@@ -4,6 +4,7 @@ on:
   push:
     paths-ignore:
       - .github/workflows/main.yml
+      - .github/workflows/filters.yml
       - '**.txt'
       - '**.md'
       - '**.cmd'
@@ -14,6 +15,7 @@ on:
   pull_request:
     paths-ignore:
       - .github/workflows/main.yml
+      - .github/workflows/filters.yml
       - '**.txt'
       - '**.md'
       - '**.cmd'

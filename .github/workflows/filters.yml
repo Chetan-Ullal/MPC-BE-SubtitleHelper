@@ -1,0 +1,67 @@
+name: Build Filters
+
+on:
+  push:
+    paths-ignore:
+      - .github/workflows/main.yml
+      - .github/workflows/filters.yml
+      - '**.txt'
+      - '**.md'
+      - '**.cmd'
+      - '**.bat'
+      - '**.vcxproj.filters'
+  pull_request:
+    paths-ignore:
+      - .github/workflows/main.yml
+      - .github/workflows/filters.yml
+      - '**.txt'
+      - '**.md'
+      - '**.cmd'
+      - '**.bat'
+      - '**.vcxproj.filters'
+  workflow_dispatch:
+    # no inputs
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Prepare MSYS
+        run: |
+          curl -sSL https://github.com/Aleksoid1978/MSYS/raw/main/MSYS_MinGW-w64_GCC_1320_x86-x64.7z -o MSYS.7z
+          7z x MSYS.7z -oC:\\MSYS
+          echo '@ECHO OFF' > environments.bat
+          echo 'SET "MPCBE_MSYS=C:\\MSYS"' >> environments.bat
+          echo 'SET "MPCBE_MINGW=C:\\MSYS\\mingw"' >> environments.bat
+          .\\update_gcc.bat
+        shell: pwsh
+
+      - name: Clean
+        run: |
+          .\\build.bat Clean All
+        shell: pwsh
+
+      - name: Build Filters
+        run: |
+          .\\build.bat Build Filters
+        shell: pwsh
+
+      - name: Upload Filters x64
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Filters x64" 
+          path: _bin/Filters_x64/*.ax
+
+      - name: Upload Filters x86
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Filters x86" 
+          path: _bin/Filters_x86/*.ax
