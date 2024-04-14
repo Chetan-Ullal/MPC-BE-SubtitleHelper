@@ -1,5 +1,4 @@
 # MPC-BE-SubtitleHelper
----
 
 Provides a DirectShow filter called MPCSubtitleHelper that allows DirectShow compatible players to use MPC-VR and XYSubtitle filters and display subtitles without losing HDR info.
 
