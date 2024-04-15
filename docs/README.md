@@ -7,8 +7,8 @@ To do this, the player must also build the DirectShow graph with a video decoder
 Steps:
 1. Add MPC-VR, XYSubFilter, LAVVideoDecoder or MPCVideoDecoder and any other required filters to the DirectShow graph.
 2. Add MPCSubtitleHelper filter to the graph.
-3. Acquire the ISubtitleHelper interface from the MPCSubtitleHelper filter.
+3. Acquire the [ISubtitleHelper](https://github.com/Chetan-Ullal/MPC-BE-SubtitleHelper/blob/master/src/filters/subtitle/MpcSubtitleHelper/ISubtitleHelper.h) interface from the MPCSubtitleHelper filter.
 4. Call ISubtitleHelper::Connect() passing in the player's video window handle.
 5. Connect the rest of the graph.
 6. If the player uses IVideoWindow and/or IBasicVideo interfaces to send positioning information to the renderer, then it must also call ISubtitleHelper::SetPositionFromRenderer() to position the subtitles. If this is not done, the subtitle will not be visible.
-7. The filter also exposes MPC-VR's IAllocatorPresenter interface, so it can be used for more advanced placement/configuration of the subtitles.
+7. The filter also exposes the [IAllocatorPresenter](https://github.com/Chetan-Ullal/MPC-BE-SubtitleHelper/blob/master/src/filters/renderer/VideoRenderers/IAllocatorPresenter.h) interface, so it can be used for more advanced placement/configuration of the subtitles.
