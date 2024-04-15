@@ -72,6 +72,8 @@ REM pre-build checks
 
 CALL "update_revision.cmd"
 
+CALL "update_filter_revision.cmd"
+
 IF EXIST "environments.bat" CALL "environments.bat"
 
 IF NOT DEFINED MPCBE_MINGW GOTO MissingVar
