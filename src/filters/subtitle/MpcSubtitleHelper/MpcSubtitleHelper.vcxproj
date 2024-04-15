@@ -389,6 +389,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CSubtitleHelperFilter.h" />
+    <ClInclude Include="FilterVersion.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ISubtitleHelper.h" />
     <ClInclude Include="MpcSubtitleHelper.h" />
@@ -399,7 +400,9 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="MpcSubtitleHelper.rc" />
+    <ResourceCompile Include="MpcSubtitleHelper.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Debug' or '$(Configuration)'=='Release'">true</ExcludedFromBuild>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\DSUtil\DSUtil.vcxproj">
