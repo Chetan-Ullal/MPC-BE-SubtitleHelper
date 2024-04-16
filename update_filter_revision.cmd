@@ -29,7 +29,7 @@ FOR /F "tokens=1 delims=." %%A IN ("%GIT_TAG_STR%") DO (
 FOR /F "tokens=2 delims=." %%A IN ("%GIT_TAG_STR%") DO (
   SET FILTER_MINOR=%%A
 )
-FOR /F "tokens=3 delims=." %%A IN ("%GIT_TAG_STR%") DO (
+FOR /F "tokens=3 delims=.-" %%A IN ("%GIT_TAG_STR%") DO (
   SET FILTER_PATCH=%%A
 )
 
