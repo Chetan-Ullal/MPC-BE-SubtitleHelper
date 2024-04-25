@@ -1077,7 +1077,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,61,282,9
     CONTROL         "Nascondi automaticamente il puntatore durante la riproduzione in modalità finestra",IDC_CHECK5,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,73,280,9
-    CONTROL         "Show zero hours in status bar and OSD",IDC_CHECK8,
+    CONTROL         "Mostra zero ore nella barra di stato e OSD",IDC_CHECK8,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,85,280,9
     LTEXT           "Non mostrare 000xx.mpls più breve di",IDC_STATIC,7,99,150,8
     EDITTEXT        IDC_EDIT5,161,97,30,13,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
@@ -3201,6 +3201,7 @@ BEGIN
     IDS_CMD_DVDPOS1         "/dvdpos T#C\tAvvia la riproduzione dal titolo T, capitolo C"
     IDS_CMD_DVDPOS2         "/dvdpos T#hh:mm\tAvvia la riproduzione dal titolo T, posizione hh:mm:ss"
     IDS_CMD_CD              "/cd\t\tCarica tutte le tracce di un cd audio o (s)vcd,\n\t\t""nome_percorso"" indica il percorso dell'unità (opzionale)"
+    IDS_CMD_DEVICE          "/device\t\tOpen the default video device"
     IDS_CMD_OPEN            "/open\t\tApri il file, non avviare automaticamente la riproduzione"
     IDS_CMD_PLAY            "/play\t\tInizia a riprodurre il file non appena il lettore viene\n\t\tlanciato"
     IDS_CMD_CLOSE           "/close\t\tChiudi il lettore dopo la riproduzione (funziona solo quando\n\t\utilizzato con /play)"
@@ -3224,7 +3225,7 @@ BEGIN
     IDS_CMD_FIXEDSIZE       "/fixedsize w,h\tImposta una dimensione fissa della finestra"
     IDS_CMD_MONITOR         "/monitor N\tAvvia il lettore sul monitor N, dove N inizia da 1"
     IDS_CMD_AUDIORENDERER   "/audiorenderer N\tInizia a usare l'audiorenderer N, dove N inizia da 1\n\t\t(vedi impostazioni ""Audio"")"
-    IDS_CMD_VOLUME          "/volume N\tSet Volume, where N is a range from 0 to 100"
+    IDS_CMD_VOLUME          "/volume N\tImposta volume, il valore di N è tra 0 e 100"
     IDS_CMD_CLIPBOARD       "/clipboard\t\tApri percorsi/collegamenti dagli appunti"
     IDS_CMD_RESET           "/reset\t\tRipristina le impostazioni predefinite"
 END
