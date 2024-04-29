@@ -55,7 +55,7 @@ CMPCVRAllocatorPresenter::~CMPCVRAllocatorPresenter()
 
 STDMETHODIMP CMPCVRAllocatorPresenter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
-	if (riid != IID_IUnknown && m_pMPCVR) {
+	if ((riid != IID_IUnknown) && m_pMPCVR && m_bReturnMPCVRInterfaces) {
 		if (SUCCEEDED(m_pMPCVR->QueryInterface(riid, ppv))) {
 			return S_OK;
 		}

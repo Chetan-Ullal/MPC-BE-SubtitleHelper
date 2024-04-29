@@ -27,6 +27,10 @@
 CSubtitleHelperAllocatorPresenter::CSubtitleHelperAllocatorPresenter(HWND hWnd, HRESULT& hr, CString& error)
 	: CMPCVRAllocatorPresenter(hWnd, hr, error)
 {
+	// Don't return the MPC-VR interfaces when in helper mode, to avoid the graph getting "stuck"
+	// and not sending the EC_COMPLETE notification after the media ends
+	// 29-Apr-2024
+	m_bReturnMPCVRInterfaces = false;
 }
 
 CSubtitleHelperAllocatorPresenter::~CSubtitleHelperAllocatorPresenter()
