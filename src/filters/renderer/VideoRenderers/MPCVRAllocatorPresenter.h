@@ -35,6 +35,7 @@ namespace DSObjects
 	{
 		CComPtr<IUnknown> m_pMPCVR;
 		bool m_bMPCVRFullscreenControl = false;
+		bool m_bReturnMPCVRInterfaces = true;
 
 	public:
 		CMPCVRAllocatorPresenter(HWND hWnd, HRESULT& hr, CString& _Error);
