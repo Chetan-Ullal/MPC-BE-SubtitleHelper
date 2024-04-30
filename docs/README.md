@@ -11,4 +11,4 @@ Steps:
 4. Call ISubtitleHelper::Connect() passing in the player's video window handle.
 5. Connect the rest of the graph.
 6. If the player uses IVideoWindow and/or IBasicVideo interfaces to send positioning information to the renderer, then it must also call ISubtitleHelper::SetPositionFromRenderer() to position the subtitles. If this is not done, the subtitle will not be visible.
-7. The filter also exposes the [IAllocatorPresenter](https://github.com/Chetan-Ullal/MPC-BE-SubtitleHelper/blob/master/src/filters/renderer/VideoRenderers/IAllocatorPresenter.h) interface, so it can be used for more advanced placement/configuration of the subtitles.
+7. The filter also exposes the [IAllocatorPresenter](https://github.com/Chetan-Ullal/MPC-BE-SubtitleHelper/blob/master/src/filters/renderer/VideoRenderers/IAllocatorPresenter.h) interface, so it can be used for more advanced placement/configuration of the subtitles. **Note that this interface is available only after Connect() has succeeded**.
