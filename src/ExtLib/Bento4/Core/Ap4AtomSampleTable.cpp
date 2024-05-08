@@ -278,13 +278,15 @@ AP4_AtomSampleTable::GetSampleIndexForTimeStamp(AP4_TimeStamp ts,
                                                 AP4_Ordinal& index)
 {
     AP4_Result result = m_SttsAtom ? m_SttsAtom->GetSampleIndexForTimeStamp(ts, m_tsDelay, index) : AP4_FAILURE;
-    if AP4_SUCCEEDED(result) {
+    if (AP4_SUCCEEDED(result)) {
         auto GetCts = [&](AP4_Ordinal i, AP4_SI64& cts) {
             AP4_TimeStamp dts;
             AP4_Duration duration;
             const AP4_Ordinal index = i + 1;
             result = m_SttsAtom->GetDts(index, dts, duration);
-            if (AP4_FAILED(result)) return result;
+            if (AP4_FAILED(result)) {
+                return result;
+            }
             AP4_SI32 cts_offset = 0;
             if (m_CttsAtom) {
                 m_CttsAtom->GetCtsOffset(index, cts_offset);
@@ -296,24 +298,29 @@ AP4_AtomSampleTable::GetSampleIndexForTimeStamp(AP4_TimeStamp ts,
 
         AP4_SI64 cts;
         result = GetCts(index, cts);
-        if (AP4_FAILED(result)) return result;
+        if (AP4_FAILED(result)) {
+            return result;
+        }
 
-        auto searched_ts = static_cast<AP4_SI64>(ts);
+        const bool validStssAtom = m_StssAtom && m_StssAtom->GetEntries().ItemCount();
+        const auto searched_ts = static_cast<AP4_SI64>(ts);
 
         if (cts == searched_ts
-                && (!m_StssAtom || (m_StssAtom && m_StssAtom->IsSampleSync(index + 1)))) {
+                && (!validStssAtom || m_StssAtom->IsSampleSync(index + 1))) {
             return AP4_SUCCESS;
         }
 
         for (;;) {
             if (index > 0 && cts >= searched_ts) {
                 for (AP4_Ordinal i = index - 1; i > 0; i--) {
-                    if (m_StssAtom && !m_StssAtom->IsSampleSync(i + 1)) {
+                    if (validStssAtom && !m_StssAtom->IsSampleSync(i + 1)) {
                         continue;
                     }
 
                     result = GetCts(i, cts);
-                    if (AP4_FAILED(result)) return result;
+                    if (AP4_FAILED(result)) {
+                        return result;
+                    }
 
                     if (cts <= searched_ts) {
                         index = i;
@@ -324,15 +331,17 @@ AP4_AtomSampleTable::GetSampleIndexForTimeStamp(AP4_TimeStamp ts,
                 break;
             } else if (index < GetSampleCount() && cts < searched_ts) {
                 for (AP4_Ordinal i = index + 1; i < GetSampleCount(); i++) {
-                    if (m_StssAtom && !m_StssAtom->IsSampleSync(i + 1)) {
+                    if (validStssAtom && !m_StssAtom->IsSampleSync(i + 1)) {
                         continue;
                     }
 
                     result = GetCts(i, cts);
-                    if (AP4_FAILED(result)) return result;
+                    if (AP4_FAILED(result)) {
+                        return result;
+                    }
 
                     if (cts > searched_ts) {
-                        if (!m_StssAtom) {
+                        if (!validStssAtom) {
                             index = i > 0 ? i - 1 : 0;
                             return AP4_SUCCESS;
                         }
@@ -342,7 +351,7 @@ AP4_AtomSampleTable::GetSampleIndexForTimeStamp(AP4_TimeStamp ts,
                 }
             }
 
-            if (!m_StssAtom) {
+            if (!validStssAtom) {
                 break;
             }
         }

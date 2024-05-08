@@ -61,7 +61,7 @@ public:
 	bool FindFolder(LPCWSTR path) const;
 	void AutoLoadFiles();
 
-	CString GetLabel(int i = 0);
+	CString GetLabel(int i = 0) const;
 
 	const bool MustBeSkipped() const {
 		if (m_bInvalid) {
@@ -339,7 +339,7 @@ public:
 	void SetLast();
 	void SetCurValid(const bool bValid);
 	void SetCurTime(REFERENCE_TIME rt);
-	void SetCurLabel(CString label);
+	void SetCurLabel(const CString& label);
 	void Randomize();
 
 	void Refresh();
