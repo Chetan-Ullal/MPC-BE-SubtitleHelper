@@ -2092,6 +2092,12 @@ redo:
 
 	if (m_CodecId == AV_CODEC_ID_AV1 && (m_bUseDXVA || m_bUseD3D11 || m_bUseD3D11cb || m_bUseD3D12cb || m_bUseNVDEC)) {
 		m_pAVCodec = avcodec_find_decoder_by_name("av1");
+	} else if (m_CodecId == AV_CODEC_ID_VVC) {
+		if (CPUInfo::HaveSSE4()) {
+			m_pAVCodec = avcodec_find_decoder_by_name("libvvdec");
+		} else {
+			m_pAVCodec = avcodec_find_decoder_by_name("vvc");
+		}
 	} else {
 		m_pAVCodec = avcodec_find_decoder(m_CodecId);
 	}
@@ -2458,7 +2464,8 @@ redo:
 			}
 
 			if (m_CodecId == AV_CODEC_ID_H264) {
-				if (m_nDXVA_SD && m_nSurfaceWidth < 1280) { // check "Disable DXVA for SD" option
+				// check "Disable DXVA for SD (H.264)" option 
+				if (m_nDXVA_SD && std::max(m_nSurfaceWidth, m_nSurfaceHeight) <= 1024 && std::min(m_nSurfaceWidth, m_nSurfaceHeight) <= 576) {
 					break;
 				}
 
@@ -3135,7 +3142,7 @@ HRESULT CMPCVideoDecFilter::NewSegment(REFERENCE_TIME rtStart, REFERENCE_TIME rt
 
 	m_rtStartCache = INVALID_TIME;
 
-	m_rtLastStop  = 0;
+	m_rtLastStop = 0;
 
 	if (m_bReorderBFrame) {
 		m_nBFramePos = 0;
@@ -3144,7 +3151,7 @@ HRESULT CMPCVideoDecFilter::NewSegment(REFERENCE_TIME rtStart, REFERENCE_TIME rt
 	}
 
 	if (m_bDecodingStart && m_pAVCtx) {
-		if (m_CodecId == AV_CODEC_ID_H264 || m_CodecId == AV_CODEC_ID_MPEG2VIDEO || m_CodecId == AV_CODEC_ID_VVC) {
+		if (m_CodecId == AV_CODEC_ID_H264 || m_CodecId == AV_CODEC_ID_MPEG2VIDEO) {
 			InitDecoder(&m_pCurrentMediaType);
 		}
 
