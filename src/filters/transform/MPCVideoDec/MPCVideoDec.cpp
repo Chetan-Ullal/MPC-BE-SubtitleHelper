@@ -466,6 +466,7 @@ FFMPEG_CODECS ffCodecs[] = {
 	// HEVC
 	{ &MEDIASUBTYPE_HEVC, AV_CODEC_ID_HEVC, VDEC_HEVC, HWCodec_HEVC },
 	{ &MEDIASUBTYPE_HVC1, AV_CODEC_ID_HEVC, VDEC_HEVC, HWCodec_HEVC },
+	{ &MEDIASUBTYPE_hvc1, AV_CODEC_ID_HEVC, VDEC_HEVC, HWCodec_HEVC },
 	{ &MEDIASUBTYPE_HM10, AV_CODEC_ID_HEVC, VDEC_HEVC, HWCodec_HEVC },
 
 	// Avid DNxHD
@@ -851,6 +852,7 @@ const AMOVIESETUP_MEDIATYPE sudPinTypesIn[] = {
 	// HEVC
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_HEVC },
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_HVC1 },
+	{ &MEDIATYPE_Video, &MEDIASUBTYPE_hvc1 },
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_HM10 },
 
 	// Avid DNxHD
@@ -1071,6 +1073,7 @@ CMPCVideoDecFilter::CMPCVideoDecFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	, m_DXVADecoderGUID(GUID_NULL)
 	, m_nActiveCodecs(CODECS_ALL & ~CODEC_H264_MVC)
 	, m_rtAvrTimePerFrame(0)
+	, m_rtLastStart(INVALID_TIME)
 	, m_rtLastStop(0)
 	, m_rtStartCache(INVALID_TIME)
 	, m_bDXVACompatible(true)
@@ -1315,7 +1318,8 @@ REFERENCE_TIME CMPCVideoDecFilter::GetFrameDuration()
 
 void CMPCVideoDecFilter::UpdateFrameTime(REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop)
 {
-	if (rtStart == INVALID_TIME) {
+	auto rtStartInput = rtStart;
+	if (rtStart == INVALID_TIME || (m_CodecId == AV_CODEC_ID_H264 && rtStart == m_rtLastStart)) {
 		rtStart = m_rtLastStop;
 		rtStop = INVALID_TIME;
 	}
@@ -1328,6 +1332,7 @@ void CMPCVideoDecFilter::UpdateFrameTime(REFERENCE_TIME& rtStart, REFERENCE_TIME
 		rtStop = rtStart + (frame_duration / m_dRate);
 	}
 
+	m_rtLastStart = rtStartInput;
 	m_rtLastStop = rtStop;
 }
 
@@ -1355,9 +1360,9 @@ bool CMPCVideoDecFilter::AddFrameSideData(IMediaSample* pSample, AVFrame* pFrame
 	CComPtr<IMediaSideData> pMediaSideData;
 	if (SUCCEEDED(pSample->QueryInterface(&pMediaSideData))) {
 		HRESULT hr = E_FAIL;
-		if (AVFrameSideData* sd = av_frame_get_side_data(pFrame, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA)) {
+		if (auto sd = av_frame_get_side_data(pFrame, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA)) {
 			if (sd->size == sizeof(AVMasteringDisplayMetadata)) {
-				AVMasteringDisplayMetadata* metadata = (AVMasteringDisplayMetadata*)sd->data;
+				auto metadata = reinterpret_cast<AVMasteringDisplayMetadata*>(sd->data);
 				MediaSideDataHDR hdr = { 0 };
 
 				if (metadata->has_primaries) {
@@ -1378,12 +1383,18 @@ bool CMPCVideoDecFilter::AddFrameSideData(IMediaSample* pSample, AVFrame* pFrame
 					hdr.min_display_mastering_luminance = av_q2d(metadata->min_luminance);
 				}
 
-				hr = pMediaSideData->SetSideData(IID_MediaSideDataHDR, (const BYTE*)&hdr, sizeof(hdr));
+				if (metadata->has_primaries || metadata->has_luminance) {
+					hr = pMediaSideData->SetSideData(IID_MediaSideDataHDR,
+													 reinterpret_cast<const BYTE*>(&hdr),
+													 sizeof(hdr));
+				}
 			} else {
 				DLog(L"CMPCVideoDecFilter::AddFrameSideData(): Found HDR data of an unexpected size (%zu)", sd->size);
 			}
 		} else if (m_FilterInfo.masterDataHDR) {
-			hr = pMediaSideData->SetSideData(IID_MediaSideDataHDR, (const BYTE*)m_FilterInfo.masterDataHDR, sizeof(MediaSideDataHDR));
+			hr = pMediaSideData->SetSideData(IID_MediaSideDataHDR,
+											 reinterpret_cast<const BYTE*>(m_FilterInfo.masterDataHDR),
+											 sizeof(MediaSideDataHDR));
 			SAFE_DELETE(m_FilterInfo.masterDataHDR);
 		}
 
@@ -1394,7 +1405,9 @@ bool CMPCVideoDecFilter::AddFrameSideData(IMediaSample* pSample, AVFrame* pFrame
 				DLog(L"CMPCVideoDecFilter::AddFrameSideData(): Found HDR Light Level data of an unexpected size (%zu)", sd->size);
 			}
 		} else if (m_FilterInfo.HDRContentLightLevel) {
-			hr = pMediaSideData->SetSideData(IID_MediaSideDataHDRContentLightLevel, (const BYTE*)m_FilterInfo.HDRContentLightLevel, sizeof(MediaSideDataHDRContentLightLevel));
+			hr = pMediaSideData->SetSideData(IID_MediaSideDataHDRContentLightLevel,
+											 reinterpret_cast<const BYTE*>(m_FilterInfo.HDRContentLightLevel),
+											 sizeof(MediaSideDataHDRContentLightLevel));
 			SAFE_DELETE(m_FilterInfo.HDRContentLightLevel);
 		}
 
@@ -1494,7 +1507,9 @@ bool CMPCVideoDecFilter::AddFrameSideData(IMediaSample* pSample, AVFrame* pFrame
 #undef RPU_MAP
 #undef RPU_COLOR
 
-			hr = pMediaSideData->SetSideData(IID_MediaSideDataDOVIMetadata, (const BYTE*)&hdr, sizeof(hdr));
+			hr = pMediaSideData->SetSideData(IID_MediaSideDataDOVIMetadata,
+											 reinterpret_cast<const BYTE*>(&hdr),
+											 sizeof(hdr));
 		}
 
 		return (hr == S_OK);
@@ -2465,7 +2480,7 @@ redo:
 			}
 
 			if (m_CodecId == AV_CODEC_ID_H264) {
-				// check "Disable DXVA for SD (H.264)" option 
+				// check "Disable DXVA for SD (H.264)" option
 				if (m_nDXVA_SD && std::max(m_nSurfaceWidth, m_nSurfaceHeight) <= 1024 && std::min(m_nSurfaceWidth, m_nSurfaceHeight) <= 576) {
 					break;
 				}
@@ -3143,6 +3158,7 @@ HRESULT CMPCVideoDecFilter::NewSegment(REFERENCE_TIME rtStart, REFERENCE_TIME rt
 
 	m_rtStartCache = INVALID_TIME;
 
+	m_rtLastStart = INVALID_TIME;
 	m_rtLastStop = 0;
 
 	if (m_bReorderBFrame) {

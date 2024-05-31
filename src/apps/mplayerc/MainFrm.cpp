@@ -6054,21 +6054,32 @@ void CMainFrame::OnFileSaveAs()
 	CString ffmpegpath;
 
 	if (m_youtubeFields.fname.GetLength()) {
-		saveItems.emplace_back('v', in, GetAltFileName(), "");
-
-		const auto pFileData = dynamic_cast<OpenFileData*>(m_lastOMD.get());
-		if (pFileData) {
-			if (pFileData->auds.size()) {
-				ffmpegpath = GetFullExePath(s.strFFmpegExePath, true);
-
-				for (const auto& aud : pFileData->auds) {
-					saveItems.emplace_back('a', aud.GetPath(), aud.GetTitle(), "");
+		if (m_bAudioOnly) {
+			saveItems.emplace_back('a', in, GetAltFileName(), "");
+			if (ext == L".m4a") {
+				auto thumbnail_ext = m_youtubeFields.thumbnailUrl.Mid(m_youtubeFields.thumbnailUrl.ReverseFind('.')).MakeLower();
+				if (thumbnail_ext == L".jpg" || thumbnail_ext == L".webp") {
+					saveItems.emplace_back('t', m_youtubeFields.thumbnailUrl, thumbnail_ext, "");
+					ffmpegpath = GetFullExePath(s.strFFmpegExePath, true);
 				}
 			}
+		}
+		else {
+			saveItems.emplace_back('v', in, GetAltFileName(), "");
 
-			for (const auto& sub : pFileData->subs) {
-				if (sub.GetPath().Find(L"fmt=vtt") > 0) {
-					saveItems.emplace_back('s', sub.GetPath(), sub.GetTitle(), sub.GetLang());
+			const auto pFileData = dynamic_cast<OpenFileData*>(m_lastOMD.get());
+			if (pFileData) {
+				if (pFileData->auds.size()) {
+					for (const auto& aud : pFileData->auds) {
+						saveItems.emplace_back('a', aud.GetPath(), aud.GetTitle(), "");
+					}
+					ffmpegpath = GetFullExePath(s.strFFmpegExePath, true);
+				}
+
+				for (const auto& sub : pFileData->subs) {
+					if (sub.GetPath().Find(L"fmt=vtt") > 0) {
+						saveItems.emplace_back('s', sub.GetPath(), sub.GetTitle(), sub.GetLang());
+					}
 				}
 			}
 		}
@@ -19612,19 +19623,19 @@ HRESULT CMainFrame::SetAudioPicture(BOOL show)
 
 			if (!bLoadRes && !m_youtubeFields.thumbnailUrl.IsEmpty()) {
 				CHTTPAsync HTTPAsync;
-				if (SUCCEEDED(HTTPAsync.Connect(m_youtubeFields.thumbnailUrl.GetString(), 10000))) {
+				if (SUCCEEDED(HTTPAsync.Connect(m_youtubeFields.thumbnailUrl.GetString(), http::connectTimeout))) {
 					const auto contentLength = HTTPAsync.GetLenght();
 					if (contentLength) {
 						m_youtubeThumbnailData.resize(contentLength);
 						DWORD dwSizeRead = 0;
-						if (S_OK != HTTPAsync.Read((PBYTE)m_youtubeThumbnailData.data(), contentLength, dwSizeRead) || dwSizeRead != contentLength) {
+						if (S_OK != HTTPAsync.Read((PBYTE)m_youtubeThumbnailData.data(), contentLength, dwSizeRead, http::readTimeout) || dwSizeRead != contentLength) {
 							m_youtubeThumbnailData.clear();
 						}
 					} else {
 						std::vector<char> tmp(16 * KILOBYTE);
 						for (;;) {
 							DWORD dwSizeRead = 0;
-							if (S_OK != HTTPAsync.Read((PBYTE)tmp.data(), tmp.size(), dwSizeRead)) {
+							if (S_OK != HTTPAsync.Read((PBYTE)tmp.data(), tmp.size(), dwSizeRead, http::readTimeout)) {
 								break;
 							}
 
