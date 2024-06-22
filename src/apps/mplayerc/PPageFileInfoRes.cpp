@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -31,7 +31,6 @@ CPPageFileInfoRes::CPPageFileInfoRes(const CString& fn, IFilterGraph* pFG)
 	: CPPageBase(CPPageFileInfoRes::IDD, CPPageFileInfoRes::IDD)
 	, m_fn(fn)
 	, m_fullfn(fn)
-	, m_hIcon(nullptr)
 {
 	m_fn.TrimRight('/');
 	int i = std::max(m_fn.ReverseFind('\\'), m_fn.ReverseFind('/'));
@@ -177,7 +176,7 @@ void CPPageFileInfoRes::OnSize(UINT nType, int cx, int cy)
 	int dy = cy - m_rCrt.Height();
 	GetClientRect(&m_rCrt);
 
-	CRect r(0, 0, 0, 0);
+	CRect r;
 	if (::IsWindow(m_list.GetSafeHwnd())) {
 		m_list.GetWindowRect(&r);
 		r.right += dx;

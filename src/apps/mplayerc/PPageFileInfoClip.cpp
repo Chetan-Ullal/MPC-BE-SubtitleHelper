@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -36,7 +36,6 @@ CPPageFileInfoClip::CPPageFileInfoClip(const CString& fn, IFilterGraph* pFG)
 	, m_rating(ResStr(IDS_AG_NONE))
 	, m_location_str(ResStr(IDS_AG_NONE))
 	, m_album(ResStr(IDS_AG_NONE))
-	, m_hIcon(nullptr)
 {
 	auto pFrame = AfxGetMainFrame();
 
@@ -240,7 +239,7 @@ void CPPageFileInfoClip::OnSize(UINT nType, int cx, int cy)
 	int dy = cy - m_rCrt.Height();
 	GetClientRect(&m_rCrt);
 
-	CRect r(0, 0, 0, 0);
+	CRect r;
 	if (::IsWindow(m_desc.GetSafeHwnd())) {
 		m_desc.GetWindowRect(&r);
 		r.right += dx;

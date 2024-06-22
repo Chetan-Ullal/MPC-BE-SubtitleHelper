@@ -90,7 +90,7 @@ HRESULT COSD::Create(CWnd* pWnd)
 		dwStyleEx	|= WS_EX_TOPMOST;
 	}
 
-	if (!CreateEx(dwStyleEx, AfxRegisterWndClass(0), nullptr, dwStyle, CRect(0, 0, 0, 0), pWnd, 0, nullptr)) {
+	if (!CreateEx(dwStyleEx, AfxRegisterWndClass(0), nullptr, dwStyle, RECT{0,0,0,0}, pWnd, 0, nullptr)) {
 		DLog(L"Failed to create OSD Window");
 		return E_FAIL;
 	}
@@ -419,7 +419,7 @@ void COSD::DrawMessage()
 	}
 
 	if (m_nMessagePos != OSD_NOMESSAGE) {
-		CRect rectText(0, 0, 0, 0);
+		CRect rectText;
 		CRect rectMessages;
 
 		m_MemDC.SelectObject(m_MainFont);
@@ -484,7 +484,7 @@ void COSD::DrawDebug()
 
 		m_MemDC.SelectObject(m_MainFont);
 
-		CRect rectText(0, 0, 0, 0);
+		CRect rectText;
 		CRect rectMessages;
 		m_MemDC.DrawText(msg, &rectText, DT_CALCRECT | DT_NOPREFIX);
 		rectText.InflateRect(20, 10);

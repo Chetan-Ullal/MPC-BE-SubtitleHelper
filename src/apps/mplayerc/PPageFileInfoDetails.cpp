@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -58,7 +58,6 @@ IMPLEMENT_DYNAMIC(CPPageFileInfoDetails, CPropertyPage)
 CPPageFileInfoDetails::CPPageFileInfoDetails(const CString& fn, IFilterGraph* pFG, IAllocatorPresenter* pCAP, IDvdInfo2* pDVDI)
 	: CPropertyPage(CPPageFileInfoDetails::IDD, CPPageFileInfoDetails::IDD)
 	, m_fn(fn)
-	, m_hIcon(nullptr)
 	, m_type(ResStr(IDS_AG_NOT_KNOWN))
 	, m_size(ResStr(IDS_AG_NOT_KNOWN))
 	, m_time(ResStr(IDS_AG_NOT_KNOWN))
@@ -468,7 +467,7 @@ void CPPageFileInfoDetails::OnSize(UINT nType, int cx, int cy)
 	int dy = cy - m_rCrt.Height();
 	GetClientRect(&m_rCrt);
 
-	CRect r(0, 0, 0, 0);
+	CRect r;
 	if (::IsWindow(m_encoding.GetSafeHwnd())) {
 		m_encoding.GetWindowRect(&r);
 		r.right += dx;
