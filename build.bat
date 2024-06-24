@@ -37,6 +37,7 @@ SET ARGZI=0
 SET ARGPDB=0
 SET INPUT=0
 SET ARGSIGN=0
+SET "Wait=True"
 
 IF /I "%ARG%" == "?"          GOTO ShowHelp
 
@@ -66,6 +67,7 @@ FOR %%A IN (%ARG%) DO (
   IF /I "%%A" == "Zip"        SET "ZIP=True"            & SET /A ARGZI+=1 & SET /A ARGCL+=1 & SET /A ARGM+=1
   IF /I "%%A" == "PDB"        SET "PDB=True"            & SET /A ARGPDB+=1
   IF /I "%%A" == "Sign"       SET "SIGN=True"           & SET /A ARGSIGN+=1
+  IF /I "%%A" == "NoWait"     SET "Wait=False"
 )
 
 REM pre-build checks
@@ -79,7 +81,9 @@ IF EXIST "environments.bat" CALL "environments.bat"
 IF NOT DEFINED MPCBE_MINGW GOTO MissingVar
 IF NOT DEFINED MPCBE_MSYS  GOTO MissingVar
 
-FOR %%X IN (%*) DO SET /A INPUT+=1
+FOR %%X IN (%*) DO (
+  IF /I "%%X" NEQ "NoWait" SET /A INPUT+=1
+)
 SET /A VALID=%ARGB%+%ARGPL%+%ARGC%+%ARGBC%+%ARGPA%+%ARGIN%+%ARGZI%+%ARGSIGN%+%ARGCOMP%+%ARGPDB%
 
 IF %VALID% NEQ %INPUT% GOTO UnsupportedSwitch
@@ -147,6 +151,7 @@ CD /D %~dp0
 
 IF /I "%CONFIG%" == "Filters" (
   CALL :SubFilters Win32
+  IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
   IF /I "%ZIP%" == "True" CALL :SubCreatePackages Filters Win32
   GOTO x64
 )
@@ -154,16 +159,21 @@ IF /I "%CONFIG%" == "Filters" (
 IF /I "%CONFIG%" == "Resources" CALL :SubResources Win32 && GOTO x64
 
 CALL :SubMPCBE Win32
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 
 IF /I "%CONFIG%" == "Main" GOTO x64
 
 CALL :SubResources Win32
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 
 IF /I "%INSTALLER%" == "True" CALL :SubCreateInstaller Win32
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 IF /I "%ZIP%" == "True"       CALL :SubCreatePackages MPC-BE Win32
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 
 IF /I "%CONFIG%" == "All" (
   CALL :SubFilters Win32
+  IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
   IF /I "%ZIP%" == "True" CALL :SubCreatePackages Filters Win32
 )
 
@@ -176,6 +186,7 @@ CD /D %~dp0
 
 IF /I "%CONFIG%" == "Filters" (
   CALL :SubFilters x64
+  IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
   IF /I "%ZIP%" == "True" CALL :SubCreatePackages Filters x64
   GOTO END
 )
@@ -183,16 +194,21 @@ IF /I "%CONFIG%" == "Filters" (
 IF /I "%CONFIG%" == "Resources" CALL :SubResources x64 && GOTO END
 
 CALL :SubMPCBE x64
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 
 IF /I "%CONFIG%" == "Main" GOTO End
 
 CALL :SubResources x64
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 
 IF /I "%INSTALLER%" == "True" CALL :SubCreateInstaller x64
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 IF /I "%ZIP%" == "True"       CALL :SubCreatePackages MPC-BE x64
+IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
 
 IF /I "%CONFIG%" == "All" (
   CALL :SubFilters x64
+  IF !ERRORLEVEL! NEQ 0 EXIT /B !ERRORLEVEL!
   IF /I "%ZIP%" == "True" CALL :SubCreatePackages Filters x64
 )
 
@@ -212,6 +228,7 @@ MSBuild.exe mpc-be.sln %MSBUILD_SWITCHES%^
  /flp2:LogFile=%LOG_DIR%\filters_warnings_%BUILDCFG%_%1.log;warningsonly;Verbosity=diagnostic
 IF %ERRORLEVEL% NEQ 0 (
   CALL :SubMsg "ERROR" "mpc-be.sln %BUILDCFG% Filter %1 - Compilation failed!"
+  EXIT /B %ERRORLEVEL%
 ) ELSE (
   CALL :SubMsg "INFO" "mpc-be.sln %BUILDCFG% Filter %1 compiled successfully"
 )
@@ -236,6 +253,7 @@ MSBuild.exe mpc-be.sln %MSBUILD_SWITCHES%^
  /flp2:LogFile=%LOG_DIR%\mpc-be_warnings_%BUILDCFG%_%1.log;warningsonly;Verbosity=diagnostic
 IF %ERRORLEVEL% NEQ 0 (
   CALL :SubMsg "ERROR" "mpc-be.sln %BUILDCFG% %1 - Compilation failed!"
+  EXIT /B %ERRORLEVEL%
 ) ELSE (
   CALL :SubMsg "INFO" "mpc-be.sln %BUILDCFG% %1 compiled successfully"
 )
@@ -247,6 +265,7 @@ MSBuild.exe mpciconlib.sln %MSBUILD_SWITCHES%^
  /flp2:LogFile=%LOG_DIR%\mpciconlib_warnings_%BUILDCFG%_%1.log;warningsonly;Verbosity=diagnostic
 IF %ERRORLEVEL% NEQ 0 (
   CALL :SubMsg "ERROR" "mpciconlib.sln %BUILDCFG% %1 - Compilation failed!"
+  EXIT /B %ERRORLEVEL%
 ) ELSE (
   CALL :SubMsg "INFO" "mpciconlib.sln %BUILDCFG% %1 compiled successfully"
 )
@@ -267,6 +286,7 @@ MSBuild.exe MPCBEShellExt.sln %MSBUILD_SWITCHES%^
  /target:%BUILDTYPE% /property:Configuration=%BUILDCFG%;Platform=Win32
 IF %ERRORLEVEL% NEQ 0 (
   CALL :SubMsg "ERROR" "MPCBEShellExt.sln %BUILDCFG% Win32 - Compilation failed!"
+  EXIT /B %ERRORLEVEL%
 ) ELSE (
   CALL :SubMsg "INFO" "MPCBEShellExt.sln %BUILDCFG% Win32 compiled successfully"
 )
@@ -280,6 +300,7 @@ MSBuild.exe MPCBEShellExt.sln %MSBUILD_SWITCHES%^
  /target:%BUILDTYPE% /property:Configuration=%BUILDCFG%;Platform=x64
 IF %ERRORLEVEL% NEQ 0 (
   CALL :SubMsg "ERROR" "MPCBEShellExt.sln %BUILDCFG% x64 - Compilation failed!"
+  EXIT /B %ERRORLEVEL%
 ) ELSE (
   CALL :SubMsg "INFO" "MPCBEShellExt.sln %BUILDCFG% x64 compiled successfully"
 )
@@ -305,7 +326,10 @@ FOR %%A IN ("Armenian" "Basque" "Belarusian" "Catalan" "Chinese Simplified"
  TITLE Compiling mpcresources - %%~A^|%1...
  MSBuild.exe mpcresources.sln %MSBUILD_SWITCHES%^
  /target:%BUILDTYPE% /property:Configuration="Release %%~A";Platform=%1
- IF %ERRORLEVEL% NEQ 0 CALL :SubMsg "ERROR" "Compilation failed!"
+ IF %ERRORLEVEL% NEQ 0 (
+   CALL :SubMsg "ERROR" "Compilation failed!"
+   EXIT /B %ERRORLEVEL%
+ )
 )
 
 IF /I "%1" == "Win32" (
@@ -357,7 +381,10 @@ IF NOT DEFINED InnoSetupPath (
 TITLE Compiling %1 installer...
 
 "%InnoSetupPath%\iscc.exe" /Q /O"%BIN%" "distrib\mpc-be_setup.iss" %ISDefs% %ISDefsSign%
-IF %ERRORLEVEL% NEQ 0 CALL :SubMsg "ERROR" "Compilation failed!"
+IF %ERRORLEVEL% NEQ 0 (
+  CALL :SubMsg "ERROR" "Compilation failed!"
+  EXIT /B %ERRORLEVEL%
+)
 CALL :SubMsg "INFO" "%1 installer successfully built"
 
 CALL :SubGetVersion
@@ -446,7 +473,10 @@ IF /I "%NAME%" == "MPC-BE" (
 TITLE Creating archive %ZIP_NAME%.7z...
 START "7z" /B /WAIT "%SEVENZIP%" a -t7z "%PackagesOut%\%MPCBE_VER%\%ZIP_NAME%.7z" "%PCKG_NAME%"^
  -m0=lzma -mx9 -mmt -ms=on
-IF %ERRORLEVEL% NEQ 0 CALL :SubMsg "ERROR" "Unable to create %ZIP_NAME%.7z!"
+IF %ERRORLEVEL% NEQ 0 (
+  CALL :SubMsg "ERROR" "Unable to create %ZIP_NAME%.7z!"
+  EXIT /B %ERRORLEVEL%
+)
 CALL :SubMsg "INFO" "%ZIP_NAME%.7z successfully created"
 
 IF EXIST "%PCKG_NAME%" RD /Q /S "%PCKG_NAME%"
@@ -589,6 +619,7 @@ ECHO "build.bat %*"
 ECHO.
 ECHO Run "%~nx0 help" for details about the commandline switches.
 CALL :SubMsg "ERROR" "Compilation failed!"
+EXIT /B 1
 
 :SubInnoSetupPath
 SET InnoSetupPath=%*
@@ -609,10 +640,12 @@ IF /I "%~1" == "ERROR" (
 )
 ECHO ------------------------------ & ECHO.
 IF /I "%~1" == "ERROR" (
-  ECHO Press any key to close this window...
-  PAUSE >NUL
+  IF /I "%Wait%" == "True" (
+    ECHO Press any key to close this window...
+    PAUSE >NUL
+  )
   ENDLOCAL
-  EXIT
+  EXIT /B 1
 ) ELSE (
   EXIT /B
 )
