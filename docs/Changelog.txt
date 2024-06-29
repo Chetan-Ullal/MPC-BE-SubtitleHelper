@@ -2,13 +2,17 @@
 
 1.7.2.x dev
 =============================
+Player
+Improved support for moving the file properties window between displays with different text scaling.
+Fixed remembering the position of some DVD-Videos.
+
 Updated Romanian translation (by Andrei Miloiu).
 Updated Korean translation (by Hackjjang).
 Updated Japanese translation (by tsubasanouta).
 
 Updated libraries:
-	ffmpeg git-n7.1-dev-1509-g0c0e7ec81e;
-	vvdec git-v2.3.0-20-gc26979f.
+	ffmpeg n7.1-dev-1585-g0b330d8642;
+	vvdec v2.3.0-24-gad8f4bb.
 
 
 1.7.2 - 2024-06-07
