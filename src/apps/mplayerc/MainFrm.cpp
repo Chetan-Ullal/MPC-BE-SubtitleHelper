@@ -5933,7 +5933,7 @@ void CMainFrame::DropFiles(std::list<CString>& slFiles)
 					}
 				} else {
 					ISubStream *pSubStream = nullptr;
-					if (LoadSubtitle(fname, &pSubStream)) {
+					if (LoadSubtitle(fname, &pSubStream, false)) {
 						SetSubtitle(pSubStream); // the subtitle at the insert position according to LoadSubtitle()
 						b_SubLoaded = true;
 
@@ -6741,7 +6741,7 @@ void CMainFrame::OnFileLoadSubtitle()
 	} else {
 		for (const auto& fn : fns) {
 			ISubStream *pSubStream = nullptr;
-			if (LoadSubtitle(fn, &pSubStream)) {
+			if (LoadSubtitle(fn, &pSubStream, false)) {
 				SetSubtitle(pSubStream); // the subtitle at the insert position according to LoadSubtitle()
 				AddSubtitlePathsAddons(fn.GetString());
 			}
@@ -6782,17 +6782,19 @@ void CMainFrame::OnFileLoadAudio()
 		while (pos) {
 			CString fname = fd.GetNextPathName(pos);
 
-			if (CComQIPtr<IGraphBuilderAudio> pGBA = m_pGB.p) {
-				HRESULT hr = pGBA->RenderAudioFile(fname);
-				if (SUCCEEDED(hr)) {
-					pli->m_auds.emplace_back(fname);
-					AddAudioPathsAddons(fname.GetString());
+			if (!m_wndPlaylistBar.CheckAudioInCurrent(fname)) {
+				if (CComQIPtr<IGraphBuilderAudio> pGBA = m_pGB.p) {
+					HRESULT hr = pGBA->RenderAudioFile(fname);
+					if (SUCCEEDED(hr)) {
+						m_wndPlaylistBar.AddAudioToCurrent(fname);
+						AddAudioPathsAddons(fname.GetString());
 
-					CComQIPtr<IAMStreamSelect> pSS = FindSwitcherFilter();
-					if (pSS) {
-						DWORD cStreams = 0;
-						if (SUCCEEDED(pSS->Count(&cStreams)) && cStreams > 0) {
-							pSS->Enable(cStreams - 1, AMSTREAMSELECTENABLE_ENABLE);
+						CComQIPtr<IAMStreamSelect> pSS = FindSwitcherFilter();
+						if (pSS) {
+							DWORD cStreams = 0;
+							if (SUCCEEDED(pSS->Count(&cStreams)) && cStreams > 0) {
+								pSS->Enable(cStreams - 1, AMSTREAMSELECTENABLE_ENABLE);
+							}
 						}
 					}
 				}
@@ -16214,7 +16216,7 @@ void CMainFrame::ApplyExraRendererSettings()
 	}
 }
 
-bool CMainFrame::LoadSubtitle(const CExtraFileItem& subItem, ISubStream **actualStream)
+bool CMainFrame::LoadSubtitle(const CExtraFileItem& subItem, ISubStream **actualStream, bool bAutoLoad)
 {
 	CAppSettings& s = AfxGetAppSettings();
 
@@ -16237,6 +16239,9 @@ bool CMainFrame::LoadSubtitle(const CExtraFileItem& subItem, ISubStream **actual
 					if (actualStream != nullptr) {
 						*actualStream = m_pSubStreams.back();
 						s.fEnableSubtitles = true;
+					}
+					if (!bAutoLoad) {
+						m_wndPlaylistBar.AddSubtitleToCurrent(fname);
 					}
 
 					return true;
@@ -16285,6 +16290,10 @@ bool CMainFrame::LoadSubtitle(const CExtraFileItem& subItem, ISubStream **actual
 			*actualStream = r;
 
 			s.fEnableSubtitles = true;
+		}
+
+		if (!bAutoLoad) {
+			m_wndPlaylistBar.AddSubtitleToCurrent(fname);
 		}
 
 		if (subChangeNotifyThread.joinable() && !::PathIsURLW(fname)) {

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -121,48 +121,60 @@ void CDSMMuxerFilter::MuxPacketHeader(IBitStream* pBS, dsmp_t type, UINT64 len)
 void CDSMMuxerFilter::MuxFileInfo(IBitStream* pBS)
 {
 	int len = 1;
-	CSimpleMap<CStringA, CStringA> si;
+	std::list<CStringA> entries;
 
-	for (int i = 0; i < GetSize(); i++) {
-		CStringA key = CStringA(CString(GetKeyAt(i))), value = WStrToUTF8(GetValueAt(i));
-		if (key.GetLength() != 4) {
+	for (const auto&[key, value] : m_properties) {
+		if (key.length() != 4 || value.IsEmpty()) {
 			continue;
 		}
-		si.Add(key, value);
+		entries.emplace_back(CStringA(key.c_str(), key.length()) + WStrToUTF8(value));
 		len += 4 + value.GetLength() + 1;
 	}
 
 	MuxPacketHeader(pBS, DSMP_FILEINFO, len);
 	pBS->BitWrite(DSMF_VERSION, 8);
-	for (int i = 0; i < si.GetSize(); i++) {
-		CStringA key = si.GetKeyAt(i), value = si.GetValueAt(i);
-		pBS->ByteWrite((LPCSTR)key, 4);
-		pBS->ByteWrite((LPCSTR)value, value.GetLength() + 1);
+	for (const auto& entry : entries) {
+		pBS->ByteWrite((LPCSTR)entry, entry.GetLength() + 1);
 	}
-
 }
 
 void CDSMMuxerFilter::MuxStreamInfo(IBitStream* pBS, CBaseMuxerInputPin* pPin)
 {
 	int len = 1;
-	CSimpleMap<CStringA, CStringA> si;
+	std::list<CStringA> entries;
 
-	for (int i = 0; i < pPin->GetSize(); i++) {
-		CStringA key = CStringA(CString(pPin->GetKeyAt(i))), value = WStrToUTF8(pPin->GetValueAt(i));
-		if (key.GetLength() != 4) {
-			continue;
+	ULONG cProperties = 0;
+	HRESULT hr = pPin->CountProperties(&cProperties);
+	if (SUCCEEDED(hr) && cProperties > 0) {
+		for (ULONG iProperty = 0; iProperty < cProperties; iProperty++) {
+			PROPBAG2 PropBag = {};
+			ULONG cPropertiesReturned = 0;
+			hr = pPin->GetPropertyInfo(iProperty, 1, &PropBag, &cPropertiesReturned);
+			if (FAILED(hr)) {
+				continue;
+			}
+
+			HRESULT hr2;
+			CComVariant var;
+			hr = pPin->Read(1, &PropBag, nullptr, &var, &hr2);
+			if (SUCCEEDED(hr) && SUCCEEDED(hr2) && (var.vt & (VT_BSTR | VT_BYREF)) == VT_BSTR) {
+				const CStringA key(PropBag.pstrName);
+				const CStringA value = WStrToUTF8(var.bstrVal);
+				if (key.GetLength() != 4 || value.IsEmpty()) {
+					continue;
+				}
+				entries.emplace_back(key + value);
+				len += 4 + value.GetLength() + 1;
+			}
+			CoTaskMemFree(PropBag.pstrName);
 		}
-		si.Add(key, value);
-		len += 4 + value.GetLength() + 1;
 	}
 
 	if (len > 1) {
 		MuxPacketHeader(pBS, DSMP_STREAMINFO, len);
 		pBS->BitWrite(pPin->GetID(), 8);
-		for (int i = 0; i < si.GetSize(); i++) {
-			CStringA key = si.GetKeyAt(i), value = si.GetValueAt(i);
-			pBS->ByteWrite((LPCSTR)key, 4);
-			pBS->ByteWrite((LPCSTR)value, value.GetLength() + 1);
+		for (const auto& entry : entries) {
+			pBS->ByteWrite((LPCSTR)entry, entry.GetLength() + 1);
 		}
 	}
 }
@@ -260,11 +272,12 @@ void CDSMMuxerFilter::MuxHeader(IBitStream* pBS)
 	// chapters
 
 	if (pCB) {
-		std::list<CDSMChapter> chapters;
+		pCB->ChapSort();
+
+		std::vector<CDSMChapter> chapters;
+		chapters.reserve(pCB->ChapGetCount());
 		REFERENCE_TIME rtPrev = 0;
 		int len = 0;
-
-		pCB->ChapSort();
 
 		for (DWORD i = 0; i < pCB->ChapGetCount(); i++) {
 			CDSMChapter c;
