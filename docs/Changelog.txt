@@ -1,6 +1,13 @@
 ﻿This file includes only a short list of the changes between Media Player Classic - BE's versions.
 
-1.7.2.x dev
+1.7.3.x dev
+=============================
+Updated libraries:
+	ffmpeg n7.1-dev-2090-gcda5f5c5ed;
+	vvdec v2.3.0-28-gf8ba8fd.
+
+
+1.7.3 - 2024-08-07
 =============================
 Splitters
 Improved DTS-HD track detection.
@@ -15,10 +22,15 @@ Optimized P010 to NV12 conversion for processors without SSE4.
 Optimized work with NVDEC.
 Fixed output format detection for FFV1 video.
 
+Subtitles
+The "Forced Only" setting now works with the entire PGS subtitle track marked as Forced.
+
 Player
 Improved support for moving the file properties window between displays with different text scaling.
 Fixed remembering the position of some DVD-Videos.
 Subtitles added manually are now saved in the playlist.
+Do not hide the player until the DirectShow graph is closed.
+Fixed freezing with some URLs when using external filters.
 
 Installer
 Compiling the installer requires InnoSetup 6.1.0 or later.
@@ -34,7 +46,7 @@ Updated libraries:
 	Little-CMS git-lcms2.16-60-g1c9021b;
 	MediaInfo git-v24.06-10-g88f3ea4aa;
 	ResizableLib v1.5.3-8-g25a89da;
-	vvdec v2.3.0-24-gad8f4bb.
+
 
 
 1.7.2 - 2024-06-07

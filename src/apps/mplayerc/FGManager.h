@@ -124,6 +124,8 @@ protected:
 
 	BOOL m_bOnlySub = FALSE;
 	BOOL m_bOnlyAudio = FALSE;
+	CStringW m_userAgent;
+	CStringW m_referrer; // not used
 
 	//
 	HWND m_hWnd;
@@ -137,7 +139,7 @@ protected:
 	std::mutex m_mutexRender;
 
 public:
-	CFGManager(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd = 0, bool IsPreview = false);
+	CFGManager(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd = 0, bool IsPreview = false);
 	virtual ~CFGManager();
 
 	DECLARE_IUNKNOWN;
@@ -149,10 +151,10 @@ class CFGManagerCustom : public CFGManager
 public:
 	// IFilterGraph
 
-	STDMETHODIMP AddFilter(IBaseFilter* pFilter, LPCWSTR pName);
+	STDMETHODIMP AddFilter(IBaseFilter* pFilter, LPCWSTR pName) override;
 
 public:
-	CFGManagerCustom(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd = 0, bool IsPreview = false);
+	CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd = 0, bool IsPreview = false);
 };
 
 class CFGManagerPlayer : public CFGManagerCustom
@@ -160,10 +162,13 @@ class CFGManagerPlayer : public CFGManagerCustom
 protected:
 	// IFilterGraph
 
-	STDMETHODIMP ConnectDirect(IPin* pPinOut, IPin* pPinIn, const AM_MEDIA_TYPE* pmt);
+	STDMETHODIMP ConnectDirect(IPin* pPinOut, IPin* pPinIn, const AM_MEDIA_TYPE* pmt) override;
 
 public:
-	CFGManagerPlayer(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd, int preview = 0);
+	CFGManagerPlayer(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, int preview = 0);
+
+	void SetUserAgent(CStringW useragent) { m_userAgent = useragent; };
+	void SetReferrer(CStringW referrer) { m_referrer = referrer; };
 };
 
 class CFGManagerDVD : public CFGManagerPlayer
@@ -171,23 +176,23 @@ class CFGManagerDVD : public CFGManagerPlayer
 protected:
 	// IGraphBuilder
 
-	STDMETHODIMP RenderFile(LPCWSTR lpcwstrFile, LPCWSTR lpcwstrPlayList);
-	STDMETHODIMP AddSourceFilter(LPCWSTR lpcwstrFileName, LPCWSTR lpcwstrFilterName, IBaseFilter** ppFilter);
+	STDMETHODIMP RenderFile(LPCWSTR lpcwstrFile, LPCWSTR lpcwstrPlayList) override;
+	STDMETHODIMP AddSourceFilter(LPCWSTR lpcwstrFileName, LPCWSTR lpcwstrFilterName, IBaseFilter** ppFilter) override;
 
 public:
-	CFGManagerDVD(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd, bool IsPreview = false);
+	CFGManagerDVD(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, bool IsPreview = false);
 };
 
 class CFGManagerCapture : public CFGManagerPlayer
 {
 public:
-	CFGManagerCapture(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd);
+	CFGManagerCapture(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd);
 };
 
 class CFGManagerMuxer : public CFGManagerCustom
 {
 public:
-	CFGManagerMuxer(LPCTSTR pName, LPUNKNOWN pUnk);
+	CFGManagerMuxer(LPCWSTR pName, LPUNKNOWN pUnk);
 };
 
 //
@@ -198,7 +203,7 @@ protected:
 	CComPtr<IUnknown> m_pUnkInner;
 
 public:
-	CFGAggregator(const CLSID& clsid, LPCTSTR pName, LPUNKNOWN pUnk, HRESULT& hr);
+	CFGAggregator(const CLSID& clsid, LPCWSTR pName, LPUNKNOWN pUnk, HRESULT& hr);
 	virtual ~CFGAggregator();
 
 	DECLARE_IUNKNOWN;
