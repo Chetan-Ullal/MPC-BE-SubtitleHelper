@@ -54,6 +54,15 @@ class __declspec(uuid("008BAC12-FBAF-497b-9670-BC6F6FBAE2C4"))
 	, public ISpecifyPropertyPages2
 {
 private:
+	enum class HwType {
+		None,
+		DXVA2,
+		D3D11,
+		D3D11CopyBack,
+		D3D12CopyBack,
+		NVDEC
+	};
+
 	CCritSec								m_csInitDec;
 	CCritSec								m_csProps;
 	// === Persistants parameters (registry)
@@ -104,21 +113,18 @@ private:
 	double									m_dRate = 1.0;
 
 	bool									m_bUseFFmpeg = true;
-	bool									m_bUseDXVA   = true;
-	bool									m_bUseD3D11  = true;
 	CFormatConverter						m_FormatConverter;
-	CSize									m_pOutSize;				// Picture size on output pin
+	CSize									m_pOutSize; // Picture size on output pin
 
-	bool									m_bUseD3D11cb = false;
-	bool									m_bUseD3D12cb = false;
-	bool									m_bUseNVDEC = false;
+	HwType									m_hwType = {};
+
 	AVPixelFormat							m_HWPixFmt;
 	AVBufferRef*							m_HWDeviceCtx = nullptr;
 	CComPtr<ID3D11Texture2D>				m_pStagingD3D11Texture2D;
 
 	// === common variables
 	std::vector<VIDEO_OUTPUT_FORMATS>		m_VideoOutputFormats;
-	CDXVA2Decoder*							m_pDXVADecoder = nullptr;
+	std::unique_ptr<CDXVA2Decoder>			m_pDXVADecoder;
 	GUID									m_DXVADecoderGUID = GUID_NULL;
 	D3DFORMAT								m_DXVASurfaceFormat = D3DFMT_UNKNOWN;
 
@@ -155,7 +161,7 @@ private:
 
 	bool									m_bHighBitdepth = false;
 
-	CMSDKDecoder*							m_pMSDKDecoder   = nullptr;
+	std::unique_ptr<CMSDKDecoder>			m_pMSDKDecoder;
 	int										m_iMvcOutputMode = MVC_OUTPUT_Auto;
 	bool									m_bMvcSwapLR     = false;
 
@@ -197,7 +203,7 @@ private:
 	bool m_bHasPalette = false;
 	uint32_t m_Palette[256] = {};
 
-	CD3D11Decoder* m_pD3D11Decoder = nullptr;
+	std::unique_ptr<CD3D11Decoder> m_pD3D11Decoder;
 
 	// === Private functions
 	void			Cleanup();
@@ -356,7 +362,7 @@ private:
 
 	BOOL m_bInInit = FALSE;
 
-	CVideoDecDXVAAllocator*		m_pDXVA2Allocator;
+	CVideoDecDXVAAllocator* m_pDXVA2Allocator = nullptr;
 
 	// *** from LAV
 	// *** Re-Commit the allocator (creates surfaces and new decoder)
