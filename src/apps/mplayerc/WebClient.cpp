@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -377,9 +377,9 @@ bool CWebClientSocket::OnInfo(CStringA& hdr, CStringA& body, CStringA& mime)
 
 	CString positionstring, durationstring, versionstring, sizestring;
 	versionstring.Format(L"%s", MPC_VERSION_WSTR);
-	CPath file(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
-	file.StripPath();
-	file.RemoveExtension();
+
+	CStringW file = GetFileName(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
+	RemoveFileExt(file);
 
 	positionstring.Format(L"%02d:%02d:%02d", (pos/3600000), (pos/60000)%60, (pos/1000)%60);
 	durationstring.Format(L"%02d:%02d:%02d", (dur/3600000), (dur/60000)%60, (dur/1000)%60);
@@ -455,17 +455,13 @@ bool CWebClientSocket::OnBrowser(CStringA& hdr, CStringA& body, CStringA& mime)
 				m_pMainFrame->SendMessageW(WM_COPYDATA, (WPARAM)nullptr, (LPARAM)&cds);
 			}
 
-			CPath p(path);
-			p.RemoveFileSpec();
-			path = (LPCWSTR)p;
+			RemoveFileSpec(path);
 		}
 	} else {
 		path = m_pMainFrame->m_wndPlaylistBar.GetCurFileName();
 
 		if (CFileGetStatus(path, fs) && !(fs.m_attribute&CFile::directory)) {
-			CPath p(path);
-			p.RemoveFileSpec();
-			path = (LPCWSTR)p;
+			RemoveFileSpec(path);
 		}
 	}
 
@@ -474,11 +470,9 @@ bool CWebClientSocket::OnBrowser(CStringA& hdr, CStringA& body, CStringA& mime)
 	}
 
 	if (CFileGetStatus(path, fs) && (fs.m_attribute&CFile::directory) || path.Find(L"\\") == 0) {
-		CPath p(path);
-		p.Canonicalize();
-		p.MakePretty();
-		p.AddBackslash();
-		path = (LPCWSTR)p;
+		path = GetCanonicalizeFilePath(path);
+		::PathMakePrettyW(path.GetBuffer());
+		AddSlash(path);
 	}
 
 	CStringA files;
@@ -496,13 +490,11 @@ bool CWebClientSocket::OnBrowser(CStringA& hdr, CStringA& body, CStringA& mime)
 
 		path = "Root";
 	} else {
-		CString parent;
+		CStringW parent;
 
 		if (path.GetLength() > 3) {
-			CPath p(path + "..");
-			p.Canonicalize();
-			p.AddBackslash();
-			parent = (LPCWSTR)p;
+			parent = GetCanonicalizeFilePath(path + "..");
+			AddSlash(parent);
 		}
 
 		files += "<tr class=\"dir\">\r\n";
@@ -585,9 +577,7 @@ bool CWebClientSocket::OnControls(CStringA& hdr, CStringA& body, CStringA& mime)
 	CString dir;
 
 	if (!path.IsEmpty()) {
-		CPath p(path);
-		p.RemoveFileSpec();
-		dir = (LPCWSTR)p;
+		dir = GetFolderPath(path);
 	}
 
 	OAFilterState fs = m_pMainFrame->GetMediaState();
@@ -656,13 +646,8 @@ bool CWebClientSocket::OnVariables(CStringA& hdr, CStringA& body, CStringA& mime
 	CString sizestring;
 
 	if (!path.IsEmpty()) {
-		CPath p(path);
-		p.RemoveFileSpec();
-		dir = (LPCWSTR)p;
-
-		CPath p2(path);
-		p2.StripPath();
-		file = (LPCWSTR)p2;
+		dir = GetFolderPath(path);
+		file = GetFileName(path);
 
 		WIN32_FIND_DATAW wfd;
 		HANDLE hFind = FindFirstFileW(path, &wfd);
@@ -776,9 +761,7 @@ bool CWebClientSocket::OnStatus(CStringA& hdr, CStringA& body, CStringA& mime)
 	/*
 	CString path = m_pMainFrame->m_wndPlaylistBar.GetCur(), dir;
 	if (!path.IsEmpty()) {
-		CPath p(path);
-		p.RemoveFileSpec();
-		dir = (LPCWSTR)p;
+		dir = GetFolderOnly(path);
 	}
 	path.Replace(L"'", L"\\'");
 	dir.Replace(L"'", L"\\'");
@@ -793,7 +776,7 @@ bool CWebClientSocket::OnStatus(CStringA& hdr, CStringA& body, CStringA& mime)
 	CString title;
 	m_pMainFrame->GetWindowTextW(title);
 
-	CPath file(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
+	CStringW file(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
 
 	CString status;
 	OAFilterState fs = m_pMainFrame->GetMediaState();

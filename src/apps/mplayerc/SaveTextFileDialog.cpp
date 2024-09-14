@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2016 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -24,13 +24,13 @@
 
 // CSaveTextFileDialog
 
-IMPLEMENT_DYNAMIC(CSaveTextFileDialog, CFileDialog)
+IMPLEMENT_DYNAMIC(CSaveTextFileDialog, CSaveFileDialog)
 CSaveTextFileDialog::CSaveTextFileDialog(
 	CTextFile::enc e,
 	LPCWSTR lpszDefExt, LPCWSTR lpszFileName,
 	LPCWSTR lpszFilter, CWnd* pParentWnd,
 	BOOL bDisableExternalStyleCheckBox, BOOL bSaveExternalStyleFile)
-	: CFileDialog(FALSE, lpszDefExt, lpszFileName,
+	: CSaveFileDialog(lpszDefExt, lpszFileName,
 				  OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR,
 				  lpszFilter, pParentWnd)
 	, m_e(e)

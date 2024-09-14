@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -24,13 +24,13 @@
 
 // CSaveImageDialog
 
-IMPLEMENT_DYNAMIC(CSaveImageDialog, CFileDialog)
+IMPLEMENT_DYNAMIC(CSaveImageDialog, CSaveFileDialog)
 CSaveImageDialog::CSaveImageDialog(
 	const int quality, const int levelPNG,
 	const bool bSnapShotSubtitles, const bool bSubtitlesEnabled,
 	LPCWSTR lpszDefExt, LPCWSTR lpszFileName,
 	LPCWSTR lpszFilter, CWnd* pParentWnd)
-	: CFileDialog(FALSE, lpszDefExt, lpszFileName,
+	: CSaveFileDialog(lpszDefExt, lpszFileName,
 				  OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR,
 				  lpszFilter, pParentWnd)
 	, m_JpegQuality(std::clamp(quality, 70, 100))

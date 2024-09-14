@@ -158,9 +158,9 @@ CString CPPageWebServer::GetCurWebRoot()
 	GetDlgItem(IDC_EDIT2)->GetWindowTextW(WebRoot);
 	WebRoot.Replace('/', '\\');
 
-	CPath path;
-	path.Combine(GetProgramDir(), WebRoot);
-	return path.IsDirectory() ? (LPCWSTR)path : L"";
+	CStringW path = GetCombineFilePath(GetProgramDir(), WebRoot);
+	
+	return ::PathIsDirectoryW(path) ? path : L"";
 }
 
 static int __stdcall BrowseCtrlCallback(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
@@ -229,13 +229,14 @@ void CPPageWebServer::OnBnClickedButton1()
 	CString dir = GetCurWebRoot();
 
 	if (PickDir(dir)) {
-		CPath path;
-
-		if (path.RelativePathTo(GetProgramDir(), FILE_ATTRIBUTE_DIRECTORY, dir, FILE_ATTRIBUTE_DIRECTORY)) {
-			dir = (LPCWSTR)path;
+		CStringW path;
+		BOOL ret = ::PathRelativePathToW(path.GetBuffer(MAX_PATH), GetProgramDir(), FILE_ATTRIBUTE_DIRECTORY, dir, FILE_ATTRIBUTE_DIRECTORY);
+		if (ret) {
+			m_WebRoot = path;
 		}
-
-		m_WebRoot = dir;
+		else {
+			m_WebRoot = dir;
+		}
 
 		UpdateData(FALSE);
 		SetModified();

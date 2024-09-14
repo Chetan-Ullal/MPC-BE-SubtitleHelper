@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,11 +21,12 @@
 
 #pragma once
 
+#include "SaveFileDialog.h"
 #include "Subtitles/TextFile.h"
 
 // CSaveTextFileDialog
 
-class CSaveTextFileDialog : public CFileDialog
+class CSaveTextFileDialog : public CSaveFileDialog
 {
 	BOOL m_bDisableExternalStyleCheckBox;
 	BOOL m_bSaveExternalStyleFile;

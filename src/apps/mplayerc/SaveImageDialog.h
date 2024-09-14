@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,9 +21,11 @@
 
 #pragma once
 
+#include "SaveFileDialog.h"
+
 // CSaveImageDialog
 
-class CSaveImageDialog : public CFileDialog
+class CSaveImageDialog : public CSaveFileDialog
 {
 	DECLARE_DYNAMIC(CSaveImageDialog)
 

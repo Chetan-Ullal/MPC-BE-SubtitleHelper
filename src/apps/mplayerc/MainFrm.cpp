@@ -2394,7 +2394,7 @@ void CMainFrame::OnActivateApp(BOOL bActive, DWORD dwThreadID)
 
 				if (!title.IsEmpty() && !module.IsEmpty()) {
 					CString str;
-					str.Format(ResStr(IDS_MAINFRM_2), GetFileOnly(module).MakeLower(), title);
+					str.Format(ResStr(IDS_MAINFRM_2), GetFileName(module).MakeLower(), title);
 					SendStatusMessage(str, 5000);
 				}
 
@@ -5472,7 +5472,7 @@ LRESULT CMainFrame::HandleCmdLine(WPARAM wParam, LPARAM lParam)
 	for (const auto& filter : s.slFilters) {
 		CString fullpath = MakeFullPath(filter);
 
-		CString path = AddSlash(GetFolderOnly(fullpath));
+		CString path = GetAddSlash(GetFolderPath(fullpath));
 
 		WIN32_FIND_DATAW fd = {0};
 		HANDLE hFind = FindFirstFileW(fullpath, &fd);
@@ -5534,8 +5534,7 @@ LRESULT CMainFrame::HandleCmdLine(WPARAM wParam, LPARAM lParam)
 		if (!s.slFiles.empty()) {
 			GetCDROMType(s.slFiles.front()[0], sl);
 		} else {
-			CString dir;
-			dir.ReleaseBufferSetLength(GetCurrentDirectoryW(MAX_PATH, dir.GetBuffer(MAX_PATH)));
+			CString dir = GetCurrentDir();
 
 			GetCDROMType(dir[0], sl);
 			for (WCHAR drive = 'C'; sl.empty() && drive <= 'Z'; drive++) {
@@ -5779,7 +5778,7 @@ void CMainFrame::OnFileOpenDVD()
 
 	if (!path.IsEmpty()) {
 		if (CheckDVD(path) || CheckBD(path)) {
-			s.strDVDPath = GetFolderOnly(path);
+			s.strDVDPath = GetFolderPath(path);
 			m_wndPlaylistBar.Open(path);
 			OpenCurPlaylistItem();
 		} else {
@@ -5950,7 +5949,7 @@ void CMainFrame::DropFiles(std::list<CString>& slFiles)
 				if (b_SubLoaded) {
 					SetToolBarSubtitleButton();
 
-					SendStatusMessage(GetFileOnly(fname) + ResStr(IDS_MAINFRM_47), 3000);
+					SendStatusMessage(GetFileName(fname) + ResStr(IDS_MAINFRM_47), 3000);
 					if (m_pDVS) {
 						return;
 					}
@@ -6005,11 +6004,11 @@ void CMainFrame::OnFileSaveAs()
 	} else {
 		if (!::PathIsURLW(out)) {
 			ext = GetFileExt(out).MakeLower();
-			out = GetFileOnly(out);
+			out = GetFileName(out);
 			if (ext == L".cda") {
-				out = RenameFileExt(out, L".wav");
+				RenameFileExt(out, L".wav");
 			} else if (ext == L".ifo") {
-				out = RenameFileExt(out, L".vob");
+				RenameFileExt(out, L".vob");
 			}
 		} else {
 			CString fname = L"streaming_saved";
@@ -6039,17 +6038,17 @@ void CMainFrame::OnFileSaveAs()
 	}
 	ext_list.Append(ResStr(IDS_AG_ALLFILES) + L" (*.*)|*.*||");
 
-	CFileDialog fd(FALSE, ext.GetLength() ? ext.GetString() : nullptr, out,
+	CSaveFileDialog fd(ext.GetLength() ? ext.GetString() : nullptr, out,
 				   OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_DONTADDTORECENT,
-				   ext_list, GetModalParent(), 0);
+				   ext_list, GetModalParent());
 
 	if (fd.DoModal() != IDOK || !in.CompareNoCase(fd.GetPathName())) {
 		return;
 	}
 
 	CStringW savedFileName(fd.GetPathName());
-	if (ext.GetLength()) {
-		savedFileName = AddExtension(savedFileName, ext);
+	if (ext.GetLength() && GetFileExt(savedFileName).IsEmpty()) {
+		savedFileName.Append(ext);
 	}
 
 	OAFilterState fs = State_Stopped;
@@ -6517,7 +6516,7 @@ CStringW CMainFrame::CreateSnapShotFileName()
 		if (m_youtubeFields.fname.GetLength()) {
 			filename = GetAltFileName();
 		}else {
-			filename = GetFileOnly(GetCurFileName());
+			filename = GetFileName(GetCurFileName());
 			FixFilename(filename); // need for URLs
 		}
 		filename.AppendFormat(L"_snapshot_%s", GetVidPos());
@@ -6529,10 +6528,9 @@ CStringW CMainFrame::CreateSnapShotFileName()
 		filename = L"snapshot";
 	}
 
-	CPathW psrc;
-	psrc.Combine(path, MakeSnapshotFileName(filename));
+	CombineFilePath(path, MakeSnapshotFileName(filename));
 
-	return psrc.m_strPath;
+	return path;
 }
 
 void CMainFrame::OnFileSaveImage()
@@ -6572,12 +6570,12 @@ void CMainFrame::OnFileSaveImage()
 	s.iThumbLevelPNG     = std::clamp(fd.m_PngCompression, 1, 9);
 	s.bSnapShotSubtitles = fd.m_bDrawSubtitles;
 
-	CString pdst = fd.GetPathName();
+	CStringW pdst = fd.GetPathName();
 	if (GetFileExt(pdst).MakeLower() != s.strSnapShotExt) {
-		pdst = RenameFileExt(pdst, s.strSnapShotExt);
+		RenameFileExt(pdst, s.strSnapShotExt);
 	}
 
-	s.strSnapShotPath = GetFolderOnly(pdst);
+	s.strSnapShotPath = GetFolderPath(pdst);
 	SaveImage(pdst, false);
 }
 
@@ -6624,21 +6622,20 @@ void CMainFrame::OnFileSaveThumbnails()
 
 	CAppSettings& s = AfxGetAppSettings();
 
-	CPath psrc(s.strSnapShotPath);
 	CStringW prefix = L"thumbs";
 	if (GetPlaybackMode() == PM_FILE) {
-		CString path = GetFileOnly(GetCurFileName());
+		CString path = GetFileName(GetCurFileName());
 		if (!m_youtubeFields.fname.IsEmpty()) {
 			path = GetAltFileName();
 		}
 
 		prefix.Format(L"%s_thumbs", path);
 	}
-	psrc.Combine(s.strSnapShotPath, MakeSnapshotFileName(prefix));
+	CStringW psrc = GetCombineFilePath(s.strSnapShotPath, MakeSnapshotFileName(prefix));
 
 	CSaveThumbnailsDialog fd(
 		s.iThumbRows, s.iThumbCols, s.iThumbWidth, s.iThumbQuality, s.iThumbLevelPNG, s.bSnapShotSubtitles, m_pCurrentSubStream != nullptr,
-		nullptr, (LPCWSTR)psrc,
+		nullptr, psrc,
 		L"BMP - Windows Bitmap (*.bmp)|*.bmp|JPG - JPEG Image (*.jpg)|*.jpg|PNG - Portable Network Graphics (*.png)|*.png||", GetModalParent());
 
 	if (s.strSnapShotExt == L".bmp") {
@@ -6668,12 +6665,12 @@ void CMainFrame::OnFileSaveThumbnails()
 	s.iThumbLevelPNG     = std::clamp(fd.m_PngCompression, 1, 9);
 	s.bSnapShotSubtitles = fd.m_bDrawSubtitles;
 
-	CString pdst = fd.GetPathName();
+	CStringW pdst = fd.GetPathName();
 	if (GetFileExt(pdst).MakeLower() != s.strSnapShotExt) {
-		pdst = RenameFileExt(pdst, s.strSnapShotExt);
+		RenameFileExt(pdst, s.strSnapShotExt);
 	}
 
-	s.strSnapShotPath = GetFolderOnly(pdst);
+	s.strSnapShotPath = GetFolderPath(pdst);
 	SaveThumbnails(pdst);
 }
 
@@ -6837,7 +6834,7 @@ void CMainFrame::OnFileSaveSubtitle()
 		if (auto pVSF = dynamic_cast<CVobSubFile*>(m_pCurrentSubStream.p)) {
 			// remember to set lpszDefExt to the first extension in the filter so that the save dialog autocompletes the extension
 			// and tracks attempts to overwrite in a graceful manner
-			CFileDialog fd(FALSE, L"idx", suggestedFileName,
+			CSaveFileDialog fd(L"idx", suggestedFileName,
 						   OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR,
 						   L"VobSub (*.idx, *.sub)|*.idx;*.sub||", GetModalParent());
 
@@ -8143,7 +8140,7 @@ void CMainFrame::OnPlayPlay()
 						MakeBDLabel(GetCurFileName(), strOSD);
 					}
 
-					strOSD.AppendFormat(L" (%s)", GetFileOnly(m_strPlaybackRenderedPath));
+					strOSD.AppendFormat(L" (%s)", GetFileName(m_strPlaybackRenderedPath));
 				} else if (strOSD.GetLength() > 0) {
 					strOSD.TrimRight('/');
 					strOSD.Replace('\\', '/');
@@ -12347,7 +12344,7 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 	}
 
 	if (!::PathIsURLW(pOFD->fi)) {
-		m_FileName = GetFileOnly(pOFD->fi);
+		m_FileName = GetFileName(pOFD->fi);
 	}
 	else if (youtubeUrl.IsEmpty()) {
 		m_bUpdateTitle = true;
@@ -12399,16 +12396,19 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 		CorrectAceStream(fn);
 
 		if (SUCCEEDED(hr)) {
-			WCHAR path[MAX_PATH] = { 0 };
-			BOOL bIsDirSet       = FALSE;
-			if (!::PathIsURLW(fn) && ::GetCurrentDirectoryW(MAX_PATH, path)) {
-				bIsDirSet = ::SetCurrentDirectoryW(GetFolderOnly(fn));
+			CStringW oldcurdir;
+			BOOL bIsDirSet = FALSE;
+			if (!::PathIsURLW(fn)) {
+				oldcurdir = GetCurrentDir();
+				if (oldcurdir.GetLength()) {
+					bIsDirSet = ::SetCurrentDirectoryW(GetFolderPath(fn));
+				}
 			}
 
 			hr = m_pGB->RenderFile(fn, nullptr);
 
 			if (bIsDirSet) {
-				::SetCurrentDirectoryW(path);
+				::SetCurrentDirectoryW(oldcurdir);
 			}
 		}
 
@@ -12542,10 +12542,13 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 		CorrectAceStream(fn);
 
 		if (SUCCEEDED(hr)) {
-			WCHAR path[MAX_PATH] = { 0 };
-			BOOL bIsDirSet       = FALSE;
-			if (!::PathIsURLW(fn) && ::GetCurrentDirectoryW(MAX_PATH, path)) {
-				bIsDirSet = ::SetCurrentDirectoryW(GetFolderOnly(fn));
+			CStringW oldcurdir;
+			BOOL bIsDirSet = FALSE;
+			if (!::PathIsURLW(fn)) {
+				oldcurdir = GetCurrentDir();
+				if (oldcurdir.GetLength()) {
+					bIsDirSet = ::SetCurrentDirectoryW(GetFolderPath(fn));
+				}
 			}
 
 			if (CComQIPtr<IGraphBuilderAudio> pGBA = m_pGB.p) {
@@ -12553,7 +12556,7 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 			}
 
 			if (bIsDirSet) {
-				::SetCurrentDirectoryW(path);
+				::SetCurrentDirectoryW(oldcurdir);
 			}
 		}
 	}
@@ -14102,7 +14105,7 @@ bool CMainFrame::OpenMediaPrivate(std::unique_ptr<OpenMediaData>& pOMD)
 						mi_fn = mi_fn + L"\\VIDEO_TS\\VTS_01_1.VOB";
 					}
 				} else if (ext == L".IFO") {
-					mi_fn = GetFolderOnly(mi_fn) + L"\\VTS_01_1.VOB";
+					mi_fn = GetFolderPath(mi_fn) + L"\\VTS_01_1.VOB";
 				}
 			} else {
 				CString ext = GetFileExt(mi_fn);
@@ -14184,7 +14187,7 @@ bool CMainFrame::OpenMediaPrivate(std::unique_ptr<OpenMediaData>& pOMD)
 
 	// load fonts from 'fonts' folder
 	if (pFileData) {
-		const CString path =  GetFolderOnly(pFileData->fi) + L"\\fonts\\";
+		const CString path =  GetFolderPath(pFileData->fi) + L"\\fonts\\";
 
 		if (::PathIsDirectoryW(path)) {
 			WIN32_FIND_DATAW fd = { 0 };
@@ -14622,7 +14625,7 @@ static void RecurseAddDir(const CString& path, std::list<CString>& sl)
 			CString f_name = fd.cFileName;
 
 			if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (f_name != L".") && (f_name != L"..")) {
-				const CString fullpath = AddSlash(path + f_name);
+				const CString fullpath = GetAddSlash(path + f_name);
 
 				sl.emplace_back(fullpath);
 				if (Check_DVD_BD_Folder(fullpath)) {
@@ -14643,12 +14646,12 @@ void CMainFrame::ParseDirs(std::list<CString>& sl)
 	std::vector<CString> tmp{ sl.cbegin(), sl.cend() };
 	for (auto fn : tmp) {
 		if (::PathIsDirectoryW(fn) && ::PathFileExistsW(fn)) {
-			fn = AddSlash(fn);
+			AddSlash(fn);
 			if (Check_DVD_BD_Folder(fn)) {
 				continue;
 			}
 
-			RecurseAddDir(AddSlash(fn), sl);
+			RecurseAddDir(GetAddSlash(fn), sl);
 		}
 	}
 }
@@ -14660,7 +14663,7 @@ int CMainFrame::SearchInDir(const bool bForward)
 	CAppSettings& s = AfxGetAppSettings();
 	CMediaFormats& mf = s.m_Formats;
 
-	const CString dir  = AddSlash(GetFolderOnly(m_LastOpenFile));
+	const CString dir  = GetAddSlash(GetFolderPath(m_LastOpenFile));
 	const CString mask = dir + L"*.*";
 	WIN32_FIND_DATAW fd;
 	HANDLE h = FindFirstFileW(mask, &fd);
@@ -15500,7 +15503,7 @@ void CMainFrame::SetupNavChaptersSubMenu()
 				}
 
 				const CString time = L"[" + ReftimeToString2(Item.Duration()) + L"]";
-				submenu.AppendMenuW(flags, id++, GetFileOnly(Item.m_strFileName) + '\t' + time);
+				submenu.AppendMenuW(flags, id++, GetFileName(Item.m_strFileName) + '\t' + time);
 			}
 		} else if (m_youtubeUrllist.size() > 1) {
 			for (size_t i = 0; i < m_youtubeUrllist.size(); i++) {
@@ -15762,15 +15765,15 @@ void CMainFrame::SetupAudioTracksSubMenu()
 				CPlaylistItem pli;
 				if (m_wndPlaylistBar.GetCur(pli)) {
 					if (!pli.m_auds.empty()) {
-						auto mainFileDir = GetFolderOnly(pli.m_fi);
+						auto mainFileDir = GetFolderPath(pli.m_fi);
 						for (const auto& fi : pli.m_auds) {
 							auto& audioFile = fi.GetPath();
 							if (!audioFile.IsEmpty() && name == audioFile) {
-								auto audioFileDir = GetFolderOnly(audioFile);
+								auto audioFileDir = GetFolderPath(audioFile);
 								if (!mainFileDir.IsEmpty() && audioFileDir != mainFileDir && StartsWith(name, mainFileDir.GetString())) {
 									name.Delete(0, mainFileDir.GetLength());
 								} else {
-									name = GetFileOnly(name.GetString());
+									name = GetFileName(name.GetString());
 								}
 
 								fExternal = true;
@@ -15778,7 +15781,7 @@ void CMainFrame::SetupAudioTracksSubMenu()
 							}
 						}
 					} else if (name == pli.m_fi.GetPath()) {
-						name = GetFileOnly(name.GetString());
+						name = GetFileName(name.GetString());
 					}
 				}
 
@@ -16325,7 +16328,7 @@ bool CMainFrame::LoadSubtitle(const CExtraFileItem& subItem, ISubStream **actual
 				m_ExtSubFiles.emplace_back(filepathtime_t{ fname, CFileGetStatus(fname, status) ? status.m_mtime : 0 });
 			}
 
-			const CString path = GetFolderOnly(fname);
+			const CString path = GetFolderPath(fname);
 			if (!Contains(m_ExtSubPaths, path)) {
 				m_ExtSubPaths.emplace_back(path);
 				m_EventSubChangeRefreshNotify.Set();
@@ -18844,7 +18847,7 @@ void CMainFrame::OnFileOpenDirectory()
 	}
 
 	if (!path.IsEmpty()) {
-		path = AddSlash(path);
+		AddSlash(path);
 		s.strLastOpenDir = path;
 
 		std::list<CString> sl;
@@ -19560,18 +19563,17 @@ bool CMainFrame::TogglePreview()
 	return false;
 }
 
-CStringW GetCoverImgFromPath(CString fullfilename)
+CStringW GetCoverImgFromPath(CStringW fullfilename)
 {
-	CPath path(fullfilename);
-	path.RemoveExtension();
+	CStringW path = GetRemoveFileExt(fullfilename);
 
-	const CStringW filename = path.m_strPath.Mid(path.FindFileName());
+	const CStringW filename = GetFileName(path);
 
-	path.RemoveFileSpec();
+	RemoveFileSpec(path);
 
-	const CStringW foldername = path.m_strPath.Mid(path.FindFileName());
+	const CStringW foldername = GetFileName(path);
 
-	path.AddBackslash();
+	AddSlash(path);
 
 	const CStringW coverNames[] = {
 		L"cover",
@@ -19595,7 +19597,7 @@ CStringW GetCoverImgFromPath(CString fullfilename)
 
 	for (const auto& coverName : coverNames) {
 		for (const auto& coverExt : coverExts) {
-			CStringW coverPath = path.m_strPath + coverName + coverExt;
+			CStringW coverPath = path + coverName + coverExt;
 			if (::PathFileExistsW(coverPath)) {
 				return coverPath;
 			}
@@ -19994,7 +19996,7 @@ int CMainFrame::GetStreamCount(DWORD dwSelGroup)
 
 void CMainFrame::AddSubtitlePathsAddons(LPCWSTR FileName)
 {
-	const CString tmp(AddSlash(GetFolderOnly(FileName)).MakeUpper());
+	const CString tmp(GetAddSlash(GetFolderPath(FileName)).MakeUpper());
 	auto& s = AfxGetAppSettings();
 
 	if (!Contains(s.slSubtitlePathsAddons, tmp)) {
@@ -20004,7 +20006,7 @@ void CMainFrame::AddSubtitlePathsAddons(LPCWSTR FileName)
 
 void CMainFrame::AddAudioPathsAddons(LPCWSTR FileName)
 {
-	const CString tmp(AddSlash(GetFolderOnly(FileName)).MakeUpper());
+	const CString tmp(GetAddSlash(GetFolderPath(FileName)).MakeUpper());
 	auto& s = AfxGetAppSettings();
 
 	if (!Contains(s.slAudioPathsAddons, tmp)) {
@@ -20317,8 +20319,8 @@ BOOL CMainFrame::AddSimilarFiles(std::list<CString>& fns)
 	}
 
 	CString fname = fns.front();
-	const CString path = AddSlash(GetFolderOnly(fname));
-	fname = GetFileOnly(fname);
+	const CString path = GetAddSlash(GetFolderPath(fname));
+	fname = GetFileName(fname);
 
 	std::vector<CString> files;
 	if (s.nAddSimilarFiles == 1) {
