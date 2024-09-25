@@ -1100,8 +1100,7 @@ BOOL CMainFrame::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoi
 				std::list<CString> slFiles;
 				UINT nFiles = ::DragQueryFileW(hDrop, UINT_MAX, nullptr, 0);
 				for (UINT iFile = 0; iFile < nFiles; iFile++) {
-					CString fn;
-					fn.ReleaseBuffer(::DragQueryFileW(hDrop, iFile, fn.GetBuffer(2048), 2048));
+					CString fn = GetDragQueryFileName(hDrop, iFile);
 					slFiles.emplace_back(ParseFileName(fn));
 				}
 				::DragFinish(hDrop);
@@ -5324,17 +5323,13 @@ void CMainFrame::OnFileOpenQuick()
 		dwFlags |= OFN_DONTADDTORECENT;
 	}
 
-	COpenFileDlg fd(mask, true, nullptr, nullptr, dwFlags, filter, GetModalParent());
+	COpenFileDialog fd(nullptr, nullptr, dwFlags, filter, GetModalParent());
 	if (fd.DoModal() != IDOK) {
 		return;
 	}
 
 	std::list<CString> fns;
-
-	POSITION pos = fd.GetStartPosition();
-	while (pos) {
-		fns.emplace_back(fd.GetNextPathName(pos));
-	}
+	fd.GetFilePaths(fns);
 
 	bool bMultipleFiles = false;
 
@@ -5802,7 +5797,7 @@ void CMainFrame::OnFileOpenIso()
 
 		CString szFilter;
 		szFilter.Format(L"Image Files (%s)|%s||", m_DiskImage.GetExts(), m_DiskImage.GetExts());
-		CFileDialog fd(TRUE, nullptr, nullptr, dwFlags, szFilter);
+		COpenFileDialog fd(nullptr, nullptr, dwFlags, szFilter);
 		if (fd.DoModal() != IDOK) {
 			return;
 		}
@@ -6042,11 +6037,14 @@ void CMainFrame::OnFileSaveAs()
 				   OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_DONTADDTORECENT,
 				   ext_list, GetModalParent());
 
-	if (fd.DoModal() != IDOK || !in.CompareNoCase(fd.GetPathName())) {
+	if (fd.DoModal() != IDOK) {
+		return;
+	}
+	CStringW savedFileName(fd.GetPathName());
+	if (in.CompareNoCase(savedFileName) == 0) {
 		return;
 	}
 
-	CStringW savedFileName(fd.GetPathName());
 	if (ext.GetLength() && GetFileExt(savedFileName).IsEmpty()) {
 		savedFileName.Append(ext);
 	}
@@ -6722,7 +6720,7 @@ void CMainFrame::OnFileLoadSubtitle()
 		mask.emplace_back(L"*." + CString(subExt));
 	}
 
-	COpenFileDlg fd(mask, false, nullptr, GetCurFileName(),
+	COpenFileDialog fd(nullptr, GetCurFileName(),
 					OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_ALLOWMULTISELECT | OFN_DONTADDTORECENT,
 					filter, GetModalParent());
 	if (fd.DoModal() != IDOK) {
@@ -6730,10 +6728,7 @@ void CMainFrame::OnFileLoadSubtitle()
 	}
 
 	std::list<CStringW> fns;
-	POSITION pos = fd.GetStartPosition();
-	while (pos) {
-		fns.emplace_back(fd.GetNextPathName(pos));
-	}
+	fd.GetFilePaths(fns);
 
 	if (m_pDVS) {
 		if (SUCCEEDED(m_pDVS->put_FileName((LPWSTR)(LPCWSTR)(*fns.cbegin())))) {
@@ -6772,7 +6767,7 @@ void CMainFrame::OnFileLoadAudio()
 	std::vector<CString> mask;
 	s.m_Formats.GetAudioFilter(filter, mask);
 
-	COpenFileDlg fd(mask, false, nullptr, GetCurFileName(),
+	COpenFileDialog fd(nullptr, GetCurFileName(),
 					OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_ALLOWMULTISELECT | OFN_DONTADDTORECENT,
 					filter, GetModalParent());
 	if (fd.DoModal() != IDOK) {
@@ -6781,10 +6776,10 @@ void CMainFrame::OnFileLoadAudio()
 
 	CPlaylistItem* pli = m_wndPlaylistBar.GetCur();
 	if (pli && pli->m_fi.Valid()) {
-		POSITION pos = fd.GetStartPosition();
-		while (pos) {
-			CString fname = fd.GetNextPathName(pos);
+		std::list<CString> fns;
+		fd.GetFilePaths(fns);
 
+		for (const auto& fname : fns) {
 			if (!m_wndPlaylistBar.CheckAudioInCurrent(fname)) {
 				if (CComQIPtr<IGraphBuilderAudio> pGBA = m_pGB.p) {
 					HRESULT hr = pGBA->RenderAudioFile(fname);
@@ -16324,8 +16319,7 @@ bool CMainFrame::LoadSubtitle(const CExtraFileItem& subItem, ISubStream **actual
 		if (subChangeNotifyThread.joinable() && !::PathIsURLW(fname)) {
 			auto it = std::find_if(m_ExtSubFiles.cbegin(), m_ExtSubFiles.cend(), [&fname](filepathtime_t fpt) { return fpt.path == fname; });
 			if (it == m_ExtSubFiles.cend()) {
-				CFileStatus status;
-				m_ExtSubFiles.emplace_back(filepathtime_t{ fname, CFileGetStatus(fname, status) ? status.m_mtime : 0 });
+				m_ExtSubFiles.emplace_back(fname, std::filesystem::last_write_time(fname.GetString()));
 			}
 
 			const CString path = GetFolderPath(fname);
@@ -19952,9 +19946,9 @@ void CMainFrame::subChangeNotifyThreadFunction()
 
 			bool bChanged = false;
 			for (auto& extSubFile : m_ExtSubFiles) {
-				CFileStatus status;
-				if (CFileGetStatus(extSubFile.path, status) && extSubFile.time != status.m_mtime) {
-					extSubFile.time = status.m_mtime;
+				auto ftime = std::filesystem::last_write_time(extSubFile.path.GetString());
+				if (ftime != extSubFile.time) {
+					extSubFile.time = ftime;
 					bChanged = true;
 				}
 			}
@@ -20690,8 +20684,7 @@ const bool CMainFrame::GetFromClipboard(std::list<CString>& sl) const
 			if (HDROP hDrop = (HDROP)::GlobalLock(hglb)) {
 				UINT nFiles = ::DragQueryFileW(hDrop, UINT_MAX, nullptr, 0);
 				for (UINT iFile = 0; iFile < nFiles; iFile++) {
-					CString fn;
-					fn.ReleaseBuffer(::DragQueryFileW(hDrop, iFile, fn.GetBuffer(2048), 2048));
+					CString fn = GetDragQueryFileName(hDrop, iFile);
 					sl.emplace_back(fn);
 				}
 				GlobalUnlock(hglb);

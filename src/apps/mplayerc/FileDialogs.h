@@ -20,17 +20,49 @@
 
 #pragma once
 
-#include <afxdlgs.h>
+//
+// COpenFileDialog
+//
 
+class COpenFileDialog : public CFileDialog
+{
+	DECLARE_DYNAMIC(COpenFileDialog)
+
+private:
+	CFileDialog::GetStartPosition;
+	CFileDialog::GetNextPathName;
+
+	CStringW m_strInitialDir;
+	CStringW m_strFileBuffer;
+
+public:
+	COpenFileDialog(
+		LPCWSTR lpszDefExt = NULL,
+		LPCWSTR lpszFileName = NULL,
+		DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		LPCWSTR lpszFilter = NULL,
+		CWnd* pParentWnd = NULL);
+	virtual ~COpenFileDialog() = default;
+
+	// Returns the file path selected for opening. Long paths are supported.
+	// PS: parent CFileDialog::GetPathName does not work for long paths.
+	CStringW GetPathName();
+
+	// Returns the file paths selected for opening. Long paths are supported.
+	// PS: parent CFileDialog::GetNextPathName does not work for long paths.
+	void GetFilePaths(std::list<CStringW>& filepaths);
+};
+
+//
 // CSaveFileDialog
+//
 
 class CSaveFileDialog : public CFileDialog
 {
 	DECLARE_DYNAMIC(CSaveFileDialog)
 
 private:
-	std::unique_ptr<WCHAR[]> m_pstrInitialDir;
-	std::unique_ptr<WCHAR[]> m_pstrFile;
+	CStringW m_strInitialDir;
 
 public:
 	CSaveFileDialog(
@@ -40,4 +72,8 @@ public:
 		LPCWSTR lpszFilter = NULL,
 		CWnd* pParentWnd = NULL);
 	virtual ~CSaveFileDialog() = default;
+
+	// Returns the file path selected for saving. Long paths are supported.
+	// PS: parent CFileDialog::GetPathName does not work for long paths.
+	CStringW GetPathName();
 };

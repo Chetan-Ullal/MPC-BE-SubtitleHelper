@@ -158,6 +158,7 @@ extern void				CorrectWaveFormatEx(CMediaType& mt);
 
 extern inline const LONGLONG GetPerfCounter();
 
+
 class CPinInfo : public PIN_INFO
 {
 public:

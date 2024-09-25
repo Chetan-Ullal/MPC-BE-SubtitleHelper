@@ -29,7 +29,7 @@
 #include "DSUtil/UrlParser.h"
 #include "SaveTextFileDialog.h"
 #include "PlayerPlaylistBar.h"
-#include "OpenDlg.h"
+#include "FileDialogs.h"
 #include "Content.h"
 #include "PlaylistNameDlg.h"
 #include <ExtLib/ui/coolsb/coolscroll.h>
@@ -66,7 +66,7 @@ static CStringW MakePath(CStringW path)
 
 	path.Replace('/', '\\');
 
-	CStringW c = GetCanonicalizeFilePath(path);
+	CStringW c = GetFullCannonFilePath(path);
 
 	return c;
 }
@@ -338,7 +338,7 @@ static void StringToPaths(const CStringW& curentdir, const CStringW& str, std::v
 		if (hFind == INVALID_HANDLE_VALUE) {
 			continue;
 		} else {
-			CStringW parentdir = GetCanonicalizeFilePath(path + L"\\..");
+			CStringW parentdir = GetFullCannonFilePath(path + L"\\..");
 			AddSlash(parentdir);
 
 			do {
@@ -808,7 +808,6 @@ CPlayerPlaylistBar::CPlayerPlaylistBar(CMainFrame* pMainFrame)
 CPlayerPlaylistBar::~CPlayerPlaylistBar()
 {
 	TEnsureVisible(m_nCurPlayListIndex); // save selected tab visible
-	SavePlaylist();
 	TSaveSettings();
 
 	for (auto& pl : m_pls) {
@@ -3535,14 +3534,10 @@ void CPlayerPlaylistBar::OnContextMenu(CWnd* /*pWnd*/, CPoint p)
 						dwFlags |= OFN_DONTADDTORECENT;
 					}
 
-					COpenFileDlg fd(mask, true, nullptr, nullptr, dwFlags, filter, this);
+					COpenFileDialog fd(nullptr, nullptr, dwFlags, filter, this);
 					if (fd.DoModal() == IDOK) {
 						std::list<CString> fns;
-
-						POSITION pos = fd.GetStartPosition();
-						while (pos) {
-							fns.emplace_back(fd.GetNextPathName(pos));
-						}
+						fd.GetFilePaths(fns);
 
 						Append(fns, fns.size() > 1, nullptr);
 					}

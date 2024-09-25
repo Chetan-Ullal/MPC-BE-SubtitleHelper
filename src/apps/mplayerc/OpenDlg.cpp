@@ -23,10 +23,12 @@
 #include <ShlObj_core.h>
 #include <dlgs.h>
 #include "OpenDlg.h"
+#include "FileDialogs.h"
 #include "MainFrm.h"
-#include "DSUtil/Filehandle.h"
 
+//
 // COpenDlg dialog
+//
 
 //IMPLEMENT_DYNAMIC(COpenDlg, CResizableDialog)
 
@@ -159,26 +161,14 @@ void COpenDlg::OnBnClickedBrowsebutton()
 		dwFlags |= OFN_DONTADDTORECENT;
 	}
 
-	COpenFileDlg fd(mask, true, nullptr, m_path, dwFlags, filter, this);
+	COpenFileDialog fd(nullptr, m_path, dwFlags, filter, this);
 
 	if (fd.DoModal() != IDOK) {
 		return;
 	}
 
 	m_fns.clear();
-
-	POSITION pos = fd.GetStartPosition();
-	while (pos) {
-		/*
-		CString str = fd.GetNextPathName(pos);
-		POSITION insertpos = m_fns.GetTailPosition();
-		while (insertpos && GetFileName(str).CompareNoCase(GetFileName(m_fns.GetAt(insertpos))) <= 0)
-			m_fns.GetPrev(insertpos);
-		if (!insertpos) m_fns.AddHead(str);
-		else m_fns.InsertAfter(insertpos, str);
-		*/
-		m_fns.emplace_back(fd.GetNextPathName(pos));
-	}
+	fd.GetFilePaths(m_fns);
 
 	if (m_fns.size() > 1
 			|| m_fns.size() == 1
@@ -208,17 +198,15 @@ void COpenDlg::OnBnClickedBrowsebutton2()
 		dwFlags |= OFN_DONTADDTORECENT;
 	}
 
-	COpenFileDlg fd(mask, false, nullptr, m_path2, dwFlags, filter, this);
+	COpenFileDialog fd(nullptr, m_path2, dwFlags, filter, this);
 
 	if (fd.DoModal() != IDOK) {
 		return;
 	}
 
 	std::list<CString> dubfns;
-	POSITION pos = fd.GetStartPosition();
-	while (pos) {
-		dubfns.emplace_back(fd.GetNextPathName(pos));
-	}
+	fd.GetFilePaths(dubfns);
+
 	const CString path = Implode(dubfns, L'|');
 	m_mrucombo2.SetWindowTextW(path.GetString());
 }
@@ -263,149 +251,4 @@ void COpenDlg::OnUpdateOk(CCmdUI* pCmdUI)
 	UpdateData();
 
 	pCmdUI->Enable(!CString(m_path).Trim().IsEmpty() || !CString(m_path2).Trim().IsEmpty());
-}
-
-// COpenFileDlg
-
-#define __DUMMY__ L"*.*"
-
-bool COpenFileDlg::m_fAllowDirSelection = false;
-WNDPROC COpenFileDlg::m_wndProc = nullptr;
-
-IMPLEMENT_DYNAMIC(COpenFileDlg, CFileDialog)
-COpenFileDlg::COpenFileDlg(std::vector<CString>& mask, bool fAllowDirSelection, LPCWSTR lpszDefExt, LPCWSTR lpszFileName,
-						   DWORD dwFlags, LPCWSTR lpszFilter, CWnd* pParentWnd)
-	: CFileDialog(TRUE, lpszDefExt, lpszFileName, dwFlags|OFN_NOVALIDATE, lpszFilter, pParentWnd, 0)
-	, m_mask(mask)
-{
-	CAppSettings& s = AfxGetAppSettings();
-	m_fAllowDirSelection = fAllowDirSelection;
-
-	CString str(lpszFileName);
-
-	if (s.bKeepHistory && (str.IsEmpty() || ::PathIsURLW(str))) {
-		str = s.strLastOpenFile;
-	}
-
-	CStringW dir = ::GetFolderPath(lpszFileName);
-	int size = std::max(MAX_PATH, dir.GetLength() + 1);
-	m_pstrInitialDir.reset(new WCHAR[size]);
-	memset(m_pstrInitialDir.get(), 0, size * sizeof(WCHAR));
-	wcscpy_s(m_pstrInitialDir.get(), size, dir.GetString());
-	m_pOFN->lpstrInitialDir = m_pstrInitialDir.get();
-
-	size = 100000; // needed to receive a large number of files
-	m_pstrFile.reset(new WCHAR[size]);
-	memset(m_pstrFile.get(), 0, size * sizeof(WCHAR));
-	m_pOFN->lpstrFile = m_pstrFile.get();
-	m_pOFN->nMaxFile = size;
-}
-
-BEGIN_MESSAGE_MAP(COpenFileDlg, CFileDialog)
-	ON_WM_DESTROY()
-END_MESSAGE_MAP()
-
-// COpenFileDlg message handlers
-
-LRESULT CALLBACK COpenFileDlg::WindowProcNew(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	if (message ==  WM_COMMAND && HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDOK
-			&& m_fAllowDirSelection) {
-		CStringW path;
-		if (::GetDlgItemTextW(hwnd, cmb13, path.GetBuffer(MAX_PATH), MAX_PATH) == 0) {
-			::SendMessageW(hwnd, CDM_SETCONTROLTEXT, edt1, (LPARAM)__DUMMY__);
-		}
-	}
-
-	return CallWindowProcW(COpenFileDlg::m_wndProc, hwnd, message, wParam, lParam);
-}
-
-BOOL COpenFileDlg::OnInitDialog()
-{
-	CFileDialog::OnInitDialog();
-
-	m_wndProc = (WNDPROC)SetWindowLongPtrW(GetParent()->m_hWnd, GWLP_WNDPROC , (LONG_PTR)WindowProcNew);
-
-	return TRUE;
-}
-
-void COpenFileDlg::OnDestroy()
-{
-	int i = GetPathName().Find(__DUMMY__);
-
-	if (i >= 0) {
-		m_pOFN->lpstrFile[i] = m_pOFN->lpstrFile[i+1] = 0;
-	}
-
-	CFileDialog::OnDestroy();
-}
-
-BOOL COpenFileDlg::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
-{
-	ASSERT(pResult != nullptr);
-
-	OFNOTIFY* pNotify = (OFNOTIFY*)lParam;
-
-	if (__super::OnNotify(wParam, lParam, pResult)) {
-		ASSERT(pNotify->hdr.code != CDN_INCLUDEITEM);
-		return TRUE;
-	}
-
-	switch (pNotify->hdr.code) {
-		case CDN_INCLUDEITEM:
-			if (OnIncludeItem((OFNOTIFYEX*)lParam, pResult)) {
-				return TRUE;
-			}
-
-			break;
-	}
-
-	return FALSE;
-}
-
-BOOL COpenFileDlg::OnIncludeItem(OFNOTIFYEX* pOFNEx, LRESULT* pResult)
-{
-	WCHAR buff[MAX_PATH];
-
-	if (!SHGetPathFromIDListW((PCIDLIST_ABSOLUTE)pOFNEx->pidl, buff)) {
-		STRRET s;
-		HRESULT hr = ((IShellFolder*)pOFNEx->psf)->GetDisplayNameOf((PCUITEMID_CHILD)pOFNEx->pidl, SHGDN_NORMAL|SHGDN_FORPARSING, &s);
-
-		if (S_OK != hr) {
-			return FALSE;
-		}
-
-		switch (s.uType) {
-			case STRRET_CSTR:
-				wcscpy_s(buff, CString(s.cStr));
-				break;
-			case STRRET_WSTR:
-				wcscpy_s(buff, s.pOleStr);
-				CoTaskMemFree(s.pOleStr);
-				break;
-			default:
-				return FALSE;
-		}
-	}
-
-	CString fn(buff);
-	/*
-		WIN32_FILE_ATTRIBUTE_DATA fad;
-		if (GetFileAttributesEx(fn, GetFileExInfoStandard, &fad)
-		&& (fad.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-			return FALSE;
-	*/
-
-	int i = fn.ReverseFind('.'), j = fn.ReverseFind('\\');
-
-	if (i < 0 || i < j) {
-		return FALSE;
-	}
-
-	CString mask = m_mask[pOFNEx->lpOFN->nFilterIndex-1] + L";";
-	CString ext = fn.Mid(i).MakeLower() + L";";
-
-	*pResult = mask.Find(ext) >= 0 || mask.Find(L"*.*") >= 0;
-
-	return TRUE;
 }
