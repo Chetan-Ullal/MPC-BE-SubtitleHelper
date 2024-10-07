@@ -1,5 +1,5 @@
 /*
- * (C) 2017-2023 see Authors.txt
+ * (C) 2017-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -53,6 +53,7 @@ class CPPageSoundProcessing : public CPPageBase
 	CButton		m_chkAudioFilters;
 	CComboBox	m_cmbFilter1Name;
 	CEdit		m_edtFilter1Args;
+	CButton		m_chkFiltersNotForStereo;
 
 	CButton		m_chkInt16;
 	CButton		m_chkInt24;
@@ -94,6 +95,7 @@ public:
 	afx_msg void OnFloatCheck();
 	afx_msg void OnTimeShiftCheck();
 	afx_msg void OnBnClickedPresets();
+	afx_msg void OnBnClickedStereoSpeakers();
 	afx_msg void OnBnClickedDefault();
 
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);

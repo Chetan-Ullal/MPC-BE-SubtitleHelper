@@ -68,7 +68,7 @@
   #define Description  = app_name + " x64 " + app_version
   #define VisualElementsManifest = "VisualElements\mpc-be64.VisualElementsManifest.xml"
 #endif
-#define mpcvr_desc     = "MPC Video Renderer 0.8.5"
+#define mpcvr_desc     = "MPC Video Renderer 0.8.7"
 
 [Setup]
 #ifdef Win32Build
@@ -160,10 +160,38 @@ Name: ua; MessagesFile: compiler:Languages\Ukrainian.isl
 #endif
 
 ; Include installer's custom messages
-#include "custom_messages.iss"
+#include ".\CustomMessages\custom_messages.iss"
+#ifdef localize
+#include ".\CustomMessages\custom_messages.br.iss"
+#include ".\CustomMessages\custom_messages.by.iss"
+#include ".\CustomMessages\custom_messages.ca.iss"
+#include ".\CustomMessages\custom_messages.cz.iss"
+#include ".\CustomMessages\custom_messages.de.iss"
+#include ".\CustomMessages\custom_messages.el.iss"
+#include ".\CustomMessages\custom_messages.es.iss"
+#include ".\CustomMessages\custom_messages.eu.iss"
+#include ".\CustomMessages\custom_messages.fr.iss"
+#include ".\CustomMessages\custom_messages.he.iss"
+#include ".\CustomMessages\custom_messages.hu.iss"
+#include ".\CustomMessages\custom_messages.hy.iss"
+#include ".\CustomMessages\custom_messages.it.iss"
+#include ".\CustomMessages\custom_messages.ja.iss"
+#include ".\CustomMessages\custom_messages.kr.iss"
+#include ".\CustomMessages\custom_messages.nl.iss"
+#include ".\CustomMessages\custom_messages.pl.iss"
+#include ".\CustomMessages\custom_messages.ro.iss"
+#include ".\CustomMessages\custom_messages.ru.iss"
+#include ".\CustomMessages\custom_messages.sc.iss"
+#include ".\CustomMessages\custom_messages.sk.iss"
+#include ".\CustomMessages\custom_messages.sv.iss"
+#include ".\CustomMessages\custom_messages.tc.iss"
+#include ".\CustomMessages\custom_messages.tr.iss"
+#include ".\CustomMessages\custom_messages.ua.iss"
+#endif
 
 [Messages]
-BeveledLabel = {#BeveledLabel}
+WelcomeLabel1=[name/ver]
+BeveledLabel={#BeveledLabel}
 
 [Types]
 Name: default; Description: {cm:types_DefaultInstallation}

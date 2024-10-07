@@ -241,6 +241,7 @@ SRCS_LC = \
 	libavcodec/elsdec.c \
 	libavcodec/encode.c \
 	libavcodec/error_resilience.c \
+	libavcodec/executor.c \
 	libavcodec/exif.c \
 	libavcodec/faandct.c \
 	libavcodec/faanidct.c \
@@ -332,6 +333,7 @@ SRCS_LC = \
 	libavcodec/lagarith.c \
 	libavcodec/lagarithrac.c \
 	libavcodec/latm_parser.c \
+	libavcodec/lcevcdec.c \
 	libavcodec/libdav1d.c \
 	libavcodec/libfdk-aacdec.c \
 	libavcodec/libspeexdec.c \
