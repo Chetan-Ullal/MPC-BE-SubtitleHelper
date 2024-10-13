@@ -1,6 +1,17 @@
 ﻿This file includes only a short list of the changes between Media Player Classic - BE's versions.
 
-1.7.3.x dev
+1.8.0.x dev
+=============================
+Player
+Fixed loading of external audio tracks and subtitles by absolute path.
+
+Updated Dutch and Chinese (Traditional) translation (by beter).
+
+Updated libraries:
+	ffmpeg n7.2-dev-301-g5557c673ea.
+
+
+1.8.0 - 2024-10-07
 =============================
 MP4Splitter
 Fixed reading of some metadata.

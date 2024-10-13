@@ -9,7 +9,9 @@ on:
       - '**.md'
       - '**.cmd'
       - '**.bat'
-      - '**.vcxproj.filters'
+      - '**.manifest.conf'
+      - '**.manifest.template'
+      - include/Version.h
   pull_request:
     paths-ignore:
       - .github/workflows/main.yml
@@ -19,6 +21,9 @@ on:
       - '**.cmd'
       - '**.bat'
       - '**.vcxproj.filters'
+      - '**.manifest.conf'
+      - '**.manifest.template'
+      - include/Version.h
 
 jobs:
   build:
