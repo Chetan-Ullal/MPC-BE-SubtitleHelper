@@ -1090,6 +1090,9 @@ CMPCVideoDecFilter::CMPCVideoDecFilter(LPUNKNOWN lpunk, HRESULT* phr)
 		}
 	}
 
+	// Enable by default - used by MPC Video Converter
+	m_VideoFilters[VDEC_UNCOMPRESSED] = true;
+
 #ifdef REGISTER_FILTER
 	CRegKey key;
 	WCHAR buff[256];

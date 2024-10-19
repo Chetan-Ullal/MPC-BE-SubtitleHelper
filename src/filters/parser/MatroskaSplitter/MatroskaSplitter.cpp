@@ -1927,10 +1927,7 @@ void CMatroskaSplitterFilter::InstallFonts()
 void CMatroskaSplitterFilter::SendVorbisHeaderSample()
 {
 	HRESULT hr;
-	for (const auto& item : m_pTrackEntryMap) {
-		DWORD TrackNumber = item.first;
-		TrackEntry* pTE   = item.second;
-
+	for (const auto& [TrackNumber, pTE] : m_pTrackEntryMap) {
 		CBaseSplitterOutputPin* pPin = GetOutputPin(TrackNumber);
 
 		if (!(pTE && pPin && pPin->IsConnected())) {
@@ -1941,8 +1938,8 @@ void CMatroskaSplitterFilter::SendVorbisHeaderSample()
 				&& pTE->CodecPrivate.size() > 0) {
 			BYTE* ptr = pTE->CodecPrivate.data();
 
-			std::list<int> sizes;
-			long last = 0;
+			std::vector<int> sizes;
+			int last = 0;
 			for (BYTE n = *ptr++; n > 0; n--) {
 				int size = 0;
 				do {
@@ -1955,7 +1952,7 @@ void CMatroskaSplitterFilter::SendVorbisHeaderSample()
 
 			hr = S_OK;
 
-			for (const long len : sizes) {
+			for (const auto& len : sizes) {
 
 				std::unique_ptr<CPacket> p(DNew CPacket());
 				p->TrackNumber	= (DWORD)pTE->TrackNumber;
