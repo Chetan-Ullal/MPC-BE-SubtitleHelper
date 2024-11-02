@@ -13,10 +13,12 @@ Fixed loading of external audio tracks and subtitles by absolute path.
 
 Updated Dutch and Chinese (Traditional) translation (by beter).
 Updated Japanese translation (by tsubasanouta).
+Updated Romanian translation (by Andrei Miloiu).
+Updated Korean translation (by Hackjjang).
 
 Updated libraries:
 	dav1d 1.5.0;
-	ffmpeg n7.2-dev-476-g153a6dc8fa;
+	ffmpeg n7.2-dev-526-gd6b2d08fc7;
 	vvdec v3.0.0.
 
 
