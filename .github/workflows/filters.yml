@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Filters
         run: |
-          .\\build.bat Build Filters
+          .\\build.bat Build Filters NoWait
         shell: pwsh
 
       - name: Upload Filters x64
