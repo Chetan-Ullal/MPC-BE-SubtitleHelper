@@ -223,7 +223,7 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
 	CalcTextRect(rect, x2, y, control_w);
 	m_edtGraphicsAdapter.Create(WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_READONLY, rect, this, 0);
 
-	////////// Format conversion //////////
+	////////// Software output formats //////////
 	x0 = x0 + group_w + 8;
 	label_w = 60;
 	control_w = 52;
@@ -233,13 +233,8 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
 	x1 = x0 + 4;
 	x2 = x1 + label_w;
 	y = 8;
-	CalcRect(rect, x0, y, group_w, 192);
-	m_grpFmtConv.Create(ResStr(IDS_VDF_COLOR_FMT_CONVERSION), WS_VISIBLE | WS_CHILD | BS_GROUPBOX, rect, this, (UINT)IDC_STATIC);
-	y += 20;
-
-	// Software output formats
-	CalcTextRect(rect, x1, y, row_w);
-	m_txtSwOutputFormats.Create(ResStr(IDS_VDF_COLOR_OUTPUT_FORMATS), WS_VISIBLE | WS_CHILD, rect, this, (UINT)IDC_STATIC);
+	CalcRect(rect, x0, y, group_w, 200);
+	m_grpSwOutputFormats.Create(ResStr(IDS_VDF_COLOR_OUTPUT_FORMATS), WS_VISIBLE | WS_CHILD | BS_GROUPBOX, rect, this, (UINT)IDC_STATIC);
 	y += 20;
 
 	CalcTextRect(rect, x2, y, control_w);
@@ -287,22 +282,26 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
 	y += 20;
 	CalcTextRect(rect, x2 + control_w * 3, y, control_w2);
 	m_cbFormat[PixFmt_YUV444P16].Create(L"YUV444P16", dwStyle | BS_AUTOCHECKBOX, rect, this, IDC_PP_SW_Y416);
-	y += 20;
+	y += 28;
 
 	CalcTextRect(rect, x1, y, label_w);
 	m_txtRGB.Create(L"RGB:", WS_VISIBLE | WS_CHILD, rect, this, (UINT)IDC_STATIC);
 	CalcTextRect(rect, x2, y, 56);
-	m_cbFormat[PixFmt_RGB32].Create(L"RGB32", dwStyle | BS_AUTOCHECKBOX, rect, this, IDC_PP_SW_RGB32);
+	m_cbFormat[PixFmt_RGB32].Create(L"RGB32", dwStyle | BS_3STATE, rect, this, IDC_PP_SW_RGB32);
 	CalcTextRect(rect, x2 + control_w * 3, y, 56);
 	m_cbFormat[PixFmt_RGB48].Create(L"RGB48", dwStyle | BS_AUTOCHECKBOX, rect, this, IDC_PP_SW_RGB48);
 	y += 28;
 
+	// Format conversion
+	CalcTextRect(rect, x1, y, row_w);
+	m_chSwConvertToRGB.Create(ResStr(IDS_VDF_COLOR_CONVERT_TO_RGB), dwStyle | BS_AUTOCHECKBOX, rect, this, IDC_PP_SWCONVERTTORGB);
+	y += 20;
 	// Output levels
 	control_w = 88;
 	label_w = row_w - control_w;
 	x2 = x1 + label_w;
 	CalcTextRect(rect, x1, y, label_w);
-	m_txtSwRGBLevels.Create(ResStr(IDS_VDF_COLOR_RGB_LEVELS), WS_VISIBLE | WS_CHILD, rect, this, (UINT)IDC_STATIC);
+	m_txtSwRGBLevels.Create(ResStr(IDS_VDF_COLOR_RGB_LEVELS), WS_VISIBLE | WS_CHILD, rect, this, IDC_PP_SWRGBLEVELS_TXT);
 	CalcTextRect(rect, x2, y, control_w); rect.top -= 4;
 	m_cbSwRGBLevels.Create(dwStyle | CBS_DROPDOWNLIST | WS_VSCROLL, rect, this, IDC_PP_SWRGBLEVELS);
 	m_cbSwRGBLevels.AddString(L"PC (0-255)");
@@ -370,18 +369,14 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
 		m_chDXVA_SD.SetCheck(m_pMDF->GetDXVA_SD());
 
 		for (int i = 0; i < PixFmt_count; i++) {
-			if (i == PixFmt_YUY2) {
-				m_cbFormat[PixFmt_YUY2].SetCheck(m_pMDF->GetSwPixelFormat(PixFmt_YUY2) ? BST_CHECKED : BST_INDETERMINATE);
+			if (i == PixFmt_YUY2 || i == PixFmt_RGB32) {
+				m_cbFormat[i].SetCheck(m_pMDF->GetSwPixelFormat((MPCPixelFormat)i) ? BST_CHECKED : BST_INDETERMINATE);
 			} else {
 				m_cbFormat[i].SetCheck(m_pMDF->GetSwPixelFormat((MPCPixelFormat)i) ? BST_CHECKED : BST_UNCHECKED);
 			}
 		}
-
+		m_chSwConvertToRGB.SetCheck(m_pMDF->GetSwConvertToRGB() ? BST_CHECKED : BST_UNCHECKED);
 		m_cbSwRGBLevels.SetCurSel(m_pMDF->GetSwRGBLevels());
-
-		if (m_cbFormat[PixFmt_RGB32].GetCheck() == BST_UNCHECKED && m_cbFormat[PixFmt_RGB48].GetCheck() == BST_UNCHECKED) {
-			m_cbSwRGBLevels.EnableWindow(FALSE);
-		}
 
 		str.Format(L"MPC Video Decoder %s", m_pMDF->GetInformation(INFO_MPCVersion));
 		m_txtVersion.SetWindowTextW(str);
@@ -390,6 +385,7 @@ bool CMPCVideoDecSettingsWnd::OnActivate()
 	}
 
 	OnCbnChangeHwDec();
+	OnBnClickedConvertToRGB();
 
 	SetCursor(m_hWnd, IDC_ARROW);
 	SetCursor(m_hWnd, IDC_PP_THREAD_NUMBER, IDC_HAND);
@@ -441,6 +437,10 @@ bool CMPCVideoDecSettingsWnd::OnApply()
 			refresh = 1; // soft refresh - signal new swscaler colorspace details
 		}
 
+		if (m_chSwConvertToRGB.GetCheck() != (int)m_pMDF->GetSwConvertToRGB()) {
+			refresh = 2;
+		}
+
 		for (int i = 0; i < PixFmt_count; i++) {
 			if ((m_cbFormat[i].GetCheck() == BST_CHECKED) != m_pMDF->GetSwPixelFormat((MPCPixelFormat)i)) {
 				refresh = 2;
@@ -452,6 +452,7 @@ bool CMPCVideoDecSettingsWnd::OnApply()
 			for (int i = 0; i < PixFmt_count; i++) {
 				m_pMDF->SetSwPixelFormat((MPCPixelFormat)i, m_cbFormat[i].GetCheck() == BST_CHECKED);
 			}
+			m_pMDF->SetSwConvertToRGB(m_chSwConvertToRGB.GetCheck() == BST_CHECKED);
 		}
 
 		if (refresh >= 1) {
@@ -475,6 +476,7 @@ BEGIN_MESSAGE_MAP(CMPCVideoDecSettingsWnd, CInternalPropertyPageWnd)
 	ON_CBN_SELCHANGE(IDC_PP_HW_DECODER, OnCbnChangeHwDec)
 	ON_BN_CLICKED(IDC_PP_SW_YUY2, OnBnClickedYUY2)
 	ON_BN_CLICKED(IDC_PP_SW_RGB32, OnBnClickedRGB32)
+	ON_BN_CLICKED(IDC_PP_SWCONVERTTORGB, OnBnClickedConvertToRGB)
 	ON_BN_CLICKED(IDC_PP_RESET, OnBnClickedReset)
 	ON_NOTIFY_EX(TTN_NEEDTEXTW, 0, OnToolTipNotify)
 	ON_WM_TIMER()
@@ -512,10 +514,21 @@ void CMPCVideoDecSettingsWnd::OnBnClickedYUY2()
 
 void CMPCVideoDecSettingsWnd::OnBnClickedRGB32()
 {
-	if (m_cbFormat[PixFmt_RGB32].GetCheck() == BST_UNCHECKED && m_cbFormat[PixFmt_RGB48].GetCheck() == BST_UNCHECKED) {
-		m_cbSwRGBLevels.EnableWindow(FALSE);
+	if (m_cbFormat[PixFmt_RGB32].GetCheck() == BST_CHECKED) {
+		m_cbFormat[PixFmt_RGB32].SetCheck(BST_INDETERMINATE);
 	} else {
+		m_cbFormat[PixFmt_RGB32].SetCheck(BST_CHECKED);
+	}
+}
+
+void CMPCVideoDecSettingsWnd::OnBnClickedConvertToRGB()
+{
+	if (m_chSwConvertToRGB.GetCheck() == BST_CHECKED) {
+		m_txtSwRGBLevels.EnableWindow(TRUE);
 		m_cbSwRGBLevels.EnableWindow(TRUE);
+	} else {
+		m_txtSwRGBLevels.EnableWindow(FALSE);
+		m_cbSwRGBLevels.EnableWindow(FALSE);
 	}
 }
 
@@ -544,8 +557,9 @@ void CMPCVideoDecSettingsWnd::OnBnClickedReset()
 			m_cbFormat[i].SetCheck(BST_CHECKED);
 		}
 	}
+	m_chSwConvertToRGB.SetCheck(BST_UNCHECKED);
 	m_cbSwRGBLevels.SetCurSel(0);
-	m_cbSwRGBLevels.EnableWindow(TRUE);
+	m_cbSwRGBLevels.EnableWindow(FALSE);
 }
 
 BOOL CMPCVideoDecSettingsWnd::OnToolTipNotify(UINT id, NMHDR * pNMHDR, LRESULT * pResult)

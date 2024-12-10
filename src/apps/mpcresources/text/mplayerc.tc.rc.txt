@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"接收器"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"色彩控制項（EVR 、 madVR 及 MPC VR）"
 6		"亮度"
 7		"對比"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"飽和度"
 18		"重設"
 20		"色彩管理"
-21		"輸入類型："
-23		"環境光："
-25		"色彩對應方式："
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"輸入類型："
+24		"環境光："
+26		"色彩對應方式："
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"貼齊到桌面邊緣"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"使用內部網頁剖析器"
-7		"偏好格式："
+7		"Preferred video format:"
 10		"60 fps"
 11		"HDR"
-12		"偏好音軌語言："
-14		"載入播放清單"
-16		"youtube-dl, yt-dlp"
-17		"執行檔："
-19		"最大影片高度："
-21		"選擇最高影格率或位元率"
-22		"AceStream 位址："
-24		"MatriX (TorrServer) 位址："
-27		"使用者代理字串︰"
+12		"Preferred audio format:"
+14		"偏好音軌語言："
+16		"載入播放清單"
+18		"youtube-dl, yt-dlp"
+19		"執行檔："
+21		"最大影片高度："
+23		"選擇最高影格率或位元率"
+24		"AceStream 位址："
+26		"MatriX (TorrServer) 位址："
+29		"使用者代理字串︰"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,7 +2039,7 @@ STRING IDS_UPDATE_ERROR_DATA		"更新伺服器資料錯誤。\n\n請稍後再試
 STRING IDS_USING_NEWER_VERSION		"您已經使用最新的穩定版本 %s"
 STRING IDS_VDF_AR_MODE		"從串流中讀取長寬比例"
 STRING IDS_VDF_AUTO		"自動"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"格式轉換"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
 STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"輸出格式："
 STRING IDS_VDF_COLOR_PRESET		"先期設定："
 STRING IDS_VDF_COLOR_RGB_LEVELS		"RGB 輸出層級："

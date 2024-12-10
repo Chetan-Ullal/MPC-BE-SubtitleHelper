@@ -76,6 +76,7 @@ extern "C" {
 #define OPT_DXVACheck        L"DXVACheckCompatibility"
 #define OPT_DisableDXVA_SD   L"DisableDXVA_SD"
 #define OPT_SW_prefix        L"Sw_"
+#define OPT_SwConvertToRGB   L"SwConvertToRGB"
 #define OPT_SwRGBLevels      L"SwRGBLevels"
 
 static LPCWSTR hwdec_opt_names[] = {
@@ -1142,6 +1143,9 @@ CMPCVideoDecFilter::CMPCVideoDecFilter(LPUNKNOWN lpunk, HRESULT* phr)
 				m_fPixFmts[i] = !!dw;
 			}
 		}
+		if (ERROR_SUCCESS == key.QueryDWORDValue(OPT_SwConvertToRGB, dw)) {
+			m_bSwConvertToRGB = !!dw;
+		}
 		if (ERROR_SUCCESS == key.QueryDWORDValue(OPT_SwRGBLevels, dw)) {
 			m_nSwRGBLevels = dw;
 		}
@@ -1180,6 +1184,7 @@ CMPCVideoDecFilter::CMPCVideoDecFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	}
 	profile.ReadInt(OPT_SECTION_VideoDec, OPT_DXVACheck, m_nDXVACheckCompatibility);
 	profile.ReadInt(OPT_SECTION_VideoDec, OPT_DisableDXVA_SD, m_nDXVA_SD);
+	profile.ReadBool(OPT_SECTION_VideoDec, OPT_SwConvertToRGB, m_bSwConvertToRGB);
 	profile.ReadInt(OPT_SECTION_VideoDec, OPT_SwRGBLevels, m_nSwRGBLevels);
 	for (int i = 0; i < PixFmt_count; i++) {
 		CString optname = OPT_SW_prefix;
@@ -2542,15 +2547,23 @@ void CMPCVideoDecFilter::BuildOutputFormat()
 	int nSwCount = 0;
 
 	const enum AVPixelFormat pix_fmt = m_pMSDKDecoder ? AV_PIX_FMT_NV12 : (m_pAVCtx->sw_pix_fmt != AV_PIX_FMT_NONE ? m_pAVCtx->sw_pix_fmt : m_pAVCtx->pix_fmt);
+	const AVPixFmtDescriptor* av_pfdesc = av_pix_fmt_desc_get(pix_fmt);
 
 	if (pix_fmt != AV_PIX_FMT_NONE) {
-		const AVPixFmtDescriptor* av_pfdesc = av_pix_fmt_desc_get(pix_fmt);
 		if (av_pfdesc) {
 			int lumabits = av_pfdesc->comp[0].depth;
 
 			const MPCPixelFormat* OutList = nullptr;
 
-			if (av_pfdesc->nb_components <= 2) { // greyscale formats with and without alfa channel
+			if (m_bSwConvertToRGB || av_pfdesc->flags & (AV_PIX_FMT_FLAG_RGB | AV_PIX_FMT_FLAG_PAL)) {
+				if (lumabits <= 10) {
+					OutList = RGB_8;
+				}
+				else {
+					OutList = RGB_16;
+				}
+			}
+			else if (av_pfdesc->nb_components <= 2) { // greyscale formats with and without alfa channel
 				if (lumabits <= 8) {
 					OutList = YUV420_8;
 				}
@@ -2559,14 +2572,6 @@ void CMPCVideoDecFilter::BuildOutputFormat()
 				}
 				else {
 					OutList = YUV420_16;
-				}
-			}
-			else if (av_pfdesc->flags & (AV_PIX_FMT_FLAG_RGB | AV_PIX_FMT_FLAG_PAL)) {
-				if (lumabits <= 10) {
-					OutList = RGB_8;
-				}
-				else {
-					OutList = RGB_16;
 				}
 			}
 			else if (av_pfdesc->nb_components >= 3) {
@@ -2618,9 +2623,17 @@ void CMPCVideoDecFilter::BuildOutputFormat()
 		}
 	}
 
-	if (!m_fPixFmts[PixFmt_YUY2] || nSwCount == 0) {
-		// if YUY2 has not been added yet, then add it to the end of the list
-		nSwIndex[nSwCount++] = PixFmt_YUY2;
+	if (av_pfdesc->flags & (AV_PIX_FMT_FLAG_RGB | AV_PIX_FMT_FLAG_PAL)) {
+		if (!m_fPixFmts[PixFmt_RGB32] || nSwCount == 0) {
+			// if RGB32 has not been added yet, then add it to the end of the list
+			nSwIndex[nSwCount++] = PixFmt_RGB32;
+		}
+	}
+	else {
+		if (!m_fPixFmts[PixFmt_YUY2] || nSwCount == 0) {
+			// if YUY2 has not been added yet, then add it to the end of the list
+			nSwIndex[nSwCount++] = PixFmt_YUY2;
+		}
 	}
 
 	int OutputCount = m_bUseFFmpeg ? nSwCount : 0;
@@ -4532,6 +4545,7 @@ STDMETHODIMP CMPCVideoDecFilter::SaveSettings()
 			optname += GetSWOF(i)->name;
 			key.SetDWORDValue(optname, m_fPixFmts[i]);
 		}
+		key.SetDWORDValue(OPT_SwConvertToRGB, m_bSwConvertToRGB);
 		key.SetDWORDValue(OPT_SwRGBLevels, m_nSwRGBLevels);
 	}
 	if (ERROR_SUCCESS == key.Create(HKEY_CURRENT_USER, OPT_REGKEY_VCodecs)) {
@@ -4555,6 +4569,7 @@ STDMETHODIMP CMPCVideoDecFilter::SaveSettings()
 	profile.WriteString(OPT_SECTION_VideoDec, OPT_HwAdapter, str);
 	profile.WriteInt(OPT_SECTION_VideoDec, OPT_DXVACheck, m_nDXVACheckCompatibility);
 	profile.WriteInt(OPT_SECTION_VideoDec, OPT_DisableDXVA_SD, m_nDXVA_SD);
+	profile.WriteBool(OPT_SECTION_VideoDec, OPT_SwConvertToRGB, m_bSwConvertToRGB);
 	profile.WriteInt(OPT_SECTION_VideoDec, OPT_SwRGBLevels, m_nSwRGBLevels);
 	for (int i = 0; i < PixFmt_count; i++) {
 		CString optname = OPT_SW_prefix;
@@ -4744,6 +4759,19 @@ STDMETHODIMP_(bool) CMPCVideoDecFilter::GetSwPixelFormat(MPCPixelFormat pf)
 	}
 
 	return m_fPixFmts[pf];
+}
+
+STDMETHODIMP CMPCVideoDecFilter::SetSwConvertToRGB(bool enable)
+{
+	CAutoLock cAutoLock(&m_csProps);
+	m_bSwConvertToRGB = enable;
+	return S_OK;
+}
+
+STDMETHODIMP_(bool) CMPCVideoDecFilter::GetSwConvertToRGB()
+{
+	CAutoLock cAutoLock(&m_csProps);
+	return m_bSwConvertToRGB;
 }
 
 STDMETHODIMP CMPCVideoDecFilter::SetSwRGBLevels(int nValue)

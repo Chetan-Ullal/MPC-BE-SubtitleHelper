@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Рісівер"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Керування кольором (для EVR, madVR і MPC VR)"
 6		"Яскравість"
 7		"Контраст"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Насиченість"
 18		"Скинути"
 20		"Управління кольором"
-21		"Вхідний тип:"
-23		"Розсіяне освітлення:"
-25		"Призначення рендерингу:"
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"Вхідний тип:"
+24		"Розсіяне освітлення:"
+26		"Призначення рендерингу:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Липнути до меж екрану"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Використовувати вбудований парсер веб-сторінок"
-7		"Віддавати перевагу формату перегляду:"
+7		"Preferred video format:"
 10		"60 кадрів\с"
 11		"HDR"
-12		"Віддавати перевагу мові аудіодоріжки:"
-14		"Завантажити список відтворення"
-16		"youtube-dl, yt-dlp"
-17		"Виконуваний файл:"
-19		"Максимальна висота відео:"
-21		"Обрати макс. кількість кадрів\с або бітрейт"
-22		"Адреса AceStream:"
-24		"Адреса MatriX (TorrServer):"
-27		"User agent:"
+12		"Preferred audio format:"
+14		"Віддавати перевагу мові аудіодоріжки:"
+16		"Завантажити список відтворення"
+18		"youtube-dl, yt-dlp"
+19		"Виконуваний файл:"
+21		"Максимальна висота відео:"
+23		"Обрати макс. кількість кадрів\с або бітрейт"
+24		"Адреса AceStream:"
+26		"Адреса MatriX (TorrServer):"
+29		"User agent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"Сервер оновлень видає неві
 STRING IDS_USING_NEWER_VERSION		"Ви вже використовуєте останню версію v%s"
 STRING IDS_VDF_AR_MODE		"Читати пропорції з відеопотоку"
 STRING IDS_VDF_AUTO		"Автоматично"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Перетворення форматів"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Вихідні формати:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Вихідні формати"
 STRING IDS_VDF_COLOR_PRESET		"Пресет:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"Вихідні рівні RGB:"
 STRING IDS_VDF_COLOR_STANDARD		"Стандарт:"

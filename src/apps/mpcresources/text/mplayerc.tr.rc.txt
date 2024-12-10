@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Alıcı"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Renk kontrolleri (GVİ, madVR ve MPC Vİ)"
 6		"Parlaklık"
 7		"Karşıtlık"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Doygunluk"
 18		"Sıfırla"
 20		"Renk Yönetimi"
-21		"Girdi biçimi:"
-23		"Ortam Işığı:"
-25		"Oluşturma Amacı:"
+21		"(GVİ-ÖS için, 10/16-bit yüzey)"
+22		"Girdi biçimi:"
+24		"Ortam Işığı:"
+26		"Oluşturma Amacı:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Masaüstü kenarlarına yapış"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Yerleşik web sayfası ayrıştırıcısını kullan"
-7		"Tercih edilen biçim:"
+7		"Tercih edilen video biçimi:"
 10		"60 fps"
 11		"HDR"
-12		"Tercih edilen ses parçası dili:"
-14		"Oynatma listesi yükle"
-16		"youtube-dl, yt-dlp"
-17		"Çalıştırılabilir dosya:"
-19		"Maks. video yüksekliği:"
-21		"Maksimum fps ya da bit hızı seç"
-22		"AceStream adresi:"
-24		"MatriX (TorrServer) adresi:"
-27		"Kullanıcı aracısı:"
+12		"Tercih edilen ses biçimi:"
+14		"Tercih edilen ses parçası dili:"
+16		"Oynatma listesi yükle"
+18		"youtube-dl, yt-dlp"
+19		"Çalıştırılabilir dosya:"
+21		"Maks. video yüksekliği:"
+23		"Maksimum fps ya da bit hızı seç"
+24		"AceStream adresi:"
+26		"MatriX (TorrServer) adresi:"
+29		"Kullanıcı aracısı:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"Güncelleştirme sunucusu yanlış veri veriyor.\
 STRING IDS_USING_NEWER_VERSION		"Zaten son sürümü kullanıyorsunuz: %s."
 STRING IDS_VDF_AR_MODE		"EBO bilgisini akıştan oku"
 STRING IDS_VDF_AUTO		"Oto"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Biçim dönüşümü"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Çıkış biçimleri:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"RGB'ye dönüşüm"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Çıkış biçimleri"
 STRING IDS_VDF_COLOR_PRESET		"Önayar:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"RGB çıkış düzeyleri:"
 STRING IDS_VDF_COLOR_STANDARD		"Standart:"

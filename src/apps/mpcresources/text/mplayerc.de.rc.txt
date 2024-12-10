@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Receiver:"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Farbeinstellungen (für EVR, madVR und MPC VR)"
 6		"Helligkeit:"
 7		"Kontrast:"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Sättigung:"
 18		"Zurücksetzen"
 20		"Farbmanagement"
-21		"Eingangstyp:"
-23		"Umgebungslicht:"
-25		"Wiedergabeziel:"
+21		"(für EVR-CP, 10/16-bit-Oberfläche)"
+22		"Eingangstyp:"
+24		"Umgebungslicht:"
+26		"Wiedergabeziel:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"An Desktoprand andocken"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Integrierten Webseiten-Parser verwenden"
-7		"Bevorzugtes Format:"
+7		"Bevorzugtes Videoformat:"
 10		"HFR"
 11		"HDR"
-12		"Bevorzugte Sprache der Audiospur:"
-14		"Wiedergabeliste laden"
-16		"youtube-dl, yt-dlp"
-17		"Ausführungsdatei:"
-19		"Maximale vertikale Auflösung:"
-21		"Maximale Bildrate oder Bitrate wählen"
-22		"AceStream Adresse:"
-24		"MatriX (TorrServer) Adresse:"
-27		"User Agent:"
+12		"Bevorzugtes Audioformat:"
+14		"Bevorzugte Sprache der Audiospur:"
+16		"Wiedergabeliste laden"
+18		"youtube-dl, yt-dlp"
+19		"Ausführungsdatei:"
+21		"Maximale Videohöhe:"
+23		"Maximale Bildrate oder Bitrate wählen"
+24		"AceStream Adresse:"
+26		"MatriX (TorrServer) Adresse:"
+29		"User Agent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"Der Update-Server hat falsche Daten ausgegeben.\n
 STRING IDS_USING_NEWER_VERSION		"Sie verwenden bereits die aktuelle Version %s"
 STRING IDS_VDF_AR_MODE		"Seitenverhältnis aus Stream lesen"
 STRING IDS_VDF_AUTO		"Auto"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Formatkonvertierung"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Ausgabeformate:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Nach RGB konvertieren"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Ausgabeformate"
 STRING IDS_VDF_COLOR_PRESET		"Voreinstellung:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"RGB-Ausgabebereich:"
 STRING IDS_VDF_COLOR_STANDARD		"Standard:"

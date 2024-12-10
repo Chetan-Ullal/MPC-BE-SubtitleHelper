@@ -849,10 +849,11 @@ public:
 	// youtube
 	bool			bYoutubePageParser;
 	struct {
-		int		fmt;
+		int		vfmt;
 		int		res;
 		bool	fps60;
 		bool	hdr;
+		int		afmt;
 	} YoutubeFormat;
 	CStringW		strYoutubeAudioLang;
 	bool			bYoutubeLoadPlaylist;

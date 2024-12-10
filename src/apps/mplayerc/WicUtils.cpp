@@ -515,7 +515,6 @@ HRESULT WicSaveImage(
 	WICPixelFormatGUID convertFormat = {};
 	GUID containerFormat = {};
 
-
 	auto pixFmtDesc = GetPixelFormatDesc(pixelFormat);
 
 	std::wstring ext;
@@ -530,8 +529,12 @@ HRESULT WicSaveImage(
 				(pixFmtDesc->depth <= 4) ? GUID_WICPixelFormat4bppIndexed :
 				GUID_WICPixelFormat8bppIndexed;
 		}
+		else if (pixFmtDesc->alpha) {
+			convertFormat = GUID_WICPixelFormat32bppBGRA;
+		}
 		else {
-			convertFormat = (pixFmtDesc->alpha) ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat24bppBGR;
+			// convert 32bppBGR to 24bppBGR for better compatibility and smaller size
+			convertFormat = GUID_WICPixelFormat24bppBGR;
 		}
 	}
 	else if (ext == L".png") {
@@ -540,10 +543,10 @@ HRESULT WicSaveImage(
 			convertFormat = pixelFormat;
 		}
 		else if (pixFmtDesc->alpha) {
-			convertFormat = (pixFmtDesc->depth == 64) ? GUID_WICPixelFormat64bppBGRA : GUID_WICPixelFormat32bppBGRA;
+			convertFormat = (pixFmtDesc->depth >= 64) ? GUID_WICPixelFormat64bppBGRA : GUID_WICPixelFormat32bppBGRA;
 		}
 		else {
-			convertFormat = (pixFmtDesc->depth == 48) ? GUID_WICPixelFormat48bppBGR : GUID_WICPixelFormat24bppBGR;
+			convertFormat = (pixFmtDesc->depth >= 48) ? GUID_WICPixelFormat48bppBGR : GUID_WICPixelFormat24bppBGR;
 		}
 	}
 	else if (ext == L".jpg" || ext == L".jpeg") {

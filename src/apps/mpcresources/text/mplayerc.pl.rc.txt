@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Odbiornik:"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Color controls (for EVR, madVR and MPC VR)"
 6		"Jasność:"
 7		"Kontrast:"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Nasycenie:"
 18		"Domyślne"
 20		"Zarządzanie kolorami"
-21		"Format wejściowy:"
-23		"Oświetlenie otoczenia:"
-25		"Sposób renderowania:"
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"Format wejściowy:"
+24		"Oświetlenie otoczenia:"
+26		"Sposób renderowania:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Przyciągnij do krawędzi pulpitu"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Użyj wbudowanego analizatora strony internetowej"
-7		"Preferowany format:"
+7		"Preferred video format:"
 10		"60 fps"
 11		"HDR"
-12		"Preferred audio track language:"
-14		"Wgraj listę odtwarzania"
-16		"youtube-dl, yt-dlp"
-17		"Executable file:"
-19		"Max video height:"
-21		"Select max fps or bitrate"
-22		"Adres AceStream:"
-24		"Adres MatriX (TorrServer):"
-27		"User agent:"
+12		"Preferred audio format:"
+14		"Preferred audio track language:"
+16		"Wgraj listę odtwarzania"
+18		"youtube-dl, yt-dlp"
+19		"Executable file:"
+21		"Max video height:"
+23		"Select max fps or bitrate"
+24		"Adres AceStream:"
+26		"Adres MatriX (TorrServer):"
+29		"User agent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -773,7 +775,7 @@ BEGIN MENU IDR_MAINFRAME LINES 138
 128		"&Zakładki"
 129		"Pomo&c"
 131		"&Strona główna"
-132		"Sprawdź &aktualizaje"
+132		"Sprawdź &aktualizacje"
 133		"Parametry wiersza &poleceń..."
 134		"Pobierz &obrazy paska narzędzi"
 136		"&O programie..."
@@ -2031,8 +2033,8 @@ STRING IDS_UPDATE_ERROR_DATA		"The update server gives the wrong data.\n\nPlease
 STRING IDS_USING_NEWER_VERSION		"Używasz aktualnej wersji %s."
 STRING IDS_VDF_AR_MODE		"Odczytywanie proporcji obrazu ze strumienia"
 STRING IDS_VDF_AUTO		"Auto"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Konwersja formatu"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Formaty wyjściowe:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Formaty wyjściowe"
 STRING IDS_VDF_COLOR_PRESET		"Preset:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"Poziom wyjściowy RGB:"
 STRING IDS_VDF_COLOR_STANDARD		"Standard:"

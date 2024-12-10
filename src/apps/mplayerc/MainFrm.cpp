@@ -6346,13 +6346,14 @@ bool CMainFrame::SaveDIB(LPCWSTR fn, BYTE* pData, long size)
 	const CAppSettings& s = AfxGetAppSettings();
 
 	const CString ext = GetFileExt(fn).MakeLower();
+
 	bool ok;
 
 	if (ext == L".png") {
-		ok = PNGDIB(fn, pData, std::clamp(s.iThumbLevelPNG, 1, 9));
+		ok = SaveDIB_libpng(fn, pData, std::clamp(s.iThumbLevelPNG, 1, 9));
 	} else {
 		size_t dstLen = 0;
-		ok = WICDIB(fn, pData, s.iThumbQuality, nullptr, dstLen);
+		ok = SaveDIB_WIC(fn, pData, s.iThumbQuality, nullptr, dstLen);
 	}
 
 	return ok;

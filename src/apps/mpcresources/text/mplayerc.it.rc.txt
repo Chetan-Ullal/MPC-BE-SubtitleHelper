@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Ricevitore"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Controlli del colore (per EVR, madVR and MPC VR)"
 6		"Luminosità"
 7		"Contrasto"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Saturazione"
 18		"Reimposta"
 20		"Gestione colore"
-21		"Tipo di ingresso:"
-23		"Luce ambiente:"
-25		"Intento di rendering:"
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"Tipo di ingresso:"
+24		"Luce ambiente:"
+26		"Intento di rendering:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Aggancia ai bordi del desktop"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Usa l'analizzatore di pagine web integrato"
-7		"formato preferito:"
+7		"Preferred video format:"
 10		"60 fps"
 11		"HDR"
-12		"Lingua preferita per la traccia audio:"
-14		"Carica playlist"
-16		"youtube-dl, yt-dlp"
-17		"File eseguibile:"
-19		"Massima altezza video:"
-21		"Seleziona fps massimi o bitrate"
-22		"Indirizzo AceStream:"
-24		"Indirizzo MatriX (TorrServer):"
-27		"User agent:"
+12		"Preferred audio format:"
+14		"Lingua preferita per la traccia audio:"
+16		"Carica playlist"
+18		"youtube-dl, yt-dlp"
+19		"File eseguibile:"
+21		"Massima altezza video:"
+23		"Seleziona fps massimi o bitrate"
+24		"Indirizzo AceStream:"
+26		"Indirizzo MatriX (TorrServer):"
+29		"User agent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"Il server di aggiornamento fornisce dati errati.\
 STRING IDS_USING_NEWER_VERSION		"Stai già utilizzando l'ultima versione %s"
 STRING IDS_VDF_AR_MODE		"Leggi AR dallo stream"
 STRING IDS_VDF_AUTO		"Auto"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Conversione formato"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Formati di uscita:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Formati di uscita"
 STRING IDS_VDF_COLOR_PRESET		"Profili:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"Livelli di uscita RGB:"
 STRING IDS_VDF_COLOR_STANDARD		"Standard:"

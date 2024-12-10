@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"수신기"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"색 제어(EVR, madVR 및 MPC VR용)"
 6		"명도"
 7		"대비"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"채도"
 18		"초기화"
 20		"색 관리"
-21		"입력 형식 :"
-23		"주변광 :"
-25		"렌더링 의도 :"
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"입력 형식 :"
+24		"주변광 :"
+26		"렌더링 의도 :"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"바탕화면 가장자리에 맞추기"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"유튜브"
 6		"내장된 웹 페이지 파서 사용"
-7		"우선 형식 :"
+7		"Preferred video format:"
 10		"60fps"
 11		"HDR"
-12		"선호하는 오디오 트랙 언어 :"
-14		"재생 목록 열기"
-16		"youtube-dl, yt-dlp"
-17		"실행 파일 :"
-19		"최대 영상 높이 :"
-21		"최대 fps 또는 비트 전송률 선택"
-22		"AceStream 주소 :"
-24		"MatriX(TorrServer) 주소 :"
-27		"사용자 에이전트 :"
+12		"Preferred audio format:"
+14		"선호하는 오디오 트랙 언어 :"
+16		"재생 목록 열기"
+18		"youtube-dl, yt-dlp"
+19		"실행 파일 :"
+21		"최대 영상 높이 :"
+23		"최대 fps 또는 비트 전송률 선택"
+24		"AceStream 주소 :"
+26		"MatriX(TorrServer) 주소 :"
+29		"사용자 에이전트 :"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"업데이트 서버 데이터에 오류가 있습
 STRING IDS_USING_NEWER_VERSION		"이미 최신 버전 %s 사용 중입니다."
 STRING IDS_VDF_AR_MODE		"스트림으로부터 AR 읽기"
 STRING IDS_VDF_AUTO		"자동"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"형식 변환"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"출력 형식 :"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"출력 형식 "
 STRING IDS_VDF_COLOR_PRESET		"사전 설정 :"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"RGB 출력 레벨 :"
 STRING IDS_VDF_COLOR_STANDARD		"표준 :"

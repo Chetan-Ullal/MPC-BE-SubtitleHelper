@@ -91,7 +91,7 @@
 #define IDS_RS_AUDIOTIMESHIFT				L"TimeShift"
 #define IDS_RS_AUDIOFILTERS					L"AudioFilters"
 #define IDS_RS_AUDIOFILTER1					L"Filter1"
-#define IDS_RS_AUDIOFILTERS_NOTFORSTEREO	L"FiltersDisableForStereoo"
+#define IDS_RS_AUDIOFILTERS_NOTFORSTEREO	L"FiltersDisableForStereo"
 
 // Mouse
 #define IDS_R_MOUSE							L"Mouse"
@@ -125,10 +125,11 @@
 #define IDS_R_ONLINESERVICES				L"OnlineServices"
 #define IDS_R_YOUTUBECACHE					L"OnlineServices\\YoutubeCache"
 #define IDS_RS_YOUTUBE_PAGEPARSER			L"YoutubePageParser"
-#define IDS_RS_YOUTUBE_FORMAT				L"YoutubeFormat"
+#define IDS_RS_YOUTUBE_VIDEOFORMAT			L"YoutubeVideoFormat"
 #define IDS_RS_YOUTUBE_RESOLUTION			L"YoutubeResolution"
 #define IDS_RS_YOUTUBE_60FPS				L"Youtube60fps"
 #define IDS_RS_YOUTUBE_HDR					L"YoutubeHDR"
+#define IDS_RS_YOUTUBE_AUDIOFORMAT			L"YoutubeAudioFormat"
 #define IDS_RS_YOUTUBE_AUDIOLANGUAGE		L"YoutubeAudioLanguage"
 #define IDS_RS_YOUTUBE_LOAD_PLAYLIST		L"YoutubeLoadPlaylist"
 #define IDS_RS_YDL_ENABLE					L"YDLEnable"

@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Vevő"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Színvezérlők (EVR, madVR és MPC VR esetén)"
 6		"Világosság"
 7		"Élesség"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Telítettség"
 18		"Visszaállítás"
 20		"Színkezelés"
-21		"Bemeneti típus:"
-23		"Háttérfény:"
-25		"Renderelési szándék:"
+21		"(EVR-CP-hez, 10/16 bites felület)"
+22		"Bemeneti típus:"
+24		"Háttérfény:"
+26		"Renderelési szándék:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Illesztés az asztal széleihez"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Használja a beépített weboldal elemzőt"
-7		"Előnyben részesített formátum:"
+7		"Preferred video format:"
 10		"60 fps"
 11		"HDR"
-12		"Előnyben részesített hangsáv nyelve:"
-14		"Lejátszási lista betöltése"
-16		"youtube-dl, yt-dlp"
-17		"Futtatható fájl:"
-19		"Maximális videómagasság:"
-21		"Válassza ki a max fps vagy bitrátát"
-22		"AceStream cím:"
-24		"MatriX (TorrServer) cím:"
-27		"Hálózati kliens:"
+12		"Preferred audio format:"
+14		"Előnyben részesített hangsáv nyelve:"
+16		"Lejátszási lista betöltése"
+18		"youtube-dl, yt-dlp"
+19		"Futtatható fájl:"
+21		"Maximális videómagasság:"
+23		"Válassza ki a max fps vagy bitrátát"
+24		"AceStream cím:"
+26		"MatriX (TorrServer) cím:"
+29		"Hálózati kliens:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -1861,8 +1863,8 @@ STRING IDS_PPAGE_OUTPUT_MADVR		"madVR"
 STRING IDS_PPAGE_OUTPUT_MPCVR		"MPC Video Renderer"
 STRING IDS_PPAGE_OUTPUT_NULL_ANY		"Null (bármely)"
 STRING IDS_PPAGE_OUTPUT_NULL_UNCOMP		"Null (tömörítetlen)"
-STRING IDS_PPAGE_OUTPUT_SURF_2D		"2D surfaces"
-STRING IDS_PPAGE_OUTPUT_SURF_3D		"3D surfaces (ajánlott)"
+STRING IDS_PPAGE_OUTPUT_SURF_2D		"2D felületek"
+STRING IDS_PPAGE_OUTPUT_SURF_3D		"3D felületek (ajánlott)"
 STRING IDS_PPAGE_OUTPUT_SURF_OFFSCREEN		"Rendszeres offscreen sima felület"
 STRING IDS_PPAGE_OUTPUT_SYNC		"Video Renderer szinkronizálása"
 STRING IDS_PPAGE_OUTPUT_SYS_DEF		"Rendszer Alapértelmezett"
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"A frissítési szerver rossz adatokat ad meg.\n\n
 STRING IDS_USING_NEWER_VERSION		"Már használja a legújabb verziót %s."
 STRING IDS_VDF_AR_MODE		"Képméretarány olvasása fájlból"
 STRING IDS_VDF_AUTO		"Auto"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Formátum átalakítás"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Kimeneti formátumok:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Kimeneti formátumok"
 STRING IDS_VDF_COLOR_PRESET		"Előre beállított:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"RGB kimeneti szintek:"
 STRING IDS_VDF_COLOR_STANDARD		"Szabványos:"

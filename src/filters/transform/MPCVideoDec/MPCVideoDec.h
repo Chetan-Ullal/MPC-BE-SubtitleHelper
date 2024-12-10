@@ -76,6 +76,7 @@ private:
 	int										m_nDXVACheckCompatibility = 1;
 	int										m_nDXVA_SD = 0;
 	bool									m_fPixFmts[PixFmt_count];
+	bool									m_bSwConvertToRGB = false;
 	int										m_nSwRGBLevels = 0;
 	//
 	bool									m_VideoFilters[VDEC_COUNT] = {};
@@ -295,6 +296,8 @@ public:
 	STDMETHODIMP SetSwRefresh(int nValue);
 	STDMETHODIMP SetSwPixelFormat(MPCPixelFormat pf, bool enable);
 	STDMETHODIMP_(bool) GetSwPixelFormat(MPCPixelFormat pf);
+	STDMETHODIMP SetSwConvertToRGB(bool enable);
+	STDMETHODIMP_(bool) GetSwConvertToRGB();
 	STDMETHODIMP SetSwRGBLevels(int nValue);
 	STDMETHODIMP_(int) GetSwRGBLevels();
 

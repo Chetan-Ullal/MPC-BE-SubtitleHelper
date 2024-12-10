@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Sprejemnik"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Kontrola barv (za EVR, madVR in MPC VR)"
 6		"Svetloba"
 7		"Kontrast"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Zasičenost"
 18		"Ponastavitev"
 20		"Upravljanje barv"
-21		"Vhodni tip:"
-23		"Ambientalna osvetljava:"
-25		"Namen upodabljanja:"
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"Vhodni tip:"
+24		"Ambientalna osvetljava:"
+26		"Namen upodabljanja:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Pripni na robove namizja"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Uporabi vgrajeni razčlenjevalnik spletnih strani"
-7		"Prednostni format:"
+7		"Preferred video format:"
 10		"60 fps"
 11		"HDR"
-12		"Prednostni jezik zvočnega zapisa:"
-14		"Naloži seznam predvajanja"
-16		"youtube-dl, yt-dlp"
-17		"Izvršljiva datoteka:"
-19		"Največja video višina:"
-21		"Izberi največji fps ali bitno hitrost"
-22		"AceStream naslov:"
-24		"MatriX (TorrServer) naslov:"
-27		"User agent:"
+12		"Preferred audio format:"
+14		"Prednostni jezik zvočnega zapisa:"
+16		"Naloži seznam predvajanja"
+18		"youtube-dl, yt-dlp"
+19		"Izvršljiva datoteka:"
+21		"Največja video višina:"
+23		"Izberi največji fps ali bitno hitrost"
+24		"AceStream naslov:"
+26		"MatriX (TorrServer) naslov:"
+29		"User agent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"Strežnik za posodabljanje posreduje napačne pod
 STRING IDS_USING_NEWER_VERSION		"Že uporabljaš najnovejšo različico %s."
 STRING IDS_VDF_AR_MODE		"Preberi AR iz pretoka"
 STRING IDS_VDF_AUTO		"Auto"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Konverzija formata"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Izhodni formati:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Izhodni formati"
 STRING IDS_VDF_COLOR_PRESET		"Preset:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"RGB izhodne ravni:"
 STRING IDS_VDF_COLOR_STANDARD		"Standard:"

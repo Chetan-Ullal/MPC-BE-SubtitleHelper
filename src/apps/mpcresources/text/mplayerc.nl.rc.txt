@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Receiver"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Kleurregeling (voor EVR, madVR en MPC VR)"
 6		"Helderheid"
 7		"Contrast"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Verzadiging"
 18		"Resetten"
 20		"Kleurmanagement"
-21		"Invoertype:"
-23		"Omgevingslicht:"
-25		"Render-intenties:"
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"Invoertype:"
+24		"Omgevingslicht:"
+26		"Render-intenties:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Aan de bureaubladrand vastmaken"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Ingebouwde webpaginaparser gebruiken"
-7		"Voorkeursformaat:"
+7		"Preferred video format:"
 10		"60 fps"
 11		"HDR"
-12		"Voorkeurstaal audiospoor:"
-14		"Afspeellijst laden"
-16		"youtube-dl, yt-dlp"
-17		"Executable:"
-19		"Maximale videohoogte:"
-21		"Maximale fps of bitrate selecteren"
-22		"Adres AceStream:"
-24		"Adres MatriX (TorrServer):"
-27		"Useragent:"
+12		"Preferred audio format:"
+14		"Voorkeurstaal audiospoor:"
+16		"Afspeellijst laden"
+18		"youtube-dl, yt-dlp"
+19		"Executable:"
+21		"Maximale videohoogte:"
+23		"Maximale fps of bitrate selecteren"
+24		"Adres AceStream:"
+26		"Adres MatriX (TorrServer):"
+29		"Useragent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"De updateserver geeft verkeerde gegevens.\n\nProb
 STRING IDS_USING_NEWER_VERSION		"U bent al de laatste versie %s aan het gebruiken."
 STRING IDS_VDF_AR_MODE		"Lees beeldverhouding van stream"
 STRING IDS_VDF_AUTO		"Automatisch"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Formaatconversie"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Uitvoerformaten:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Uitvoerformaten"
 STRING IDS_VDF_COLOR_PRESET		"Preset:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"RGB-uitvoerniveaus:"
 STRING IDS_VDF_COLOR_STANDARD		"Kleurstandaard:"

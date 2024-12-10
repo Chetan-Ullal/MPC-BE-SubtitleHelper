@@ -202,7 +202,7 @@ BEGIN DIALOGEX IDD_PPAGECAPTURE LINES 22
 18		"Receptor"
 END
 
-BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
+BEGIN DIALOGEX IDD_PPAGECOLOR LINES 28
 5		"Control al culorilor (pentru EVR, madVR și MPC VR)"
 6		"Luminozitate"
 7		"Contrast"
@@ -210,9 +210,10 @@ BEGIN DIALOGEX IDD_PPAGECOLOR LINES 27
 9		"Saturație"
 18		"Resetează"
 20		"Gestionează culorile"
-21		"Tip de intrare:"
-23		"Lumină ambientală:"
-25		"Intenția de redare:"
+21		"(for EVR-CP, surface 10/16-bit)"
+22		"Tip de intrare:"
+24		"Lumină ambientală:"
+26		"Intenția de redare:"
 END
 
 BEGIN DIALOGEX IDD_PPAGEDVD LINES 19
@@ -594,21 +595,22 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Fixează la marginile desktop-ului (biroului)"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 29
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"YouTube"
 6		"Folosește analizatorul de pagini web încorporat"
-7		"Formatul preferat:"
+7		"Preferred video format:"
 10		"60 fps"
 11		"HDR"
-12		"Limba preferată pentru pistă:"
-14		"Încarcă lista de redare"
-16		"youtube-dl, yt-dlp"
-17		"Fișier executabil:"
-19		"Înălțimea video maximă:"
-21		"Selectează numărul maxim de cadre/secundă (fps) sau rata de biți"
-22		"Adresa AceStream:"
-24		"Adresa MatriX (TorrServer):"
-27		"Agent de utilizator:"
+12		"Preferred audio format:"
+14		"Limba preferată pentru pistă:"
+16		"Încarcă lista de redare"
+18		"youtube-dl, yt-dlp"
+19		"Fișier executabil:"
+21		"Înălțimea video maximă:"
+23		"Selectează numărul maxim de cadre/secundă (fps) sau rata de biți"
+24		"Adresa AceStream:"
+26		"Adresa MatriX (TorrServer):"
+29		"Agent de utilizator:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -2037,8 +2039,8 @@ STRING IDS_UPDATE_ERROR_DATA		"Serverul pentru actualizare oferă date greșite.
 STRING IDS_USING_NEWER_VERSION		"Deja folosești ultima versiune %s."
 STRING IDS_VDF_AR_MODE		"Citește raportul de aspect din flux"
 STRING IDS_VDF_AUTO		"Auto(mat)"
-STRING IDS_VDF_COLOR_FMT_CONVERSION		"Conversia de formate"
-STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Formate de ieșire:"
+STRING IDS_VDF_COLOR_CONVERT_TO_RGB		"Convert to RGB"
+STRING IDS_VDF_COLOR_OUTPUT_FORMATS		"Formate de ieșire"
 STRING IDS_VDF_COLOR_PRESET		"Presetare:"
 STRING IDS_VDF_COLOR_RGB_LEVELS		"Nivele de ieșire RGB:"
 STRING IDS_VDF_COLOR_STANDARD		"Standard:"

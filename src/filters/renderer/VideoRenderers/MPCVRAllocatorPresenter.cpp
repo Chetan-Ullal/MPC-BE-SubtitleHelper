@@ -232,6 +232,7 @@ void CMPCVRAllocatorPresenter::AttachToRenderer()
 	if (CComQIPtr<IExFilterConfig> pIExFilterConfig = m_pMPCVR.p) {
 		pIExFilterConfig->Flt_SetBool("lessRedraws", true);
 		pIExFilterConfig->Flt_SetBool("d3dFullscreenControl", m_bMPCVRFullscreenControl);
+		pIExFilterConfig->Flt_SetBool("allowDeepColorBitmaps", true);
 	}
 
 	CComQIPtr<IBaseFilter> pBF(m_pMPCVR);
