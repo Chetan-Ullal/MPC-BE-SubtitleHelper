@@ -95,15 +95,14 @@ CStringA UrlDecode(const CStringA& str_in)
 	return str_out;
 }
 
-CStringW UrlDecode(LPCWSTR lpWideCharStr)
+bool Unescape(CStringW& str)
 {
-	if (wcsrchr(lpWideCharStr, L'%') == nullptr) {
-		return lpWideCharStr;
+	int len = str.GetLength();
+	HRESULT hr = UrlUnescapeW(str.GetBuffer(), nullptr, nullptr, URL_ESCAPE_URI_COMPONENT | URL_UNESCAPE_INPLACE);
+	if (SUCCEEDED(hr)) {
+		str.ReleaseBuffer();
 	}
-
-	auto utf8 = WStrToUTF8(lpWideCharStr);
-	utf8 = UrlDecode(utf8);
-	return UTF8ToWStr(utf8);
+	return len != str.GetLength();
 }
 
 CStringW ExtractTag(CStringW tag, CMapStringToString& attribs, bool& fClosing)

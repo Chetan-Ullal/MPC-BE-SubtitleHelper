@@ -694,24 +694,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		SetColorMenu();
 	}
 
-	if (SysVersion::IsWin11orLater()) {
-		GetSystemTitleColor();
-		SetColorTitle();
-	}
-	else if (s.bUseDarkTheme && s.bDarkMenu && SysVersion::IsWin10v1809orLater()) {
-		HMODULE hUser = GetModuleHandleW(L"user32.dll");
-		if (hUser) {
-			pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
-			if (setWindowCompositionAttribute) {
-				ACCENT_POLICY accent = { ACCENT_ENABLE_BLURBEHIND, 0, 0, 0 };
-				WINDOWCOMPOSITIONATTRIBDATA data;
-				data.Attrib = WCA_USEDARKMODECOLORS;
-				data.pvData = &accent;
-				data.cbData = sizeof(accent);
-				setWindowCompositionAttribute(GetSafeHwnd(), &data);
-			}
-		}
-	}
+	SetColorTitle();
 
 	m_popupMenu.LoadMenuW(IDR_POPUP);
 	m_popupMainMenu.LoadMenuW(IDR_POPUPMAIN);
@@ -19217,7 +19200,6 @@ void CMainFrame::OnSessionChange(UINT nSessionState, UINT nId)
 
 void CMainFrame::OnSettingChange(UINT, LPCTSTR)
 {
-	GetSystemTitleColor();
 	SetColorTitle(true);
 }
 
@@ -20557,6 +20539,17 @@ void CMainFrame::SetColorTitle(const bool bSystemOnly/* = false*/)
 		} else {
 			DwmSetWindowAttribute(m_hWnd, 35 /*DWMWA_CAPTION_COLOR*/, &m_colTitleBkSystem, sizeof(m_colTitleBkSystem));
 		}
+	} else if (SysVersion::IsWin10v1809orLater()) {
+		static HMODULE hUser = GetModuleHandleW(L"user32.dll");
+		if (hUser) {
+			static auto pSetWindowCompositionAttribute = reinterpret_cast<pfnSetWindowCompositionAttribute>(GetProcAddress(hUser, "SetWindowCompositionAttribute"));
+			if (pSetWindowCompositionAttribute) {
+				const auto& s = AfxGetAppSettings();
+				ACCENT_POLICY accent = { (s.bUseDarkTheme && s.bDarkTitle ? ACCENT_ENABLE_BLURBEHIND : ACCENT_DISABLED), 0, 0, 0 };
+				WINDOWCOMPOSITIONATTRIBDATA data = { WCA_USEDARKMODECOLORS, &accent, sizeof(accent) };
+				pSetWindowCompositionAttribute(GetSafeHwnd(), &data);
+			}
+		}
 	}
 }
 
@@ -20882,25 +20875,6 @@ void CMainFrame::OnUpdateRepeatForever(CCmdUI* pCmdUI)
 
 	if (pCmdUI->m_pMenu) {
 		pCmdUI->m_pMenu->CheckMenuItem(ID_REPEAT_FOREVER, MF_BYCOMMAND | (s.fLoopForever ? MF_CHECKED : MF_UNCHECKED));
-	}
-}
-
-void CMainFrame::GetSystemTitleColor()
-{
-	if (SysVersion::IsWin11orLater()) {
-		m_colTitleBkSystem = 0x00FFFFFF;
-
-		CRegKey key;
-		if (ERROR_SUCCESS == key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\DWM", KEY_READ)) {
-			DWORD prevalenceFlag = 0;
-			key.QueryDWORDValue(L"ColorPrevalence", prevalenceFlag);
-			if (prevalenceFlag) {
-				COLORREF dwAccentColor = {};
-				if (ERROR_SUCCESS == key.QueryDWORDValue(L"AccentColor", dwAccentColor)) {
-					m_colTitleBkSystem = dwAccentColor & 0x00FFFFFF;
-				}
-			}
-		}
 	}
 }
 
