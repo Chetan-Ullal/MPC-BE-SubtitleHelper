@@ -1,5 +1,5 @@
 /*
- * (C) 2012-2024 see Authors.txt
+ * (C) 2012-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -219,6 +219,8 @@ namespace Youtube
 
 	static bool URLPostData(LPCWSTR lpszAgent, const CStringW& headers, CStringA& requestData, urlData& pData)
 	{
+		pData.clear();
+
 		if (auto hInet = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0)) {
 			if (auto hSession = InternetConnectW(hInet, L"www.youtube.com", 443, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 1)) {
 				if (auto hRequest = HttpOpenRequestW(hSession,
@@ -228,7 +230,7 @@ namespace Youtube
 
 					if (HttpSendRequestW(hRequest, headers.GetString(), headers.GetLength(),
 										 reinterpret_cast<LPVOID>(requestData.GetBuffer()), requestData.GetLength())) {
-						pData.clear();
+
 						static std::vector<char> tmp(16 * 1024);
 						for (;;) {
 							DWORD dwSizeRead = 0;
@@ -241,7 +243,6 @@ namespace Youtube
 
 						if (!pData.empty()) {
 							pData.emplace_back('\0');
-							return true;
 						}
 					}
 
@@ -252,7 +253,7 @@ namespace Youtube
 			InternetCloseHandle(hInet);
 		}
 
-		return false;
+		return !pData.empty();
 	}
 
 	static bool URLPostData(LPCWSTR videoId, urlData& pData)
@@ -692,6 +693,8 @@ namespace Youtube
 			using streamingDataFormat = std::tuple<int, CStringA, CStringA, CStringA>;
 			std::list<streamingDataFormat> streamingDataFormatList;
 			std::map<CStringA, std::list<streamingDataFormat>> streamingDataFormatListAudioWithLanguages;
+			CStringA defaultAudioLang;
+
 			if (!player_response_jsonDocument.IsNull()) {
 				if (auto playabilityStatus = GetJsonObject(player_response_jsonDocument, "playabilityStatus")) {
 					CStringA status;
@@ -773,6 +776,13 @@ namespace Youtube
 										auto pos = lang_id.Find('.');
 										if (pos != -1) {
 											lang_id = lang_id.Left(pos);
+
+											if (defaultAudioLang.IsEmpty()) {
+												bool audioIsDefault = false;
+												if (getJsonValue(*audioTrack, "audioIsDefault", audioIsDefault) && audioIsDefault) {
+													defaultAudioLang = lang_id;
+												};
+											}
 										}
 									}
 								}
@@ -788,7 +798,7 @@ namespace Youtube
 				}
 			}
 
-			if (!streamingDataFormatListAudioWithLanguages.empty()) {
+			if (streamingDataFormatListAudioWithLanguages.size()) {
 				// Removing existing audio formats without "language" tag.
 				for (auto it = streamingDataFormatList.begin(); it != streamingDataFormatList.end();) {
 					auto itag = std::get<0>(*it);
@@ -799,16 +809,23 @@ namespace Youtube
 					}
 				}
 
-				auto it = streamingDataFormatListAudioWithLanguages.find("en");
-				if (!s.strYoutubeAudioLang.IsEmpty()) {
-					it = streamingDataFormatListAudioWithLanguages.find(WStrToUTF8(s.strYoutubeAudioLang.GetString()));
-					if (it == streamingDataFormatListAudioWithLanguages.end()) {
-						it = streamingDataFormatListAudioWithLanguages.find("en");
-					}
-				}
+				auto& audioLangs = streamingDataFormatListAudioWithLanguages;
 
-				if (it == streamingDataFormatListAudioWithLanguages.end()) {
-					it = streamingDataFormatListAudioWithLanguages.begin();
+
+				auto it = defaultAudioLang.GetLength() ? audioLangs.find(defaultAudioLang) : audioLangs.begin();
+
+				if (s.strYoutubeAudioLang.GetLength()) {
+					CStringA lang = WStrToUTF8(s.strYoutubeAudioLang.GetString());
+					auto it2 = audioLangs.find(lang);
+					if (it2 == audioLangs.end() && lang.GetLength() == 2) {
+						// check en-US, de-DE, fr-FR, es-US, es-419, zh-Hans and other
+						lang.AppendChar('-');
+						it2 = std::find_if(audioLangs.begin(), audioLangs.end(), [&lang](const auto& pair) { return StartsWith(pair.first, lang); });
+					}
+
+					if (it2 != audioLangs.end()) {
+						it = it2;
+					}
 				}
 
 				streamingDataFormatList.splice(streamingDataFormatList.end(), it->second);
