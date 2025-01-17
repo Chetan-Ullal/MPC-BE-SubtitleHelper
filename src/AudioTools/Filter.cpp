@@ -1,5 +1,5 @@
 /*
- * (C) 2014-2023 see Authors.txt
+ * (C) 2014-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -30,11 +30,10 @@ extern "C"
 {
 	#include <libavfilter/buffersink.h>
 	#include <libavfilter/buffersrc.h>
-	#include "libavutil/bprint.h"
 	#include <libavutil/opt.h>
 }
 
-CStringW AvError2Str(const int averror)
+static CStringW AvError2Str(const int averror)
 {
 	CStringW str;
 
@@ -62,7 +61,7 @@ CStringW AvError2Str(const int averror)
 	return str;
 }
 
-AVSampleFormat MpcToAvSampleFormat(const SampleFormat sample_fmt)
+static AVSampleFormat MpcToAvSampleFormat(const SampleFormat sample_fmt)
 {
 	switch (sample_fmt) {
 	case SAMPLE_FMT_U8:  return AV_SAMPLE_FMT_U8;
@@ -85,13 +84,93 @@ CAudioFilter::CAudioFilter()
 	av_log_set_callback(nullptr);
 #endif
 
-	m_pFrame = av_frame_alloc();
+	m_pInputFrame = av_frame_alloc();
+	m_pOutputFrame = av_frame_alloc();
 }
 
 CAudioFilter::~CAudioFilter()
 {
-	av_frame_free(&m_pFrame);
+	av_frame_free(&m_pInputFrame);
+	av_frame_free(&m_pOutputFrame);
 	avfilter_graph_free(&m_pFilterGraph);
+}
+
+int CAudioFilter::InitFilterBufferSrc()
+{
+	ASSERT(m_pFilterGraph);
+	ASSERT(!m_pFilterBufferSrc);
+
+	const AVFilter* abuffer = avfilter_get_by_name("abuffer");
+	if (!abuffer) {
+		return AVERROR_FILTER_NOT_FOUND;
+	}
+
+	m_pFilterBufferSrc = avfilter_graph_alloc_filter(m_pFilterGraph, abuffer, "in");
+	if (!m_pFilterBufferSrc) {
+		return AVERROR(ENOMEM);
+	}
+
+	AVChannelLayout ch_layout = { AV_CHANNEL_ORDER_NATIVE, m_inChannels, m_inLayout };
+	int ret = av_opt_set_chlayout(m_pFilterBufferSrc, "channel_layout", &ch_layout, AV_OPT_SEARCH_CHILDREN);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = av_opt_set_sample_fmt(m_pFilterBufferSrc, "sample_fmt", m_inAvSampleFmt, AV_OPT_SEARCH_CHILDREN);
+	if (ret < 0) {
+		return ret;
+	}
+
+	AVRational time_base = { 1, m_inSamplerate };
+	ret = av_opt_set_q(m_pFilterBufferSrc, "time_base", time_base, AV_OPT_SEARCH_CHILDREN);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = av_opt_set_int(m_pFilterBufferSrc, "sample_rate", m_inSamplerate, AV_OPT_SEARCH_CHILDREN);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = avfilter_init_dict(m_pFilterBufferSrc, nullptr); // initialize the filter
+
+	return ret;
+}
+
+int CAudioFilter::InitFilterBufferSink()
+{
+	ASSERT(m_pFilterGraph);
+	ASSERT(!m_pFilterBufferSink);
+
+	const AVFilter* abuffersink = avfilter_get_by_name("abuffersink");
+	if (!abuffersink) {
+		return AVERROR_FILTER_NOT_FOUND;
+	}
+
+	m_pFilterBufferSink = avfilter_graph_alloc_filter(m_pFilterGraph, abuffersink, "out");
+	if (!m_pFilterBufferSink) {
+		return AVERROR(ENOMEM);
+	}
+
+	int ret = av_opt_set_array(m_pFilterBufferSink, "sample_formats", AV_OPT_SEARCH_CHILDREN, 0, 1, AV_OPT_TYPE_SAMPLE_FMT, &m_outAvSampleFmt);
+	if (ret < 0) {
+		return ret;
+	}
+
+	AVChannelLayout ch_layout = { AV_CHANNEL_ORDER_NATIVE, m_outChannels, m_outLayout };
+	ret = av_opt_set_array(m_pFilterBufferSink, "channel_layouts", AV_OPT_SEARCH_CHILDREN, 0, 1, AV_OPT_TYPE_CHLAYOUT, &ch_layout);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = av_opt_set_array(m_pFilterBufferSink, "samplerates", AV_OPT_SEARCH_CHILDREN, 0, 1, AV_OPT_TYPE_INT, &m_outSamplerate);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = avfilter_init_dict(m_pFilterBufferSink, nullptr); // initialize the filter
+
+	return ret;
 }
 
 HRESULT CAudioFilter::Initialize(
@@ -126,69 +205,18 @@ HRESULT CAudioFilter::Initialize(
 	m_outChannels   = CountBits(out_layout);
 	m_outSamplerate = out_samplerate;
 
-	const AVFilter *buffersrc = avfilter_get_by_name("abuffer");
-	CheckPointer(buffersrc, E_FAIL);
-	const AVFilter *buffersink = avfilter_get_by_name("abuffersink");
-	CheckPointer(buffersink, E_FAIL);
-
 	m_pFilterGraph = avfilter_graph_alloc();
 	CheckPointer(m_pFilterGraph, E_FAIL);
 	avfilter_graph_set_auto_convert(m_pFilterGraph, autoconvert ? AVFILTER_AUTO_CONVERT_ALL : AVFILTER_AUTO_CONVERT_NONE);
 
 	int ret = 0;
 	do {
-		AVBPrint bp = {};
-		av_bprint_init(&bp, 0, AV_BPRINT_SIZE_AUTOMATIC);
-		AVChannelLayout ch_layout = { AV_CHANNEL_ORDER_NATIVE, m_inChannels, m_inLayout };
-		av_channel_layout_describe_bprint(&ch_layout, &bp);
-
-		char args[256] = { 0 };
-		_snprintf_s(args, sizeof(args), "time_base=1/%d:sample_rate=%d:sample_fmt=%s:channel_layout=%s",
-			m_inSamplerate,
-			m_inSamplerate,
-			av_get_sample_fmt_name(m_inAvSampleFmt),
-			bp.str);
-		av_bprint_finalize(&bp, nullptr);
-		ret = avfilter_graph_create_filter(&m_pFilterBufferSrc,
-			buffersrc,
-			"in",
-			args,
-			nullptr,
-			m_pFilterGraph);
+		ret = InitFilterBufferSrc();
 		if (ret < 0) {
 			break;
 		}
 
-		ret = avfilter_graph_create_filter(&m_pFilterBufferSink,
-			buffersink,
-			"out",
-			nullptr,
-			nullptr,
-			m_pFilterGraph);
-		if (ret < 0) {
-			break;
-		}
-
-		ret = av_opt_set_bin(m_pFilterBufferSink, "sample_fmts",
-			(uint8_t*)&m_outAvSampleFmt, sizeof(m_outAvSampleFmt),
-			AV_OPT_SEARCH_CHILDREN);
-		if (ret < 0) {
-			break;
-		}
-
-		av_bprint_init(&bp, 0, AV_BPRINT_SIZE_AUTOMATIC);
-		ch_layout = { AV_CHANNEL_ORDER_NATIVE, m_outChannels, m_outLayout };
-		av_channel_layout_describe_bprint(&ch_layout, &bp);
-		ret = av_opt_set(m_pFilterBufferSink, "ch_layouts",
-			bp.str, AV_OPT_SEARCH_CHILDREN);
-		av_bprint_finalize(&bp, nullptr);
-		if (ret < 0) {
-			break;
-		}
-
-		ret = av_opt_set_bin(m_pFilterBufferSink, "sample_rates",
-			(uint8_t*)&m_outSamplerate, sizeof(m_outSamplerate),
-			AV_OPT_SEARCH_CHILDREN);
+		ret = InitFilterBufferSink();
 		if (ret < 0) {
 			break;
 		}
@@ -241,33 +269,38 @@ HRESULT CAudioFilter::Push(const std::unique_ptr<CPacket>& p)
 
 HRESULT CAudioFilter::Push(const REFERENCE_TIME time_start, BYTE* pData, const size_t size)
 {
-	if (!m_pFilterBufferSrc || !m_pFrame) {
+	if (!m_pFilterBufferSrc || !m_pInputFrame) {
 		return E_ABORT;
 	}
 	ASSERT(av_sample_fmt_is_planar(m_inAvSampleFmt) == 0);
 
 	const int nSamples = size / (m_inChannels * get_bytes_per_sample(m_inSampleFmt));
+	if (m_pInputFrame->nb_samples != nSamples) {
+		av_frame_unref(m_pInputFrame);
 
-	m_pFrame->nb_samples     = nSamples;
-	m_pFrame->format         = m_inAvSampleFmt;
-	m_pFrame->ch_layout      = { AV_CHANNEL_ORDER_NATIVE, m_inChannels, m_inLayout };
-	m_pFrame->sample_rate    = m_inSamplerate;
-	m_pFrame->pts            = av_rescale(time_start, m_time_base.den, m_time_base.num * UNITS);
-
-	int ret = av_frame_get_buffer(m_pFrame, 0);
-	if (ret < 0) {
-		return E_OUTOFMEMORY;
+		m_pInputFrame->nb_samples  = nSamples;
+		m_pInputFrame->format      = m_inAvSampleFmt;
+		m_pInputFrame->ch_layout   = { AV_CHANNEL_ORDER_NATIVE, m_inChannels, m_inLayout };
+		m_pInputFrame->sample_rate = m_inSamplerate;
 	}
+
+	if (!m_pInputFrame->data[0]) {
+		int ret = av_frame_get_buffer(m_pInputFrame, 0);
+		if (ret < 0) {
+			return E_OUTOFMEMORY;
+		}
+	}
+
+	m_pInputFrame->pts = av_rescale(time_start, m_time_base.den, m_time_base.num * UNITS);
 
 	if (m_inSampleFmt == SAMPLE_FMT_S24 && m_inAvSampleFmt == AV_SAMPLE_FMT_S32) {
-		convert_int24_to_int32((int32_t*)m_pFrame->data[0], pData, nSamples * m_inChannels);
+		convert_int24_to_int32((int32_t*)m_pInputFrame->data[0], pData, static_cast<size_t>(nSamples) * m_inChannels);
 	} else {
-		memcpy(m_pFrame->data[0], pData, size);
+		memcpy(m_pInputFrame->data[0], pData, size);
 	}
 
-	ret = av_buffersrc_write_frame(m_pFilterBufferSrc, m_pFrame);
+	auto ret = av_buffersrc_write_frame(m_pFilterBufferSrc, m_pInputFrame);
 
-	av_frame_unref(m_pFrame);
 	DLogIf(ret < 0, L"CAudioFilter::Push failed with %s", AvError2Str(ret));
 
 	return ret < 0 ? E_FAIL : S_OK;
@@ -282,7 +315,7 @@ void CAudioFilter::PushEnd()
 
 HRESULT CAudioFilter::Pull(std::unique_ptr<CPacket>& p)
 {
-	if (!m_pFilterBufferSink || !m_pFrame) {
+	if (!m_pFilterBufferSink || !m_pOutputFrame) {
 		return E_ABORT;
 	}
 	ASSERT(av_sample_fmt_is_planar(m_outAvSampleFmt) == 0);
@@ -292,23 +325,23 @@ HRESULT CAudioFilter::Pull(std::unique_ptr<CPacket>& p)
 	}
 	CheckPointer(p, E_FAIL);
 
-	const int ret = av_buffersink_get_frame(m_pFilterBufferSink, m_pFrame);
+	const int ret = av_buffersink_get_frame(m_pFilterBufferSink, m_pOutputFrame);
 	if (ret >= 0) {
-		ASSERT(m_pFrame->format == m_outAvSampleFmt && m_pFrame->ch_layout.nb_channels == m_outChannels);
+		ASSERT(m_pOutputFrame->format == m_outAvSampleFmt && m_pOutputFrame->ch_layout.nb_channels == m_outChannels);
 
-		p->rtStart = av_rescale(m_pFrame->pts, m_time_base.num * UNITS, m_time_base.den);
-		p->rtStop  = p->rtStart + llMulDiv(UNITS, m_pFrame->nb_samples, m_pFrame->sample_rate, 0);
+		p->rtStart = av_rescale(m_pOutputFrame->pts, m_time_base.num * UNITS, m_time_base.den);
+		p->rtStop  = p->rtStart + llMulDiv(UNITS, m_pOutputFrame->nb_samples, m_pOutputFrame->sample_rate, 0);
 
 		if (m_outSampleFmt == SAMPLE_FMT_S24 && m_outAvSampleFmt == AV_SAMPLE_FMT_S32) {
-			const size_t samples = m_pFrame->nb_samples * m_pFrame->ch_layout.nb_channels;
+			const size_t samples = m_pOutputFrame->nb_samples * m_pOutputFrame->ch_layout.nb_channels;
 			p->resize(samples * 3);
-			convert_int32_to_int24(p->data(), (int32_t*)m_pFrame->data[0], samples);
+			convert_int32_to_int24(p->data(), (int32_t*)m_pOutputFrame->data[0], samples);
 		} else {
-			const int buffersize = av_samples_get_buffer_size(nullptr, m_pFrame->ch_layout.nb_channels, m_pFrame->nb_samples, m_outAvSampleFmt, 1);
-			p->SetData(m_pFrame->data[0], buffersize);
+			const int buffersize = av_samples_get_buffer_size(nullptr, m_pOutputFrame->ch_layout.nb_channels, m_pOutputFrame->nb_samples, m_outAvSampleFmt, 1);
+			p->SetData(m_pOutputFrame->data[0], buffersize);
 		}
 	}
-	av_frame_unref(m_pFrame);
+	av_frame_unref(m_pOutputFrame);
 
 	return
 		ret >= 0 ? S_OK :
@@ -318,20 +351,20 @@ HRESULT CAudioFilter::Pull(std::unique_ptr<CPacket>& p)
 
 HRESULT CAudioFilter::Pull(REFERENCE_TIME& time_start, CSimpleBuffer<float>& simpleBuffer, unsigned& allsamples)
 {
-	if (m_outAvSampleFmt != AV_SAMPLE_FMT_FLT || !m_pFilterBufferSink || !m_pFrame) {
+	if (m_outAvSampleFmt != AV_SAMPLE_FMT_FLT || !m_pFilterBufferSink || !m_pOutputFrame) {
 		return E_ABORT;
 	}
 
-	const int ret = av_buffersink_get_frame(m_pFilterBufferSink, m_pFrame);
+	const int ret = av_buffersink_get_frame(m_pFilterBufferSink, m_pOutputFrame);
 	if (ret >= 0) {
-		ASSERT(m_pFrame->format == m_outAvSampleFmt && m_pFrame->ch_layout.nb_channels == m_outChannels);
+		ASSERT(m_pOutputFrame->format == m_outAvSampleFmt && m_pOutputFrame->ch_layout.nb_channels == m_outChannels);
 
-		time_start = av_rescale(m_pFrame->pts, m_time_base.num * UNITS, m_time_base.den);
-		allsamples = m_pFrame->nb_samples * m_pFrame->ch_layout.nb_channels;
+		time_start = av_rescale(m_pOutputFrame->pts, m_time_base.num * UNITS, m_time_base.den);
+		allsamples = m_pOutputFrame->nb_samples * m_pOutputFrame->ch_layout.nb_channels;
 		simpleBuffer.ExtendSize(allsamples);
-		memcpy(simpleBuffer.Data(), m_pFrame->data[0], allsamples * sizeof(float));
+		memcpy(simpleBuffer.Data(), m_pOutputFrame->data[0], allsamples * sizeof(float));
 	}
-	av_frame_unref(m_pFrame);
+	av_frame_unref(m_pOutputFrame);
 
 	return
 		ret >= 0 ? S_OK :
@@ -342,6 +375,8 @@ HRESULT CAudioFilter::Pull(REFERENCE_TIME& time_start, CSimpleBuffer<float>& sim
 void CAudioFilter::Flush()
 {
 	CAutoLock cAutoLock(&m_csFilter);
+
+	av_frame_unref(m_pInputFrame);
 
 	avfilter_graph_free(&m_pFilterGraph);
 	m_pFilterBufferSrc  = nullptr;

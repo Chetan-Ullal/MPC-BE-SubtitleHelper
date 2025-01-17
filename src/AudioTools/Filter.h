@@ -1,5 +1,5 @@
 /*
- * (C) 2014-2023 see Authors.txt
+ * (C) 2014-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -39,7 +39,8 @@ private:
 	AVFilterContext *m_pFilterBufferSrc  = nullptr;
 	AVFilterContext *m_pFilterBufferSink = nullptr;
 
-	AVFrame         *m_pFrame            = nullptr;
+	AVFrame         *m_pInputFrame       = nullptr;
+	AVFrame         *m_pOutputFrame      = nullptr;
 
 	SampleFormat    m_inSampleFmt        = SAMPLE_FMT_NONE;
 	AVSampleFormat  m_inAvSampleFmt      = (AVSampleFormat)-1;
@@ -59,6 +60,11 @@ public:
 	CAudioFilter();
 	~CAudioFilter();
 
+private:
+	int InitFilterBufferSrc();
+	int InitFilterBufferSink();
+
+public:
 	HRESULT Initialize(
 		const SampleFormat in_format, const uint32_t in_layout, const int in_samplerate,
 		const SampleFormat out_format, const uint32_t out_layout, const int out_samplerate,
