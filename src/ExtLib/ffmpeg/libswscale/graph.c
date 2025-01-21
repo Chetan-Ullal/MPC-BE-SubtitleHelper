@@ -472,7 +472,7 @@ static int add_legacy_sws_pass(SwsGraph *graph, SwsFormat src, SwsFormat dst,
 static void free_lut3d(void *priv)
 {
     SwsLut3D *lut = priv;
-    ff_sws_lut3d_free(&lut);
+    sws_lut3d_free(&lut);
 }
 
 static void setup_lut3d(const SwsImg *out, const SwsImg *in, const SwsPass *pass)
@@ -480,7 +480,7 @@ static void setup_lut3d(const SwsImg *out, const SwsImg *in, const SwsPass *pass
     SwsLut3D *lut = pass->priv;
 
     /* Update dynamic frame metadata from the original source frame */
-    ff_sws_lut3d_update(lut, &pass->graph->src.color);
+    sws_lut3d_update(lut, &pass->graph->src.color);
 }
 
 static void run_lut3d(const SwsImg *out_base, const SwsImg *in_base,
@@ -490,8 +490,8 @@ static void run_lut3d(const SwsImg *out_base, const SwsImg *in_base,
     const SwsImg in  = shift_img(in_base,  y);
     const SwsImg out = shift_img(out_base, y);
 
-    ff_sws_lut3d_apply(lut, in.data[0], in.linesize[0], out.data[0],
-                       out.linesize[0], pass->width, h);
+    sws_lut3d_apply(lut, in.data[0], in.linesize[0], out.data[0],
+                    out.linesize[0], pass->width, h);
 }
 
 static int adapt_colors(SwsGraph *graph, SwsFormat src, SwsFormat dst,
@@ -522,15 +522,15 @@ static int adapt_colors(SwsGraph *graph, SwsFormat src, SwsFormat dst,
     map.src    = src.color;
     map.dst    = dst.color;
 
-    if (ff_sws_color_map_noop(&map))
+    if (sws_color_map_noop(&map))
         return 0;
 
-    lut = ff_sws_lut3d_alloc();
+    lut = sws_lut3d_alloc();
     if (!lut)
         return AVERROR(ENOMEM);
 
-    fmt_in  = ff_sws_lut3d_pick_pixfmt(src, 0);
-    fmt_out = ff_sws_lut3d_pick_pixfmt(dst, 1);
+    fmt_in  = sws_lut3d_pick_pixfmt(src, 0);
+    fmt_out = sws_lut3d_pick_pixfmt(dst, 1);
     if (fmt_in != src.format) {
         SwsFormat tmp = src;
         tmp.format = fmt_in;
@@ -539,16 +539,16 @@ static int adapt_colors(SwsGraph *graph, SwsFormat src, SwsFormat dst,
             return ret;
     }
 
-    ret = ff_sws_lut3d_generate(lut, fmt_in, fmt_out, &map);
+    ret = sws_lut3d_generate(lut, fmt_in, fmt_out, &map);
     if (ret < 0) {
-        ff_sws_lut3d_free(&lut);
+        sws_lut3d_free(&lut);
         return ret;
     }
 
     pass = pass_add(graph, lut, fmt_out, src.width, src.height,
                     input, 1, run_lut3d);
     if (!pass) {
-        ff_sws_lut3d_free(&lut);
+        sws_lut3d_free(&lut);
         return AVERROR(ENOMEM);
     }
     pass->setup = setup_lut3d;
@@ -607,8 +607,8 @@ static void sws_graph_worker(void *priv, int jobnr, int threadnr, int nb_jobs,
     pass->run(output, input, slice_y, slice_h, pass);
 }
 
-int ff_sws_graph_create(SwsContext *ctx, const SwsFormat *dst, const SwsFormat *src,
-                        int field, SwsGraph **out_graph)
+int sws_graph_create(SwsContext *ctx, const SwsFormat *dst, const SwsFormat *src,
+                     int field, SwsGraph **out_graph)
 {
     int ret;
     SwsGraph *graph = av_mallocz(sizeof(*graph));
@@ -641,11 +641,11 @@ int ff_sws_graph_create(SwsContext *ctx, const SwsFormat *dst, const SwsFormat *
     return 0;
 
 error:
-    ff_sws_graph_free(&graph);
+    sws_graph_free(&graph);
     return ret;
 }
 
-void ff_sws_graph_free(SwsGraph **pgraph)
+void sws_graph_free(SwsGraph **pgraph)
 {
     SwsGraph *graph = *pgraph;
     if (!graph)
@@ -684,23 +684,23 @@ static int opts_equal(const SwsContext *c1, const SwsContext *c2)
 
 }
 
-int ff_sws_graph_reinit(SwsContext *ctx, const SwsFormat *dst, const SwsFormat *src,
-                        int field, SwsGraph **out_graph)
+int sws_graph_reinit(SwsContext *ctx, const SwsFormat *dst, const SwsFormat *src,
+                     int field, SwsGraph **out_graph)
 {
     SwsGraph *graph = *out_graph;
     if (graph && ff_fmt_equal(&graph->src, src) &&
                  ff_fmt_equal(&graph->dst, dst) &&
                  opts_equal(ctx, &graph->opts_copy))
     {
-        ff_sws_graph_update_metadata(graph, &src->color);
+        sws_graph_update_metadata(graph, &src->color);
         return 0;
     }
 
-    ff_sws_graph_free(out_graph);
-    return ff_sws_graph_create(ctx, dst, src, field, out_graph);
+    sws_graph_free(out_graph);
+    return sws_graph_create(ctx, dst, src, field, out_graph);
 }
 
-void ff_sws_graph_update_metadata(SwsGraph *graph, const SwsColor *color)
+void sws_graph_update_metadata(SwsGraph *graph, const SwsColor *color)
 {
     if (!color)
         return;
@@ -708,10 +708,10 @@ void ff_sws_graph_update_metadata(SwsGraph *graph, const SwsColor *color)
     ff_color_update_dynamic(&graph->src.color, color);
 }
 
-void ff_sws_graph_run(SwsGraph *graph, uint8_t *const out_data[4],
-                      const int out_linesize[4],
-                      const uint8_t *const in_data[4],
-                      const int in_linesize[4])
+void sws_graph_run(SwsGraph *graph, uint8_t *const out_data[4],
+                   const int out_linesize[4],
+                   const uint8_t *const in_data[4],
+                   const int in_linesize[4])
 {
     SwsImg *out = &graph->exec.output;
     SwsImg *in  = &graph->exec.input;

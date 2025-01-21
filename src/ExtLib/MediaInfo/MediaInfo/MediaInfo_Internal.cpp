@@ -66,14 +66,12 @@
 #if MEDIAINFO_ADVANCED && defined(MEDIAINFO_FILE_YES)
     #include <limits>
     #ifdef WINDOWS
-        #ifndef WIN32_LEAN_AND_MEAN
-            #define WIN32_LEAN_AND_MEAN
-        #endif
-        #ifndef NOMINMAX
-            #define NOMINMAX
-        #endif
+    namespace WindowsNamespace
+    {
         #include <windows.h>
         #undef Yield
+        #undef max
+    }
     #else
         #include <unistd.h>
         #include <signal.h>
@@ -1019,7 +1017,7 @@ static void CtrlC_Received()
 }
 
 #ifdef WINDOWS
-static BOOL WINAPI SignalHandler(DWORD SignalType)
+static WindowsNamespace::BOOL WINAPI SignalHandler(WindowsNamespace::DWORD SignalType)
 {
     if (SignalType==CTRL_C_EVENT)
     {
@@ -1032,12 +1030,12 @@ static BOOL WINAPI SignalHandler(DWORD SignalType)
 
 static void CtrlC_Register()
 {
-    SetConsoleCtrlHandler(SignalHandler, TRUE);
+    WindowsNamespace::SetConsoleCtrlHandler(SignalHandler, TRUE);
 }
 
 static void CtrlC_Unregister()
 {
-    SetConsoleCtrlHandler(SignalHandler, FALSE);
+    WindowsNamespace::SetConsoleCtrlHandler(SignalHandler, FALSE);
 }
 #else //WINDOWS
 static void SignalHandler(int SignalType)
@@ -1491,7 +1489,7 @@ void MediaInfo_Internal::Entry()
                     }
 
                     #ifdef WINDOWS
-                        Sleep(0);
+                        WindowsNamespace::Sleep(0);
                     #elif defined(_POSIX_PRIORITY_SCHEDULING)
                         sched_yield();
                     #endif //_POSIX_PRIORITY_SCHEDULING

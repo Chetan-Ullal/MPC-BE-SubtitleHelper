@@ -554,17 +554,18 @@ static const AVFilterPad avfilter_vsrc_buffer_outputs[] = {
     },
 };
 
-const FFFilter ff_vsrc_buffer = {
-    .p.name        = "buffer",
-    .p.description = NULL_IF_CONFIG_SMALL("Buffer video frames, and make them accessible to the filterchain."),
-    .p.priv_class  = &buffer_class,
+const AVFilter ff_vsrc_buffer = {
+    .name      = "buffer",
+    .description = NULL_IF_CONFIG_SMALL("Buffer video frames, and make them accessible to the filterchain."),
     .priv_size = sizeof(BufferSourceContext),
     .activate  = activate,
     .init      = init_video,
     .uninit    = uninit,
 
+    .inputs    = NULL,
     FILTER_OUTPUTS(avfilter_vsrc_buffer_outputs),
     FILTER_QUERY_FUNC2(query_formats),
+    .priv_class = &buffer_class,
 };
 
 static const AVFilterPad avfilter_asrc_abuffer_outputs[] = {
@@ -575,15 +576,16 @@ static const AVFilterPad avfilter_asrc_abuffer_outputs[] = {
     },
 };
 
-const FFFilter ff_asrc_abuffer = {
-    .p.name        = "abuffer",
-    .p.description = NULL_IF_CONFIG_SMALL("Buffer audio frames, and make them accessible to the filterchain."),
-    .p.priv_class  = &abuffer_class,
+const AVFilter ff_asrc_abuffer = {
+    .name          = "abuffer",
+    .description   = NULL_IF_CONFIG_SMALL("Buffer audio frames, and make them accessible to the filterchain."),
     .priv_size     = sizeof(BufferSourceContext),
     .activate  = activate,
     .init      = init_audio,
     .uninit    = uninit,
 
+    .inputs    = NULL,
     FILTER_OUTPUTS(avfilter_asrc_abuffer_outputs),
     FILTER_QUERY_FUNC2(query_formats),
+    .priv_class = &abuffer_class,
 };
