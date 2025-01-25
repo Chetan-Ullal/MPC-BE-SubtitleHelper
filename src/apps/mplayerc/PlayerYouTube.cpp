@@ -217,7 +217,7 @@ namespace Youtube
 		return false;
 	}
 
-	static bool URLPostData(LPCWSTR lpszAgent, const CStringW& headers, CStringA& requestData, urlData& pData)
+	static bool URLPostData(LPCWSTR lpszAgent, LPCWSTR headers, CStringA& requestData, urlData& pData)
 	{
 		pData.clear();
 
@@ -228,7 +228,7 @@ namespace Youtube
 													 L"youtubei/v1/player", nullptr, nullptr, nullptr,
 													 INTERNET_FLAG_SECURE | INTERNET_FLAG_RELOAD, 1)) {
 
-					if (HttpSendRequestW(hRequest, headers.GetString(), headers.GetLength(),
+					if (HttpSendRequestW(hRequest, headers, -1,
 										 reinterpret_cast<LPVOID>(requestData.GetBuffer()), requestData.GetLength())) {
 
 						static std::vector<char> tmp(16 * 1024);
@@ -256,36 +256,89 @@ namespace Youtube
 		return !pData.empty();
 	}
 
+	static CStringA ExtractYtcfg(LPCWSTR videoId)
+	{
+		constexpr LPCWSTR urls[] = {
+			L"https://www.youtube.com/embed/",
+			L"https://www.youtube.com/watch?v="
+		};
+
+		urlData data;
+		for (auto url : urls) {
+			if (URLReadData(CStringW(url) + videoId, data)) {
+				const std::regex regex(R"(ytcfg\.set\s*\(\s*(\{.+?\})\s*\)\s*;)");
+				std::cmatch match;
+				if (std::regex_search(data.data(), match, regex) && match.size() == 2) {
+					return CStringA(match[1].first, match[1].length());
+				}
+			}
+		}
+
+		return {};
+	}
+
+	static CStringW ExtractVisitorData(LPCWSTR videoId)
+	{
+		CStringW visitorData;
+
+		if (auto ytcfg = ExtractYtcfg(videoId); !ytcfg.IsEmpty()) {
+			rapidjson::Document json;
+			if (!json.Parse(ytcfg).HasParseError()) {
+				if (!getJsonValue(json, "VISITOR_DATA", visitorData)) {
+					if (auto value = GetValueByPointer(json, "/INNERTUBE_CONTEXT/client/visitorData"); value && value->IsString()) {
+						visitorData = UTF8ToWStr(value->GetString());
+					}
+				}
+			}
+		}
+
+		if (!visitorData.IsEmpty()) {
+			Unescape(visitorData);
+		}
+
+		return visitorData;
+	}
+
 	static bool URLPostData(LPCWSTR videoId, urlData& pData)
 	{
-		constexpr auto requestStr =
+		constexpr static auto requestStr =
 			R"({"contentCheckOk": true, "context": {"client": {"clientName": "IOS", "clientVersion": "19.45.4", "deviceMake": "Apple", "deviceModel": "iPhone16,2", "hl": "en", "osName": "iPhone", "osVersion": "18.1.0.22B83", "timeZone": "UTC", "utcOffsetMinutes": 0}}, "playbackContext": {"contentPlaybackContext": {"html5Preference": "HTML5_PREF_WANTS"}}, "racyCheckOk" : true, "videoId" : "%S"})";
-
-		static const CStringW headers =
-			LR"(X-YouTube-Client-Name: 5\r\n)"
-			LR"(X-YouTube-Client-Version: 19.45.4\r\n)"
-			LR"(Origin: https://www.youtube.com\r\n)"
-			LR"(content-type: application/json\r\n)";
 
 		CStringA requestData;
 		requestData.Format(requestStr, videoId);
 
-		return URLPostData(L"com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X;)", headers, requestData, pData);
+		CStringW headers =
+			L"X-YouTube-Client-Name: 5\r\n"
+			L"X-YouTube-Client-Version: 19.45.4\r\n"
+			L"Origin: https://www.youtube.com\r\n"
+			L"Content-Type: application/json\r\n";
+
+		auto visitorData = ExtractVisitorData(videoId);
+		if (!visitorData.IsEmpty()) {
+			headers.AppendFormat(L"X-Goog-Visitor-Id: %s\r\n", visitorData.GetString());
+		}
+
+		return URLPostData(L"com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X;)", headers.GetString(), requestData, pData);
 	}
 
 	static bool URLPostDataForLive(LPCWSTR videoId, urlData& pData)
 	{
-		constexpr auto requestStr =
+		constexpr static auto requestStr =
 			R"({"contentCheckOk": true, "context": {"client": {"clientName": "MWEB", "clientVersion": "2.20240726.01.00", "hl": "en", "timeZone": "UTC", "utcOffsetMinutes": 0}}, "playbackContext": {"contentPlaybackContext": {"html5Preference": "HTML5_PREF_WANTS"}}, "racyCheckOk": true, "videoId": "%S"})";
-
-		static const CStringW headers =
-			LR"(X-YouTube-Client-Name: 2\r\n)"
-			LR"(X-YouTube-Client-Version: 2.20240726.01.00\r\n)"
-			LR"(Origin: https://www.youtube.com\r\n)"
-			LR"(content-type: application/json\r\n)";
 
 		CStringA requestData;
 		requestData.Format(requestStr, videoId);
+
+		CStringW headers =
+			LR"(X-YouTube-Client-Name: 2\r\n)"
+			LR"(X-YouTube-Client-Version: 2.20240726.01.00\r\n)"
+			LR"(Origin: https://www.youtube.com\r\n)"
+			LR"(Content-Type: application/json\r\n)";
+
+		auto visitorData = ExtractVisitorData(videoId);
+		if (!visitorData.IsEmpty()) {
+			headers.AppendFormat(L"X-Goog-Visitor-Id: %s\r\n", visitorData.GetString());
+		}
 
 		return URLPostData(http::userAgent.GetString(), headers, requestData, pData);
 	}
@@ -1843,11 +1896,49 @@ namespace Youtube
 	bool Parse_URL(CString url, YoutubeFields& y_fields)
 	{
 		bool bRet = false;
+
 		if (CheckURL(url)) {
 			HandleURL(url);
 			const CString videoId = RegExpParse(url.GetString(), videoIdRegExp);
 
 			bRet = ParseMetadata(videoId, y_fields);
+		}
+
+		return bRet;
+	}
+
+	bool Parse_URL(CString url, CString& title, REFERENCE_TIME& duration)
+	{
+		bool bRet = false;
+
+		if (CheckURL(url)) {
+			HandleURL(url);
+			const CString videoId = RegExpParse(url.GetString(), videoIdRegExp);
+
+			if (auto ytcfg = ExtractYtcfg(videoId); !ytcfg.IsEmpty()) {
+				rapidjson::Document json;
+				if (!json.Parse(ytcfg).HasParseError()) {
+					if (auto embedded_player_response = GetValueByPointer(json, "/PLAYER_VARS/embedded_player_response"); embedded_player_response && embedded_player_response->IsString()) {
+						auto str = UrlDecode(embedded_player_response->GetString());
+						if (!json.Parse(str).HasParseError()) {
+							if (auto thumbnailPreviewRenderer = GetValueByPointer(json, "/embedPreview/thumbnailPreviewRenderer"); thumbnailPreviewRenderer && thumbnailPreviewRenderer->IsObject()) {
+								if (auto title_runs = GetValueByPointer(*thumbnailPreviewRenderer, "/title/runs"); title_runs && title_runs->IsArray()) {
+									auto array = title_runs->GetArray();
+									if (!array.Empty()) {
+										getJsonValue(array[0], "text", title);
+										bRet = true;
+									}
+								}
+
+								CStringA videoDurationSeconds;
+								if (getJsonValue(*thumbnailPreviewRenderer, "videoDurationSeconds", videoDurationSeconds)) {
+									duration = atoi(videoDurationSeconds.GetString()) * UNITS;
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 
 		return bRet;
