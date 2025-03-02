@@ -1,6 +1,31 @@
 ﻿This file includes only a short list of the changes between Media Player Classic - BE's versions.
 
-1.8.2.x dev
+1.8.3.x dev
+=============================
+MpcAudioRenderer
+Rare crashes have been fixed.
+The "Release device when idle" setting now works with Shared mode and is enabled by default. This will allow the computer to go to sleep on a timer when playback is paused.
+
+YouTube
+Minor fixes.
+
+Player
+Fixed opening of some online links.
+
+Updated Korean translation (by Hackjjang).
+Updated Romanian translation (by Andrei Miloiu).
+Updated Japanese translation (by tsubasanouta).
+Updated German translation (by Klaus1189).
+Updated Spanish translation (by IPeluchito).
+Updated Turkish translation (by cmhrky).
+Updated Chinese (Simplified) translation (by wushantao).
+Updated Hungarian translation (by mickey).
+
+Updated libraries:
+	ffmpeg n7.2-dev-1357-gbb8e95b650.
+
+
+1.8.3 - 2025-02-07
 =============================
 StreamReader
 Fixed freezing in some situations.
@@ -22,6 +47,9 @@ Added "Preferred audio format" setting for the built-in YouTube parser.
 Improved language track selection for region-specific languages ​​that do not have a separate setting.
 If the audio track language is not found, the default track for this video will be used.
 
+Subtitles
+Fixed crash on some PGS subtitles.
+
 Player
 Added the ability to receive the displayed video frame on a 10-bit display in RGB48 format when using MPC Video Renderer 0.9.0.2326 or later.
 Fixed playlist operation with clipboard.
@@ -33,12 +61,12 @@ Fixed enabling/disabling shaders on pause in the "Shader Combiner" dialog.
 Installer
 MPC Video Renderer will be installed by default.
 Added MPC Script Source 0.2.5.
-Updated MPC Video Renderer 0.9.1.
+Updated MPC Video Renderer 0.9.3.
 Compiling the installer requires InnoSetup 6.4.0 or later.
 
 Updated German translation (by Klaus1189).
 Updated Hungarian translation (by mickey).
-Updated Chinese (Simplified) translation (by wushantao).
+Updated Chinese (Simplified) translation (by wushantao and nothingshiru).
 Updated Turkish translation (by cmhrky).
 Updated Italian translation (by mapi68).
 Updated Spanish translation (by IPeluchito).

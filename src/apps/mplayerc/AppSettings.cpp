@@ -627,6 +627,8 @@ void CAppSettings::ResetSettings()
 	strAudioFilter1.Empty();
 	bAudioFiltersNotForStereo = false;
 
+	m_VRSettings.SetDefault();
+
 	m_ExternalFilters.clear();
 
 	// Keys
@@ -2367,7 +2369,7 @@ void CAppSettings::ParseCommandLine(cmdLine& cmdln)
 				CMiniDump::SetState(false);
 			}
 			else if (sw == L"audiorenderer" && next_available) {
-				SetAudioRenderer(_wtoi(*it++));
+				SetAudioRenderer(*it++);
 			}
 			else if (sw == L"reset") {
 				nCLSwitches |= CLSW_RESET;

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -30,7 +30,14 @@ class CPPageAudio : public CPPageBase
 	DECLARE_DYNAMIC(CPPageAudio)
 
 private:
-	CStringArray m_AudioRendererDisplayNames;
+	struct audioDeviceInfo_t {
+		CStringW friendlyName;
+		CLSID clsid = GUID_NULL;
+		GUID dsGuid = GUID_NULL;
+		CStringW displayName;
+	};
+
+	std::vector<audioDeviceInfo_t> m_audioDevices;
 	int m_oldVolume = 0; //not very nice solution
 
 public:
@@ -59,6 +66,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual BOOL OnInitDialog();
 	virtual BOOL OnApply();
 
