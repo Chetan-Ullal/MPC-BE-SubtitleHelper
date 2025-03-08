@@ -16,26 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVCODEC_LCEVCDEC_H
-#define AVCODEC_LCEVCDEC_H
+#ifndef AVUTIL_SIDE_DATA_H
+#define AVUTIL_SIDE_DATA_H
 
-#include "config.h"
+#include "buffer.h"
+#include "frame.h"
 
-#include <stdint.h>
-#if CONFIG_LIBLCEVC_DEC
-#include <LCEVC/lcevc_dec.h>
-#else
-typedef uintptr_t LCEVC_DecoderHandle;
-#endif
+AVFrameSideData *ff_frame_side_data_add_from_buf(AVFrameSideData ***sd,
+                                                 int *nb_sd,
+                                                 enum AVFrameSideDataType type,
+                                                 AVBufferRef *buf);
 
-typedef struct FFLCEVCContext {
-    LCEVC_DecoderHandle decoder;
-    int initialized;
-} FFLCEVCContext;
-
-struct AVFrame;
-
-int ff_lcevc_alloc(FFLCEVCContext **plcevc);
-int ff_lcevc_process(void *logctx, struct AVFrame *frame);
-void ff_lcevc_unref(void *opaque);
-#endif /* AVCODEC_LCEVCDEC_H */
+#endif // AVUTIL_SIDE_DATA_H

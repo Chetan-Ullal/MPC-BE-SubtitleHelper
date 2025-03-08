@@ -1,5 +1,5 @@
 /*
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -163,6 +163,13 @@ struct {
 	{ AV_CODEC_ID_H264, DXVA2_ModeH264_E, false },
 	{ AV_CODEC_ID_H264, DXVA2_ModeH264_F, false },
 	{ AV_CODEC_ID_H264, DXVA2_H264_VLD_Intel, false },
+	// HEVC Rext
+	{ AV_CODEC_ID_HEVC, D3D11_DECODER_PROFILE_HEVC_VLD_MAIN12,     false, AV_PIX_FMT_YUV420P12 },
+	{ AV_CODEC_ID_HEVC, D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_422, false, AV_PIX_FMT_YUV422P10 },
+	{ AV_CODEC_ID_HEVC, D3D11_DECODER_PROFILE_HEVC_VLD_MAIN12_422, false, AV_PIX_FMT_YUV422P12 },
+	{ AV_CODEC_ID_HEVC, D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444,   false, AV_PIX_FMT_YUV444P   },
+	{ AV_CODEC_ID_HEVC, D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444, false, AV_PIX_FMT_YUV444P10 },
+	{ AV_CODEC_ID_HEVC, D3D11_DECODER_PROFILE_HEVC_VLD_MAIN12_444, false, AV_PIX_FMT_YUV444P12 },
 	// HEVC Intel
 	{ AV_CODEC_ID_HEVC, DXVA2_HEVC_VLD_Main12_Intel,     false, AV_PIX_FMT_YUV420P12 },
 	{ AV_CODEC_ID_HEVC, DXVA2_HEVC_VLD_Main422_10_Intel, false, AV_PIX_FMT_YUV422P   },
@@ -2646,7 +2653,7 @@ void CMPCVideoDecFilter::BuildOutputFormat()
 	if (IsDXVASupported(m_hwType == HwType::DXVA2 || m_hwType == HwType::D3D11)) {
 		if (m_hwType == HwType::D3D11 && m_CodecId == AV_CODEC_ID_HEVC && m_pAVCtx->profile == FF_PROFILE_HEVC_REXT) {
 			switch (pix_fmt) {
-				case AV_PIX_FMT_YUV420P12: m_VideoOutputFormats.push_back(DXVA_P016); break;
+				case AV_PIX_FMT_YUV420P12: m_VideoOutputFormats.push_back(m_nPCIVendor == PCIV_nVidia ? DXVA_P010 : DXVA_P016); break;
 				case AV_PIX_FMT_YUV422P:   m_VideoOutputFormats.push_back(DXVA_YUY2); break;
 				case AV_PIX_FMT_YUV422P10: m_VideoOutputFormats.push_back(DXVA_Y210); break;
 				case AV_PIX_FMT_YUV422P12: m_VideoOutputFormats.push_back(DXVA_Y216); break;
@@ -4173,10 +4180,12 @@ BOOL CMPCVideoDecFilter::IsSupportedDecoderMode(const GUID& decoderGUID)
 		for (const auto& mode : DXVAModes) {
 			if (mode.nCodecId == m_CodecId
 					&& mode.decoderGUID == decoderGUID) {
-				if (mode.pixFormat != AV_PIX_FMT_NONE && m_hwType == HwType::D3D11 && m_pAVCtx->profile == FF_PROFILE_HEVC_REXT) {
-					const enum AVPixelFormat pix_fmt = (m_pAVCtx->sw_pix_fmt != AV_PIX_FMT_NONE) ? m_pAVCtx->sw_pix_fmt : m_pAVCtx->pix_fmt;
-					if (mode.pixFormat == pix_fmt) {
-						return TRUE;
+				if (m_pAVCtx->codec_id == AV_CODEC_ID_HEVC && m_pAVCtx->profile == FF_PROFILE_HEVC_REXT) {
+					if (mode.pixFormat != AV_PIX_FMT_NONE) {
+						const auto pix_fmt = (m_pAVCtx->sw_pix_fmt != AV_PIX_FMT_NONE) ? m_pAVCtx->sw_pix_fmt : m_pAVCtx->pix_fmt;
+						if (mode.pixFormat == pix_fmt) {
+							return TRUE;
+						}
 					}
 				} else if (mode.bHighBitdepth == m_bHighBitdepth) {
 					return TRUE;
