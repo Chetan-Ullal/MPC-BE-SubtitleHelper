@@ -959,7 +959,7 @@ STDMETHODIMP CMpcAudioRenderer::GetPreroll(LONGLONG* pPreroll)
 }
 
 // === IMMNotificationClient
-STDMETHODIMP CMpcAudioRenderer::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState)
+STDMETHODIMP CMpcAudioRenderer::OnDeviceStateChanged(__in LPCWSTR pwstrDeviceId, __in DWORD dwNewState)
 {
 	CheckPointer(m_hRenderThread, S_OK);
 
@@ -970,7 +970,7 @@ STDMETHODIMP CMpcAudioRenderer::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWOR
 	return S_OK;
 }
 
-STDMETHODIMP CMpcAudioRenderer::OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDeviceId)
+STDMETHODIMP CMpcAudioRenderer::OnDefaultDeviceChanged(__in EDataFlow flow, __in ERole role, __in LPCWSTR pwstrDefaultDeviceId)
 {
 	CheckPointer(m_hRenderThread, S_OK);
 
@@ -1470,6 +1470,8 @@ HRESULT CMpcAudioRenderer::Transform(IMediaSample *pMediaSample)
 		return S_FALSE;
 	}
 
+	CheckPointer(m_pWaveFormatExInput, S_FALSE);
+
 	m_rtLastReceivedSampleTimeEnd = rtStart + SamplesToTime(lSize / m_pWaveFormatExInput->nBlockAlign, m_pWaveFormatExInput) / m_dRate;
 
 	if (!m_pRenderClient) {
@@ -1496,7 +1498,6 @@ HRESULT CMpcAudioRenderer::Transform(IMediaSample *pMediaSample)
 		}
 	}
 
-	CheckPointer(m_pWaveFormatExInput, S_FALSE);
 	CheckPointer(m_pWaveFormatExOutput, S_FALSE);
 
 	if (m_input_params.sf == SAMPLE_FMT_NONE || m_output_params.sf == SAMPLE_FMT_NONE) {
@@ -1529,9 +1530,9 @@ HRESULT CMpcAudioRenderer::Transform(IMediaSample *pMediaSample)
 		return hr;
 	}
 
-	BYTE *pInputBufferPointer = nullptr;
+	auto pInputBufferPointer = pMediaBuffer;
 
-	BYTE* out_buf = nullptr;
+	std::unique_ptr<BYTE> pChangedBuffer;
 
 	if (m_bUpdateBalanceMask) {
 		SetBalanceMask(m_output_params.layout);
@@ -1544,8 +1545,6 @@ HRESULT CMpcAudioRenderer::Transform(IMediaSample *pMediaSample)
 
 	const bool bFormatChanged = !m_bIsBitstream && (m_input_params.layout != m_output_params.layout || m_input_params.samplerate != m_output_params.samplerate || m_input_params.sf != m_output_params.sf);
 	if (bFormatChanged) {
-		BYTE* in_buff = &pMediaBuffer[0];
-
 		if (m_input_params.layout != m_output_params.layout || m_input_params.samplerate != m_output_params.samplerate) {
 #if defined(DEBUG_OR_LOG) && DBGLOG_LEVEL > 2
 			CString dbgLog = L"CMpcAudioRenderer::Transform() - use Mixer:\n";
@@ -1569,10 +1568,9 @@ HRESULT CMpcAudioRenderer::Transform(IMediaSample *pMediaSample)
 			m_Resampler.UpdateOutput(m_output_params.sf, m_output_params.layout, m_output_params.samplerate);
 			out_samples = m_Resampler.CalcOutSamples(in_samples);
 			REFERENCE_TIME delay = m_Resampler.GetDelay();
-			out_buf     = DNew BYTE[out_samples * m_output_params.channels * get_bytes_per_sample(m_output_params.sf)];
-			out_samples = m_Resampler.Mixing(out_buf, out_samples, in_buff, in_samples);
+			pChangedBuffer.reset(DNew BYTE[out_samples * m_output_params.channels * get_bytes_per_sample(m_output_params.sf)]);
+			out_samples = m_Resampler.Mixing(pChangedBuffer.get(), out_samples, pMediaBuffer, in_samples);
 			if (!out_samples) {
-				delete [] out_buf;
 				return E_INVALIDARG;
 			}
 			lSize = out_samples * m_output_params.channels * get_bytes_per_sample(m_output_params.sf);
@@ -1586,51 +1584,48 @@ HRESULT CMpcAudioRenderer::Transform(IMediaSample *pMediaSample)
 			DLog(L"CMpcAudioRenderer::Transform() - convert: '%s' -> '%s'", GetSampleFormatString(m_input_params.sf), GetSampleFormatString(m_output_params.sf));
 #endif
 
-			lSize   = out_samples * m_output_params.channels * get_bytes_per_sample(m_output_params.sf);
-			out_buf = DNew BYTE[lSize];
+			lSize = out_samples * m_output_params.channels * get_bytes_per_sample(m_output_params.sf);
+			pChangedBuffer.reset(DNew BYTE[lSize]);
 
 			HRESULT hr = E_INVALIDARG;
 			switch (m_output_params.sf) {
 				case SAMPLE_FMT_S16:
 					m_DitherInt16.UpdateInput(m_input_params.sf, m_output_params.channels);
-					m_DitherInt16.Process((int16_t*)out_buf, in_buff, out_samples);
+					m_DitherInt16.Process(reinterpret_cast<int16_t*>(pChangedBuffer.get()), pMediaBuffer, out_samples);
 					hr = S_OK;
 					break;
 				case SAMPLE_FMT_S24:
-					hr = convert_to_int24(m_input_params.sf, m_output_params.channels, out_samples, in_buff, out_buf);
+					hr = convert_to_int24(m_input_params.sf, m_output_params.channels, out_samples, pMediaBuffer, pChangedBuffer.get());
 					break;
 				case SAMPLE_FMT_S32:
-					hr = convert_to_int32(m_input_params.sf, m_output_params.channels, out_samples, in_buff, (int32_t*)out_buf);
+					hr = convert_to_int32(m_input_params.sf, m_output_params.channels, out_samples, pMediaBuffer, reinterpret_cast<int32_t*>(pChangedBuffer.get()));
 					break;
 				case SAMPLE_FMT_FLT:
-					hr = convert_to_float(m_input_params.sf, m_output_params.channels, out_samples, in_buff, (float*)out_buf);
+					hr = convert_to_float(m_input_params.sf, m_output_params.channels, out_samples, pMediaBuffer, reinterpret_cast<float*>(pChangedBuffer.get()));
 					break;
 			}
 
 			if (FAILED(hr)) {
-				SAFE_DELETE_ARRAY(out_buf);
 				return hr;
 			}
 		}
 
-		pInputBufferPointer	= &out_buf[0];
-	} else {
-		pInputBufferPointer	= &pMediaBuffer[0];
+		pInputBufferPointer	= pChangedBuffer.get();
 	}
 
 	if (m_bs2b_active) {
 		switch (m_output_params.sf) {
 		case SAMPLE_FMT_S16:
-			m_bs2b.cross_feed((int16_t*)pInputBufferPointer, out_samples);
+			m_bs2b.cross_feed(reinterpret_cast<int16_t*>(pInputBufferPointer), out_samples);
 			break;
 		case SAMPLE_FMT_S24:
-			m_bs2b.cross_feed((bs2b_int24_t*)pInputBufferPointer, out_samples);
+			m_bs2b.cross_feed(reinterpret_cast<bs2b_int24_t*>(pInputBufferPointer), out_samples);
 			break;
 		case SAMPLE_FMT_S32:
-			m_bs2b.cross_feed((int32_t*)pInputBufferPointer, out_samples);
+			m_bs2b.cross_feed(reinterpret_cast<int32_t*>(pInputBufferPointer), out_samples);
 			break;
 		case SAMPLE_FMT_FLT:
-			m_bs2b.cross_feed((float*)pInputBufferPointer, out_samples);
+			m_bs2b.cross_feed(reinterpret_cast<float*>(pInputBufferPointer), out_samples);
 			break;
 		}
 	}
@@ -1677,8 +1672,6 @@ HRESULT CMpcAudioRenderer::Transform(IMediaSample *pMediaSample)
 	} else {
 		PushToQueue(p);
 	}
-
-	SAFE_DELETE_ARRAY(out_buf);
 
 	if (!m_bIsAudioClientStarted) {
 		StartRendererThread();
@@ -2768,9 +2761,6 @@ HRESULT CMpcAudioRenderer::ReinitializeAudioDevice(BOOL bFullInitialization/* = 
 
 	CAutoLock cRenderLock(&m_csRender);
 
-	WAVEFORMATEX* pWaveFormatEx = nullptr;
-	CopyWaveFormat(m_pWaveFormatExInput, &pWaveFormatEx);
-
 	if (m_bIsAudioClientStarted && m_pAudioClient) {
 		m_pAudioClient->Stop();
 	}
@@ -2781,8 +2771,6 @@ HRESULT CMpcAudioRenderer::ReinitializeAudioDevice(BOOL bFullInitialization/* = 
 		SAFE_RELEASE(m_pRenderClient);
 		SAFE_RELEASE(m_pAudioClient);
 		SAFE_RELEASE(m_pMMDevice);
-
-		SAFE_DELETE_ARRAY(m_pWaveFormatExInput);
 
 		m_wBitsPerSampleList.clear();
 		m_nChannelsList.clear();
@@ -2798,17 +2786,15 @@ HRESULT CMpcAudioRenderer::ReinitializeAudioDevice(BOOL bFullInitialization/* = 
 	if (bFullInitialization) {
 		hr = CreateAudioClient();
 		if (SUCCEEDED(hr)) {
-			hr = CheckAudioClient(pWaveFormatEx);
+			hr = CheckAudioClient(m_pWaveFormatExInput);
 		}
 	} else {
-		hr = CheckAudioClient(pWaveFormatEx);
+		hr = CheckAudioClient(m_pWaveFormatExInput);
 	}
 
 	if (FAILED(hr)) {
 		DLog(L"CMpcAudioRenderer::ReinitializeAudioDevice() failed: (0x%08x)", hr);
 	}
-
-	SAFE_DELETE_ARRAY(pWaveFormatEx);
 
 	if (bFullInitialization) {
 		bool bInfTeePresent = FindFilter(CLSID_InfTee, m_pGraph);
@@ -2841,7 +2827,7 @@ HRESULT CMpcAudioRenderer::RenderWasapiBuffer()
 
 	UINT32 numFramesPadding = 0;
 	if ((m_DeviceModeCurrent == MODE_WASAPI_SHARED && !m_bIsBitstream) || m_WasapiMethod == WASAPI_METHOD::PUSH) {
-		m_pAudioClient->GetCurrentPadding(&numFramesPadding);
+		hr = m_pAudioClient->GetCurrentPadding(&numFramesPadding);
 		if (FAILED(hr)) {
 #if defined(DEBUG_OR_LOG) && DBGLOG_LEVEL > 1
 			DLog(L"CMpcAudioRenderer::RenderWasapiBuffer() - GetCurrentPadding() failed (0x%08x)", hr);
