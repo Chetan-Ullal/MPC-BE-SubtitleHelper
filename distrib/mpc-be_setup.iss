@@ -68,8 +68,8 @@
   #define Description  = app_name + " x64 " + app_version
   #define VisualElementsManifest = "VisualElements\mpc-be64.VisualElementsManifest.xml"
 #endif
-#define mpcvr_desc     = "MPC Video Renderer 0.9.3"
-#define mpcscriptsrc_desc = "MPC Script Source 0.2.5"
+#define mpcvr_desc     = "MPC Video Renderer 0.9.5"
+#define mpcscriptsrc_desc = "MPC Script Source 0.2.7"
 
 [Setup]
 #ifdef Win32Build
@@ -132,6 +132,7 @@ SignTool=OpenSourceSign
 Name: en; MessagesFile: compiler:Default.isl
 
 #ifdef localize
+Name: bg; MessagesFile: compiler:Languages\Bulgarian.isl
 Name: br; MessagesFile: compiler:Languages\BrazilianPortuguese.isl
 Name: by; MessagesFile: Languages\Belarusian.isl
 Name: ca; MessagesFile: compiler:Languages\Catalan.isl
@@ -164,6 +165,7 @@ Name: ua; MessagesFile: compiler:Languages\Ukrainian.isl
 ; Include installer's custom messages
 #include ".\CustomMessages\custom_messages.iss"
 #ifdef localize
+#include ".\CustomMessages\custom_messages.bg.iss"
 #include ".\CustomMessages\custom_messages.br.iss"
 #include ".\CustomMessages\custom_messages.by.iss"
 #include ".\CustomMessages\custom_messages.ca.iss"
