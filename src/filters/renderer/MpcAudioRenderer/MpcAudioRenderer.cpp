@@ -2064,6 +2064,18 @@ again:
 									}
 								}
 							}
+						} else {
+							if (!m_bUseDefaultDevice) {
+								DLog(L"CMpcAudioRenderer::CheckAudioClient() - InitAudioClient() failed: (0x%08x), trying default", hr);
+
+								ReleaseAudio(true);
+								bForceUseDefaultDevice = TRUE;
+
+								goto again;
+							}
+
+							DLog(L"CMpcAudioRenderer::CheckAudioClient() - InitAudioClient() failed: (0x%08x)", hr);
+							return hr;
 						}
 					}
 
@@ -2463,18 +2475,18 @@ HRESULT CMpcAudioRenderer::CreateRenderClient(WAVEFORMATEX *pWaveFormatEx, const
 		WasapiFlush();
 	}
 
-	auto GetAudioPosition = [&] {
-		UINT64 deviceClockFrequency, deviceClockPosition;
-		if (SUCCEEDED(m_pAudioClock->GetFrequency(&deviceClockFrequency))
-				&& SUCCEEDED(m_pAudioClock->GetPosition(&deviceClockPosition, nullptr))) {
-			return llMulDiv(deviceClockPosition, UNITS, deviceClockFrequency, 0);
-		}
-
-		return 0LL;
-	};
-
 	m_rtEstimateSlavingJitter = 0;
-	if (m_filterState == State_Running) {
+	if (m_filterState == State_Running && m_pAudioClock) {
+		auto GetAudioPosition = [&] {
+			UINT64 deviceClockFrequency, deviceClockPosition;
+			if (SUCCEEDED(m_pAudioClock->GetFrequency(&deviceClockFrequency))
+				&& SUCCEEDED(m_pAudioClock->GetPosition(&deviceClockPosition, nullptr))) {
+				return llMulDiv(deviceClockPosition, UNITS, deviceClockFrequency, 0);
+			}
+
+			return 0LL;
+		};
+
 		if (!m_bReleased) {
 			m_rtEstimateSlavingJitter = m_rtLastReceivedSampleTimeEnd - (m_pSyncClock->GetPrivateTime() - m_rtStartTime) + GetAudioPosition();
 			if (m_rtEstimateSlavingJitter < 0 || m_rtEstimateSlavingJitter > UNITS) {
@@ -2864,7 +2876,7 @@ HRESULT CMpcAudioRenderer::RenderWasapiBuffer()
 #endif
 		dwFlags = AUDCLNT_BUFFERFLAGS_SILENT;
 
-		if (!nWasapiQueueSize && m_filterState == State_Running && !bFlushing) {
+		if (m_bIsAudioClientStarted && !nWasapiQueueSize && m_filterState == State_Running && !bFlushing) {
 			const auto duration = SamplesToTime(numFramesAvailable, m_pWaveFormatExOutput);
 			m_rtNextRenderedSampleTime = m_rtLastReceivedSampleTimeEnd = std::max(m_rtNextRenderedSampleTime, m_pSyncClock->GetPrivateTime() - m_rtStartTime + duration);
 			DLog(L"CMpcAudioRenderer::RenderWasapiBuffer() - internal buffer is empty, render silence  %.2f ms to %I64d", duration / 10000.0f, m_rtNextRenderedSampleTime);

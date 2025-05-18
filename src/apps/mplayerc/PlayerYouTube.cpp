@@ -128,16 +128,18 @@ namespace Youtube
 
 	static CStringA GetEntry(LPCSTR pszBuff, LPCSTR pszMatchStart, LPCSTR pszMatchEnd)
 	{
-		LPCSTR pStart = CStringA::StrTraits::StringFindString(pszBuff, pszMatchStart);
-		if (pStart) {
-			pStart += CStringA::StrTraits::SafeStringLen(pszMatchStart);
+		if (pszBuff) {
+			LPCSTR pStart = CStringA::StrTraits::StringFindString(pszBuff, pszMatchStart);
+			if (pStart) {
+				pStart += CStringA::StrTraits::SafeStringLen(pszMatchStart);
 
-			LPCSTR pEnd = CStringA::StrTraits::StringFindString(pStart, pszMatchEnd);
-			if (pEnd) {
-				return CStringA(pStart, pEnd - pStart);
-			} else {
-				pEnd = pszBuff + CStringA::StrTraits::SafeStringLen(pszBuff);
-				return CStringA(pStart, pEnd - pStart);
+				LPCSTR pEnd = CStringA::StrTraits::StringFindString(pStart, pszMatchEnd);
+				if (pEnd) {
+					return CStringA(pStart, pEnd - pStart);
+				} else {
+					pEnd = pszBuff + CStringA::StrTraits::SafeStringLen(pszBuff);
+					return CStringA(pStart, pEnd - pStart);
+				}
 			}
 		}
 
@@ -728,7 +730,9 @@ namespace Youtube
 		const auto& s = AfxGetAppSettings();
 
 		urlData data;
-		URLReadData(url.GetString(), data);
+		if (!URLReadData(url.GetString(), data)) {
+			return false;
+		}
 
 		pOFD->rtStart = rtStart;
 
@@ -1391,6 +1395,7 @@ namespace Youtube
 		const YoutubeUrllistItem* final_item = nullptr;
 		CStringW final_media_url;
 		CStringW final_audio_url;
+		auto final_audio_url_format = y_mp4_aac;
 
 		if (s.YoutubeFormat.res == 0) { // audio only
 			final_item = SelectAudioStream(youtubeAudioUrllist);
@@ -1410,6 +1415,7 @@ namespace Youtube
 					const auto audio_item = GetAudioUrl(final_item->profile, youtubeAudioUrllist);
 					DLog(L"Youtube::Parse_URL() : output audio format - %s, \"%s\"", audio_item->title, audio_item->url);
 					final_audio_url = audio_item->url;
+					final_audio_url_format = audio_item->profile->format;
 				}
 			}
 		}
@@ -1427,9 +1433,13 @@ namespace Youtube
 		}
 
 		if (final_item->profile->type == Youtube::y_audio) {
-			y_fields.fname.Format(L"%s.%s", y_fields.title, final_item->profile->ext);
+			y_fields.fname.Format(L"%s.%s", y_fields.title.GetString(), final_item->profile->ext);
 		} else {
-			y_fields.fname.Format(L"%s.%dp.%s", y_fields.title, final_item->profile->quality, final_item->profile->ext);
+			auto ext = final_item->profile->ext;
+			if (!final_audio_url.IsEmpty() && final_item->profile->format == y_webm_vp9 && final_audio_url_format != y_webm_opus) {
+				ext = L"mkv";
+			}
+			y_fields.fname.Format(L"%s.%dp.%s", y_fields.title.GetString(), final_item->profile->quality, ext);
 		}
 		FixFilename(y_fields.fname);
 
