@@ -616,7 +616,11 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 					} else if (CodecID == "V_MPEG4/MS/V3") {
 						fourcc = FCC('MP43');
 					} else if (CodecID == "V_PRORES") {
-						fourcc = FCC('icpf');
+						if (pTE->CodecPrivate.size() == 4) {
+							fourcc = GETU32(pTE->CodecPrivate.data());
+						} else {
+							fourcc = FCC('icpf');
+						}
 						mt.subtype = MEDIASUBTYPE_icpf;
 					} else if (CodecID == "V_SNOW") {
 						fourcc = FCC('SNOW');
@@ -679,7 +683,9 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 
 					if (fourcc) {
 						mt.formattype = FORMAT_VideoInfo;
-						mt.subtype = FOURCCMap(fourcc);
+						if (mt.subtype != MEDIASUBTYPE_icpf) {
+							mt.subtype = FOURCCMap(fourcc);
+						}
 						VIDEOINFOHEADER* pvih = (VIDEOINFOHEADER*)mt.AllocFormatBuffer(sizeof(VIDEOINFOHEADER) + pTE->CodecPrivate.size());
 						memset(mt.Format(), 0, mt.FormatLength());
 						memcpy(mt.Format() + sizeof(VIDEOINFOHEADER), pTE->CodecPrivate.data(), pTE->CodecPrivate.size());
@@ -2432,11 +2438,11 @@ bool CMatroskaSplitterFilter::DemuxLoop()
 					break;
 				}
 			}
-		} while (m_pBlock->NextBlock() && SUCCEEDED(hr) && !CheckRequest(nullptr));
+		} while (m_pBlock->NextBlock() && SUCCEEDED(hr) && !CheckRequest(nullptr) && SUCCEEDED(m_pFile->GetLastReadError()));
 
 		m_pBlock.reset();
 	} while (m_pFile->GetPos() < (__int64)(m_pFile->m_segment.pos + m_pFile->m_segment.len)
-			 && m_pCluster->Next(true) && SUCCEEDED(hr) && !CheckRequest(nullptr));
+			 && m_pCluster->Next(true) && SUCCEEDED(hr) && !CheckRequest(nullptr) && SUCCEEDED(m_pFile->GetLastReadError()));
 
 	m_pCluster.reset();
 
