@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Restaurar resolución al salir"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"Usar Tema ""Oscuro"" (predeterminado)"
 7		"Brillo :"
 9		"Ajuste de color del indicador de sonido:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"G:"
 17		"B:"
 21		"Habilitar Menú Oscuro"
-22		"Habilitar Título Oscuro (Windows 10 y superior)"
-25		"Usar herramienta informativa de tiempo:"
-27		"Usar vista previa en la búsqueda"
-28		"Tamaño relativo al ancho de pantalla:"
-32		"En línea"
-33		"Usar marcador de capítulos"
-34		"Usar barra flotante"
-35		"Tamaño de fuente de Lista de Reproducción:"
-38		"OSD"
-39		"Fuente:"
-43		"F"
-44		"Fondo:"
-45		"G1"
-46		"G2"
-47		"Transparencia:"
-49		"Borde:"
-52		"Sombra"
-53		"Suavizado"
-54		"Usar características de la Barra de tareas de Windows 7 (y superior)"
+22		"Use Blur Behind effect (Windows 11)"
+23		"Habilitar Título Oscuro (Windows 10 y superior)"
+26		"Usar herramienta informativa de tiempo:"
+28		"Usar vista previa en la búsqueda"
+29		"Tamaño relativo al ancho de pantalla:"
+33		"En línea"
+34		"Usar marcador de capítulos"
+35		"Usar barra flotante"
+36		"Tamaño de fuente de Lista de Reproducción:"
+39		"Tamaño de controles:"
+41		"Usar características de la Barra de tareas de Windows 7 (y superior)"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Predeterminado"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"Mostrar OSD (requiere reinicio)"
+7		"Mostrar nombre de archivo multimedia"
+8		"Mostrar tiempo de búsqueda"
+10		"Fuente:"
+14		"F"
+15		"Fondo:"
+16		"G1"
+17		"G2"
+18		"Transparencia:"
+20		"Borde:"
+23		"Sombra"
+24		"Suavizado"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Reproducción"
 6		"Reproducir"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Pausar la reproducción de video cuando se minimiza"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"Opciones de apertura"
 6		"Forzar un solo proceso"
 7		"Usar el mismo proceso para cada archivo"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Mostrar título para URL en archivos recientes"
 33		"Otros"
 34		"Icono de bandeja"
-35		"Mostrar OSD (requiere reinicio)"
-36		"Mostrar nombre de archivo multimedia"
-37		"Mostrar tiempo de búsqueda"
-38		"Deshabilitar menú 'Abrir Disco'"
-39		"Mayor prioridad para el proceso"
-40		"Tiempo de espera de red"
-41		"Conexión:"
-44		"seg."
-45		"Recibiendo datos:"
-48		"seg."
+35		"Deshabilitar menú 'Abrir Disco'"
+36		"Mayor prioridad para el proceso"
+37		"Tiempo de espera de red"
+38		"Conexión:"
+41		"seg."
+42		"Recibiendo datos:"
+45		"seg."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Deshabilitar esta opción evitará que 
 STRING IDC_CHECK_RELATIVETO		"El estado predeterminado se hereda a otros estilos donde aún esté indefinido"
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"Permite subtítulos con animación al utilizar una memoria intermedia para sub-imágenes mayor que 0. Inhabilitando esta opción se minimiza el uso de CPU. Inhabilitar también si los subtítulos parpadean."
 STRING IDC_CHECK_SUBRESYNC		"Permite ver y editar subtítulos (incluido código de tiempo), navegación por subtítulos. Puede ralentizar significativamente la carga de subtítulos."
+STRING IDC_CONTROLS_SIZE_COMBO		"Sólo se aplica a la barra de herramientas integrada o a una externa en formato SVG, y a la barra flotante"
 STRING IDC_D3D9DEVICE_CHECK		"Especifica un adaptador de gráficos para renderizado. Advertencia: Posiblemente funcione de forma incorrecta en pantallas que estén conectadas a otro adaptador."
 STRING IDC_DX9RESIZER_COMBO		"Si no hay soporte para Pixel Shader 2.0, se usara automáticamente el redimensionamiento bilinear sencillo."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Reduce el Parpadeo pero impide que se muestre la barra de herramientas. Para salir de pantalla completa en este modo, presione Ctrl+C."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Filtros Internos"
 STRING IDD_PPAGELOGO		"Reproductor::Logo"
 STRING IDD_PPAGEMISC		"Misceláneos"
 STRING IDD_PPAGEMOUSE		"Reproductor::Mouse"
+STRING IDD_PPAGEOSD		"Reproductor::OSD"
 STRING IDD_PPAGEPLAYBACK		"Reproducción"
 STRING IDD_PPAGEPLAYER		"Reproductor"
 STRING IDD_PPAGESOUNDPROCESSING		"Audio::Procesamiento de Sonido"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Vol: %d%% [Silencio]"
 STRING IDS_VTSREADER_LOAD_PGC		"Habilita una opción de Título"
 STRING IDS_WEBSERVER_ERROR_TEST		"Necesitas aplicar la nueva configuración antes de probarla."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"La Vista Previa está actualmente deshabilitada. Puedes habilitarla en las opciones de MPC-BE."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Zoom 1"
 STRING IDS_ZOOM2		"Zoom 2"
 STRING IDS_ZOOM_AUTOFIT		"Ajuste automático"

@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Çıkışta çözünürlüğü geri al"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"'Koyu' arayüzü kullan (varsayılan)"
 7		"Parlaklık :"
 9		"Ses göstergesi renk ayarı:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"G:"
 17		"B:"
 21		"Koyu menüyü etkinleştir"
-22		"Koyu başlığı etkinleştir (Windows 10 ve üzeri)"
-25		"Süre bilgi ipucunu göster:"
-27		"Arama Çubuğu üzerinde ön izleme resmi göster"
-28		"Ekran genişliğine göre boyut:"
-32		"Çevrim içi"
-33		"Bölüm işaretlerini göster"
-34		"Şeffaf Çubuğu göster"
-35		"Oynatma listesi yazı tipi boyutu:"
-38		"OSD"
-39		"Yazı tipi:"
-43		"F"
-44		"Arka plan:"
-45		"G1"
-46		"G2"
-47		"Şeffaflık:"
-49		"Kenar Genişliği:"
-52		"Gölge"
-53		"Kenar yumuşatma"
-54		"Windows 7 (ve üzeri) Görev çubuğu özelliklerini kullan"
+22		"Arkada Bulanıklık efektini kullan (Windows 11)"
+23		"Koyu başlığı etkinleştir (Windows 10 ve üzeri)"
+26		"Süre bilgi ipucunu göster:"
+28		"Arama Çubuğu üzerinde ön izleme resmi göster"
+29		"Ekran genişliğine göre boyut:"
+33		"Çevrim içi"
+34		"Bölüm işaretlerini göster"
+35		"Şeffaf Çubuğu göster"
+36		"Oynatma listesi yazı tipi boyutu:"
+39		"Kontrollerin boyutu:"
+41		"Windows 7 (ve üzeri) Görev çubuğu özelliklerini kullan"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Varsayılan"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"OSD göster"
+7		"Dosya adını göster"
+8		"Atlama zamanını göster"
+10		"Yazı tipi:"
+14		"F"
+15		"Arka plan:"
+16		"G1"
+17		"G2"
+18		"Şeffaflık:"
+20		"Kenar Genişliği:"
+23		"Gölge"
+24		"Kenar yumuşatma"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Oynatma"
 6		"Sadece"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Küçültüldüğünde video oynatmayı duraklat"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"Açılış ayarları"
 6		"Tek oynatıcı için zorla"
 7		"Her dosya için benzer oynatıcı"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Son dosyalarda URL için başlığı göster"
 33		"Diğer"
 34		"Bildirim alanı simgesi göster"
-35		"OSD göster"
-36		"Dosya adını göster"
-37		"Atlama zamanını göster"
-38		"Disk Açma özelliğini devre dışı bırak"
-39		"İşlem önceliğini normalden yüksek tut"
-40		"Ağ zaman aşımları"
-41		"Bağlantı:"
-44		"sn."
-45		"Veri alma:"
-48		"sn."
+35		"Disk Açma özelliğini devre dışı bırak"
+36		"İşlem önceliğini normalden yüksek tut"
+37		"Ağ zaman aşımları"
+38		"Bağlantı:"
+41		"sn."
+42		"Veri alma:"
+45		"sn."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Bu seçeneğin devre dışı bırakılm
 STRING IDC_CHECK_RELATIVETO		"Varsayılan durum hâlâ tanımsız olduğu için diğer biçimlerden etkileniyor"
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"0'dan büyük bir ara bellek kullanıldığında alt yazı animasyonuna izin verir. Bu seçeneğin devre dışı bırakılması CPU kullanımını azaltacaktır. Ayrıca yanıp sönen alt yazılarla karşılaşırsanız devre dışı bırakın."
 STRING IDC_CHECK_SUBRESYNC		"Alt yazıları görüntüleme ve düzenleme (zaman kodu dahil), alt yazı ile gezinmeyi sağlar. Alt yazı yüklemeyi önemli ölçüde yavaşlatabilir"
+STRING IDC_CONTROLS_SIZE_COMBO		"Sadece yerleşik araç çubuğu, SVG biçimindeki harici araç çubuğu ve Şeffaf Çubuk için geçerlidir"
 STRING IDC_D3D9DEVICE_CHECK		"Oluşturma için bir grafik bağdaştırıcı belirtin. Uyarı: Başka bir bağdaştırıcıya bağlandığında ekranda olası bir hatalı çalışma olabilir."
 STRING IDC_DX9RESIZER_COMBO		"Piksel Tonlama 2.0 desteği bulunmuyorsa, otomatik olarak basit çizgisellik kullanılacaktır."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Kopuklukları engeller, ancak araç çubuğu gösterimine izin vermez. Bu modda tam ekran görünümünden çıkmak için Alt+Enter, Ctrl+Enter ya da Ctrl+C tuşlarına basın."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Dahili Süzgeçler"
 STRING IDD_PPAGELOGO		"Oynatıcı::Logo"
 STRING IDD_PPAGEMISC		"Diğer"
 STRING IDD_PPAGEMOUSE		"Oynatıcı::Fare"
+STRING IDD_PPAGEOSD		"Oynatıcı::OSD"
 STRING IDD_PPAGEPLAYBACK		"Oynatma"
 STRING IDD_PPAGEPLAYER		"Oynatıcı"
 STRING IDD_PPAGESOUNDPROCESSING		"Ses::Ses İşleme"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Ses: %d%% [Sessiz]"
 STRING IDS_VTSREADER_LOAD_PGC		"Başlık seçimini etkinleştir"
 STRING IDS_WEBSERVER_ERROR_TEST		"Önce yeni ayarları uygulamanız gerekmektedir."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"Ön izleme şu anda devre dışı. MPC-BE ayarlarından etkinleştirebilirsiniz."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Yakınlaştırma 1"
 STRING IDS_ZOOM2		"Yakınlaştırma 2"
 STRING IDS_ZOOM_AUTOFIT		"Oto Sığdır"

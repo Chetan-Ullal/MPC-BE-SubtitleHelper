@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2010-2019 Hendrik Leppkes
+ *      Copyright (C) 2010-2021 Hendrik Leppkes
  *      http://www.1f0.de
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,7 @@ extern "C" {
 //
 
 // This function is only designed for NV12-like pixel formats, like NV12, P010, P016, ...
-HRESULT CFormatConverter::plane_copy_direct_sse4(const uint8_t* const src[4], const ptrdiff_t srcStride[4], uint8_t* dst[], int width, int height, const ptrdiff_t dstStride[])
+HRESULT CFormatConverter::plane_copy_direct_nv12_sse4(const uint8_t* const src[4], const ptrdiff_t srcStride[4], uint8_t* dst[], int width, int height, const ptrdiff_t dstStride[])
 {
     const ptrdiff_t inStride = srcStride[0];
     const ptrdiff_t outStride = dstStride[0];
@@ -102,6 +102,55 @@ HRESULT CFormatConverter::plane_copy_direct_sse4(const uint8_t* const src[4], co
         {
             PIXCONV_LOAD_ALIGNED(xmm0, uv + i);
             PIXCONV_PUT_STREAM(duv + i, xmm0);
+        }
+    }
+
+    return S_OK;
+}
+
+HRESULT CFormatConverter::plane_copy_direct_sse4(const uint8_t* const src[4], const ptrdiff_t srcStride[4], uint8_t* dst[], int width, int height, const ptrdiff_t dstStride[])
+{
+    const SW_OUT_FMT& desc = s_sw_formats[m_out_pixfmt];
+
+    const int widthBytes = width * desc.codedbytes;
+    const int planes = std::max(desc.planes, 1);
+
+    ptrdiff_t line, plane;
+
+    for (plane = 0; plane < planes; plane++)
+    {
+        const int planeWidth = widthBytes / desc.planeWidth[plane];
+        const int planeHeight = height / desc.planeHeight[plane];
+        const ptrdiff_t srcPlaneStride = srcStride[plane];
+        const ptrdiff_t dstPlaneStride = dstStride[plane];
+        const uint8_t *const srcBuf = src[plane];
+        uint8_t *const dstBuf = dst[plane];
+
+        for (line = 0; line < planeHeight; ++line)
+        {
+            const uint8_t *const srcLinePtr = srcBuf + line * srcPlaneStride;
+            uint8_t *const dstLinePtr = dstBuf + line * dstPlaneStride;
+            __m128i r1, r2, r3, r4;
+            ptrdiff_t i;
+            for (i = 0; i < (planeWidth - 63); i += 64)
+            {
+                PIXCONV_STREAM_LOAD(r1, srcLinePtr + i + 0)
+                PIXCONV_STREAM_LOAD(r2, srcLinePtr + i + 16);
+                PIXCONV_STREAM_LOAD(r3, srcLinePtr + i + 32);
+                PIXCONV_STREAM_LOAD(r4, srcLinePtr + i + 48);
+
+                _ReadWriteBarrier();
+
+                PIXCONV_PUT_STREAM(dstLinePtr + i + 0, r1);
+                PIXCONV_PUT_STREAM(dstLinePtr + i + 16, r2);
+                PIXCONV_PUT_STREAM(dstLinePtr + i + 32, r3);
+                PIXCONV_PUT_STREAM(dstLinePtr + i + 48, r4);
+            }
+            for (; i < planeWidth; i += 16)
+            {
+                PIXCONV_STREAM_LOAD(r1, srcLinePtr + i);
+                PIXCONV_PUT_STREAM(dstLinePtr + i, r1);
+            }
         }
     }
 
@@ -319,6 +368,59 @@ HRESULT CFormatConverter::convert_p010_nv12_direct_sse4(const uint8_t* const src
             xmm0 = _mm_packus_epi16(_mm_srli_epi16(xmm0, 8), _mm_srli_epi16(xmm1, 8));
 
             PIXCONV_PUT_STREAM(duv + (i >> 1), xmm0);
+        }
+    }
+
+    return S_OK;
+}
+
+HRESULT CFormatConverter::convert_y210_p210_direct_sse4(const uint8_t* const src[4], const ptrdiff_t srcStride[4], uint8_t* dst[], int width, int height, const ptrdiff_t dstStride[])
+{
+    const ptrdiff_t inStride = srcStride[0];
+    const ptrdiff_t outStride = dstStride[0];
+
+    const ptrdiff_t byteWidth = width << 2;
+    const ptrdiff_t stride = std::min(FFALIGN(byteWidth, 64), std::min(inStride, outStride << 1));
+
+    ptrdiff_t line, i;
+    __m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7;
+    xmm7 = _mm_set1_epi32(0x0000FFFF);
+
+    for (line = 0; line < height; line++)
+    {
+        const uint8_t *srcLine = src[0] + line * inStride;
+        uint8_t *dstY = dst[0] + line * dstStride[0];
+        uint8_t *dstUV = dst[1] + line * dstStride[1];
+        for (i = 0; i < (stride - 63); i += 64)
+        {
+            PIXCONV_STREAM_LOAD(xmm0, srcLine + i + 0); // Y0 U Y1 V
+            PIXCONV_STREAM_LOAD(xmm1, srcLine + i + 16);
+            PIXCONV_STREAM_LOAD(xmm2, srcLine + i + 32);
+            PIXCONV_STREAM_LOAD(xmm3, srcLine + i + 48);
+
+            // extract Y
+            xmm4 = _mm_and_si128(xmm0, xmm7);
+            xmm5 = _mm_and_si128(xmm1, xmm7);
+            xmm6 = _mm_packus_epi32(xmm4, xmm5);
+
+            xmm4 = _mm_and_si128(xmm2, xmm7);
+            xmm5 = _mm_and_si128(xmm3, xmm7);
+            xmm4 = _mm_packus_epi32(xmm4, xmm5);
+
+            PIXCONV_PUT_STREAM(dstY + (i >> 1) + 0, xmm6);
+            PIXCONV_PUT_STREAM(dstY + (i >> 1) + 16, xmm4);
+
+            // extract UV
+            xmm4 = _mm_srli_epi32(xmm0, 16);
+            xmm5 = _mm_srli_epi32(xmm1, 16);
+            xmm6 = _mm_packus_epi32(xmm4, xmm5);
+
+            xmm4 = _mm_srli_epi32(xmm2, 16);
+            xmm5 = _mm_srli_epi32(xmm3, 16);
+            xmm4 = _mm_packus_epi32(xmm4, xmm5);
+
+            PIXCONV_PUT_STREAM(dstUV + (i >> 1) + 0, xmm6);
+            PIXCONV_PUT_STREAM(dstUV + (i >> 1) + 16, xmm4);
         }
     }
 

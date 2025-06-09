@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"종료 후, 해상도 복원"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"다크 테마 사용(기본값)"
 7		"명도 :"
 9		"음량 조절 색 설정 :"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"G :"
 17		"B :"
 21		"다크 메뉴 활성화"
-22		"다크 타이틀 활성화(윈도11)"
-25		"시간 툴팁 사용 :"
-27		"탐색 표시줄에서 미리 보기 사용"
-28		"화면 너비 대비 크기 :"
-32		"Online"
-33		"챕터 구분 표기 사용"
-34		"플라이바 사용"
-35		"재생 목록 글자 크기 :"
-38		"화면 표시"
-39		"화면 표시 글꼴 :"
-43		"F"
-44		"배경 :"
-45		"G1"
-46		"G2"
-47		"투명도 :"
-49		"경계 크기 :"
-52		"그림자"
-53		"위신호 제거"
-54		"(윈도7 이상) 작업 표시줄 기능 사용"
+22		"Use Blur Behind effect (Windows 11)"
+23		"다크 타이틀 활성화(윈도11)"
+26		"시간 툴팁 사용 :"
+28		"탐색 표시줄에서 미리 보기 사용"
+29		"화면 너비 대비 크기 :"
+33		"Online"
+34		"챕터 구분 표기 사용"
+35		"플라이바 사용"
+36		"재생 목록 글자 크기 :"
+39		"Controls size:"
+41		"(윈도7 이상) 작업 표시줄 기능 사용"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"기본값"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"화면 표시 보이기(다시 시작 필요)"
+7		"미디어 파일명 표기"
+8		"탐색 시간 표기"
+10		"화면 표시 글꼴 :"
+14		"F"
+15		"배경 :"
+16		"G1"
+17		"G2"
+18		"투명도 :"
+20		"경계 크기 :"
+23		"그림자"
+24		"위신호 제거"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"재생"
 6		"파일을"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"최소화 시, 영상 재생 일시 정지"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"열기 옵션"
 6		"프로세스 하나만 사용"
 7		"파일을 열 때마다 같은 재생기창 사용"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"최근 열람한 파일 경로를 제목 표시줄에 표기"
 33		"기타"
 34		"트레이에 아이콘 보이기"
-35		"화면 표시 보이기(다시 시작 필요)"
-36		"미디어 파일명 표기"
-37		"탐색 시간 표기"
-38		"'디스크 열기' 메뉴 사용 안 함"
-39		"프로세스 우선순위 높이기"
-40		"네트워크 시간 초과"
-41		"연결 :"
-44		"초"
-45		"데이터 수신 :"
-48		"초"
+35		"'디스크 열기' 메뉴 사용 안 함"
+36		"프로세스 우선순위 높이기"
+37		"네트워크 시간 초과"
+38		"연결 :"
+41		"초"
+42		"데이터 수신 :"
+45		"초"
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"이 옵션을 비활성화하면 자막
 STRING IDC_CHECK_RELATIVETO		"기본 상태가 다른 스타일을 상속합니다."
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"서브픽처 버퍼가 0보다 클 때 자막 애니메이션을 허용합니다. 이 옵션을 선택하면 CPU 사용률이 증가할 수 있습니다. 자막이 깜박이거나 비정상적으로 출력되면 이 옵션을 해제하십시오."
 STRING IDC_CHECK_SUBRESYNC		"자막(시간 코드 포함), 자막 탐색을 보고 편집할 수 있습니다. 자막 로딩 속도가 많이 늦어질 수 있습니다."
+STRING IDC_CONTROLS_SIZE_COMBO		"Applies only to the built-in toolbar or external one in SVG format, and to the flybar"
 STRING IDC_D3D9DEVICE_CHECK		"생성을 위한 그래픽 어댑터를 지정합니다. 경고 : 디스플레이에서 가능한 잘못된 작업이 다른 어댑터에 연결되어 있습니다."
 STRING IDC_DX9RESIZER_COMBO		"그래픽카드에서 픽셀셰이더 2.0을 지원하지 않으면 단순 쌍선형이 자동으로 선택됩니다."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"티어링을 줄여주지만, 도구 모음이 보이지 않게 됩니다. 전체 화면을 나가기 위해서는 Ctrl+C를 누르세요"
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"내장 필터"
 STRING IDD_PPAGELOGO		"재생기::로고"
 STRING IDD_PPAGEMISC		"기타"
 STRING IDD_PPAGEMOUSE		"재생기::마우스"
+STRING IDD_PPAGEOSD		"재생기::OSD"
 STRING IDD_PPAGEPLAYBACK		"재생"
 STRING IDD_PPAGEPLAYER		"재생기"
 STRING IDD_PPAGESOUNDPROCESSING		"오디오::음향 처리"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"음량 : %d%% [음 소거]"
 STRING IDS_VTSREADER_LOAD_PGC		"제목 선택 활성화"
 STRING IDS_WEBSERVER_ERROR_TEST		"설정들을 테스트해 보려면 설정들을 적용해야 합니다."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"현재 미리 보기가 비활성화되어 있습니다. MPC-BE의 옵션에서 활성화할 수 있습니다."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"확대 1"
 STRING IDS_ZOOM2		"확대 2"
 STRING IDS_ZOOM_AUTOFIT		"자동 맞춤"

@@ -31,13 +31,21 @@ Fixed saving of video frame image with subtitles when using MPC Video Renderer.
 HLS M3U files are no longer processed as normal playlists, but are passed to the source filter as is.
 Added the ability to save the "Show milliseconds" setting.
 
+Installer
+Updated MPC Video Renderer 0.9.9.
+
 Updated Bulgarian translation (by jekovcar).
 Updated Romanian translation (by Andrei Miloiu).
 Updated Slovak translation (by PEPEK).
 Updated Japanese translation (by tsubasanouta).
+Updated Chinese (Simplified) translation (by wushantao).
+Updated German translation (by Klaus1189).
+Updated Turkish translation (by cmhrky).
+Updated Hungarian translation (by mickey).
+Updated Spanish translation (by IPeluchito).
 
 Updated libraries:
-	ffmpeg n7.2-dev-2617-g6c291232cf.
+	ffmpeg n7.2-dev-2678-gd9797544b4.
 
 
 1.8.4 - 2025-04-19

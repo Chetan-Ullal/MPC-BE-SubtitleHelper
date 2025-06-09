@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Відновлювати роздільну здатність після закриття програми"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"Використовувати ""темну"" тему (типово)"
 7		"Яскравість :"
 9		"Налаштування кольору індикатора гучності:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"З:"
 17		"С:"
 21		"Використовувати темне меню"
-22		"Використовувати темний заголовок (Windows 10 and above)"
-25		"Використовувати підказку з поточним часом відтворення:"
-27		"Використовувати попередній перегляд при перемотуванні"
-28		"Розмір відносно ширини екрана:"
-32		"Online"
-33		"Використовувати маркери розділів"
-34		"Використовувати flybar"
-35		"Розмір шрифта списка відтворення:"
-38		"OSD"
-39		"Шрифт:"
-43		"F"
-44		"Фон:"
-45		"G1"
-46		"G2"
-47		"Прозорість:"
-49		"Розмір бордюрів:"
-52		"Тінь"
-53		"Згладжування"
-54		"Використовувати особливості панелі завдань Windows 7 (і пізніших)"
+22		"Use Blur Behind effect (Windows 11)"
+23		"Використовувати темний заголовок (Windows 10 and above)"
+26		"Використовувати підказку з поточним часом відтворення:"
+28		"Використовувати попередній перегляд при перемотуванні"
+29		"Розмір відносно ширини екрана:"
+33		"Online"
+34		"Використовувати маркери розділів"
+35		"Використовувати flybar"
+36		"Розмір шрифта списка відтворення:"
+39		"Controls size:"
+41		"Використовувати особливості панелі завдань Windows 7 (і пізніших)"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"За замовчуванням"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"Показувати OSD"
+7		"Показувати ім'я файла"
+8		"Показувати поточну позиц.\тривалість"
+10		"Шрифт:"
+14		"F"
+15		"Фон:"
+16		"G1"
+17		"G2"
+18		"Прозорість:"
+20		"Розмір бордюрів:"
+23		"Тінь"
+24		"Згладжування"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Відтворення"
 6		"Повтор"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Призупиняти відтворення відео при згортанні вікна"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"При відкритті файлів"
 6		"Примусовий одновіконний режим"
 7		"Використовувати один процес для усіх файлів"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Показувати заголовок для URL у останніх відкр. файлах"
 33		"Інше"
 34		"Значок у панелі задач"
-35		"Показувати OSD"
-36		"Показувати ім'я файла"
-37		"Показувати поточну позиц.\тривалість"
-38		"Заборонити меню 'Відкрити диск'"
-39		"Підвищений пріоритет процесу"
-40		"Network timeouts"
-41		"Connection:"
-44		"сек."
-45		"Receiving data:"
-48		"sec."
+35		"Заборонити меню 'Відкрити диск'"
+36		"Підвищений пріоритет процесу"
+37		"Network timeouts"
+38		"Connection:"
+41		"сек."
+42		"Receiving data:"
+45		"sec."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Вимкнення цієї опції 
 STRING IDC_CHECK_RELATIVETO		"Стандартний стан успадковується іншими стилями, в яких він ще не визначений."
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"Дозволяє анімацію субтитрів при використанні буфера субзображень більшого за 0. Вимкнення цієї опції дозволить дещо зменшити завантаження ЦП. Використовуйте якщо помітне мигтіння субтитрів."
 STRING IDC_CHECK_SUBRESYNC		"Дозволяє відображати і редагувати субтитри(включаючи тайм-коди), здійснювати навігацію по субтитрам. Може значно сповільнити завантаження субтитрів."
+STRING IDC_CONTROLS_SIZE_COMBO		"Applies only to the built-in toolbar or external one in SVG format, and to the flybar"
 STRING IDC_D3D9DEVICE_CHECK		"Вказує графічний адаптер для рендерингу. Попередження: можлива некоректна робота з дисплеями, що під'єднані до іншого графічного адаптера."
 STRING IDC_DX9RESIZER_COMBO		"Якщо піксельні шейдери версії 2.0 не підтримуються, то буде використовуватись простий білінійний метод."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Зменшує дрижання, проте перешкоджає відображенню панелі інструментів. Для виходу з повноекранного режиму в цьому випадку треба натискати Ctrl+C."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Вбудовані фільтри"
 STRING IDD_PPAGELOGO		"Програвач::Логотип"
 STRING IDD_PPAGEMISC		"Різне"
 STRING IDD_PPAGEMOUSE		"Програвач::Mouse"
+STRING IDD_PPAGEOSD		"Player::OSD"
 STRING IDD_PPAGEPLAYBACK		"Відтворення"
 STRING IDD_PPAGEPLAYER		"Програвач"
 STRING IDD_PPAGESOUNDPROCESSING		"Аудіо::Обробка звуку"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Гучн.: %d%% [Без звуку]"
 STRING IDS_VTSREADER_LOAD_PGC		"Ввімкнути вибір Головного Меню"
 STRING IDS_WEBSERVER_ERROR_TEST		"Вам необхідно застосувати нові налаштування перед тим, як їх тестувати."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"Preview is currently disabled. You can enable it in MPC-BE's options."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Збільшення 1"
 STRING IDS_ZOOM2		"Збільшення 2"
 STRING IDS_ZOOM_AUTOFIT		"Вписати"

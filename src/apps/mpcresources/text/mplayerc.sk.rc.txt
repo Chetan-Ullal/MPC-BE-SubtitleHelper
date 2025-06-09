@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Po ukončení obnoviť pôvodné rozlíšenie"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"Použiť „tmavú“ tému (predvolená)"
 7		"Jas:"
 9		"Nastavenie farby indikátora zvuku:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"G:"
 17		"B:"
 21		"Povoliť tmavú ponuku"
-22		"Povoliť tmavý názov (Windows 10 a vyšší)"
-25		"Použiť popis času:"
-27		"Pri vyhľadávaní použiť náhľad"
-28		"Veľkosť vzhľadom na šírku obrazovky:"
-32		"Online"
-33		"Použiť značky kapitol"
-34		"Použiťe plávajúcu lištu"
-35		"Veľkosť písma zoznamu skladieb:"
-38		"OSD"
-39		"Písmo:"
-43		"F"
-44		"Pozadie:"
-45		"G1"
-46		"G2"
-47		"Priehľadnosť:"
-49		"Veľkosť okraja:"
-52		"Tieň"
-53		"Vyhladzovanie"
-54		"Použiť funkcie panela úloh OS Windows 7 (a vyšší)."
+22		"Use Blur Behind effect (Windows 11)"
+23		"Povoliť tmavý názov (Windows 10 a vyšší)"
+26		"Použiť popis času:"
+28		"Pri vyhľadávaní použiť náhľad"
+29		"Veľkosť vzhľadom na šírku obrazovky:"
+33		"Online"
+34		"Použiť značky kapitol"
+35		"Použiťe plávajúcu lištu"
+36		"Veľkosť písma zoznamu skladieb:"
+39		"Controls size:"
+41		"Použiť funkcie panela úloh OS Windows 7 (a vyšší)."
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Predvolené"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"Zobraziť OSD (vyžaduje reštart)"
+7		"Zobraziť názov mediálneho súboru"
+8		"Zobraziť čas vyhľadávania"
+10		"Písmo:"
+14		"F"
+15		"Pozadie:"
+16		"G1"
+17		"G2"
+18		"Priehľadnosť:"
+20		"Veľkosť okraja:"
+23		"Tieň"
+24		"Vyhladzovanie"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Prehrávanie"
 6		"Prehrať"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Pri minimalizovaní pozastaviť prehrávanie videa"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"Otvoriť nastavenia"
 6		"Vynútiť si jeden proces"
 7		"Použiť rovnaký proces pre každý súbor"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Zobraziť názov adresy URL v posledných súboroch"
 33		"Ostatné"
 34		"Ikona v lište nástrojov"
-35		"Zobraziť OSD (vyžaduje reštart)"
-36		"Zobraziť názov mediálneho súboru"
-37		"Zobraziť čas vyhľadávania"
-38		"Zablokovať ponuku 'Otvoriť disk'"
-39		"Spustiť so zvýšenou prioritou"
-40		"Časové limity siete"
-41		"Pripojenie:"
-44		"sek."
-45		"Príjem dát:"
-48		"sek."
+35		"Zablokovať ponuku 'Otvoriť disk'"
+36		"Spustiť so zvýšenou prioritou"
+37		"Časové limity siete"
+38		"Pripojenie:"
+41		"sek."
+42		"Príjem dát:"
+45		"sek."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Vypnutie tejto možnosti zabráni blika
 STRING IDC_CHECK_RELATIVETO		"Predvolené hodnoty sa nastavia aj v iných štýloch, ak užívateľ nastavenia nezmení"
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"Ak je použitá vyrovnávacia pamäť pre podobrázky väčšia ako 0, môžu sa titulky animovať. Zablokovaním tejto voľby znížite vyťaženie procesora. Voľbu zablokujte aj v prípade, že titulky blikajú."
 STRING IDC_CHECK_SUBRESYNC		"Umožňuje prezerať a upravovať titulky (vrátane časového kódu), navigáciu podľa titulkov. Môže výrazne spomaliť načítavanie titulkov."
+STRING IDC_CONTROLS_SIZE_COMBO		"Applies only to the built-in toolbar or external one in SVG format, and to the flybar"
 STRING IDC_D3D9DEVICE_CHECK		"Zadajte grafický adaptér na vykresľovanie. Upozornenie: možná nesprávna práca na displejoch je pripojená k inému adaptéru."
 STRING IDC_DX9RESIZER_COMBO		"Ak karta nepodporuje Pixel Shader 2.0, automaticky sa aktivuje jednoduché bilineárne prepočítavanie."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Znižuje trhanie, ale zabraňuje zobrazeniu panela s nástrojmi. Ak chcete ukončiť celú obrazovku v tomto režime, stlačte Ctrl+C."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Interné filtre"
 STRING IDD_PPAGELOGO		"Prehrávač::Logo"
 STRING IDD_PPAGEMISC		"Rôzne"
 STRING IDD_PPAGEMOUSE		"Prehrávač::Myš"
+STRING IDD_PPAGEOSD		"Prehrávač::OSD"
 STRING IDD_PPAGEPLAYBACK		"Prehrávanie"
 STRING IDD_PPAGEPLAYER		"Prehrávač"
 STRING IDD_PPAGESOUNDPROCESSING		"Audio::Spracovanie zvuku"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Hlas.: %d%% [Vypnúť]"
 STRING IDS_VTSREADER_LOAD_PGC		"Povoliť výber titulu"
 STRING IDS_WEBSERVER_ERROR_TEST		"Pred otestovaním je potrebné aplikovať nové nastavenia."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"Náhľad je momentálne zakázaný. Môžete to povoliť v možnostiach MPC-BE."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Priblíženie 1"
 STRING IDS_ZOOM2		"Priblíženie 2"
 STRING IDS_ZOOM_AUTOFIT		"Automaticky prispôsobiť"

@@ -1,5 +1,5 @@
 /*
- * (C) 2014-2024 see Authors.txt
+ * (C) 2014-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -36,7 +36,7 @@ extern "C" {
 #pragma warning(pop)
 
 SW_OUT_FMT s_sw_formats[] = {
-	//name         biCompression       subtype                                            av_pix_fmt   chroma_w chroma_h actual_bpp luma_bits
+	//name         biCompression       subtype               bpp                          av_pix_fmt   chroma_w chroma_h actual_bpp luma_bits
 	// YUV 8 bit
 	{L"NV12",      FCC('NV12'),      &MEDIASUBTYPE_NV12,      12, 1, 2, {1,2},   {1,1},   AV_PIX_FMT_NV12,        1, 1, 12,  8}, // PixFmt_NV12
 	{L"YV12",      FCC('YV12'),      &MEDIASUBTYPE_YV12,      12, 1, 3, {1,2,2}, {1,2,2}, AV_PIX_FMT_YUV420P,     1, 1, 12,  8}, // PixFmt_YV12
@@ -140,10 +140,17 @@ MPCPixFmtType GetPixFmtType(AVPixelFormat av_pix_fmt)
 		return PFType_unspecified;
 	}
 
-	if (av_pix_fmt == AV_PIX_FMT_NV12) {
+	switch (av_pix_fmt) {
+	case AV_PIX_FMT_NV12:
 		return PFType_NV12;
-	} else if (av_pix_fmt == AV_PIX_FMT_P010 || av_pix_fmt == AV_PIX_FMT_P016) {
+	case AV_PIX_FMT_P010:
+	case AV_PIX_FMT_P012:
+	case AV_PIX_FMT_P016:
 		return PFType_P01x;
+	case AV_PIX_FMT_Y210:
+	case AV_PIX_FMT_Y212 :
+	case AV_PIX_FMT_Y216:
+		return PFType_Y21x;
 	}
 
 	int lumabits = pfdesc->comp[0].depth;
@@ -269,112 +276,14 @@ void CFormatConverter::UpdateSWSContext()
 
 void CFormatConverter::SetConvertFunc()
 {
-	m_pConvertFn = &CFormatConverter::ConvertGeneric;
+	m_pConvertFn = nullptr;
 	m_RequiredAlignment = 16;
 
-	switch (m_out_pixfmt) {
-		case PixFmt_AYUV:
-			if (m_FProps.pftype == PFType_YUV444Px) {
-				m_pConvertFn = &CFormatConverter::convert_yuv444_ayuv_dither_le;
-			}
-			break;
-		case PixFmt_P010:
-		case PixFmt_P016:
-			if (m_FProps.pftype == PFType_YUV420Px) {
-				m_pConvertFn = &CFormatConverter::convert_yuv420_px1x_le;
-			}
-			break;
-		case PixFmt_Y410:
-			if (m_FProps.pftype == PFType_YUV444Px && m_FProps.lumabits <= 10) {
-				m_pConvertFn = &CFormatConverter::convert_yuv444_y410;
-			}
-			break;
-		case PixFmt_P210:
-		case PixFmt_P216:
-			if (m_FProps.pftype == PFType_YUV422Px) {
-				m_pConvertFn = &CFormatConverter::convert_yuv420_px1x_le;
-			}
-			break;
-		case PixFmt_YUY2:
-			if (m_FProps.pftype == PFType_YUV422Px) {
-				m_pConvertFn = &CFormatConverter::convert_yuv422_yuy2_uyvy_dither_le;
-				m_RequiredAlignment = 8;
-			}
-			else if (m_FProps.pftype == PFType_YUV420
-					|| (m_FProps.pftype == PFType_YUV420Px && m_FProps.lumabits <= 14)
-					|| m_FProps.pftype == PFType_NV12) {
-				m_pConvertFn = &CFormatConverter::convert_yuv420_yuy2;
-				m_RequiredAlignment = 8;
-			}
-			break;
-		case PixFmt_NV12:
-			if (m_FProps.pftype == PFType_NV12) {
-				m_pConvertFn = &CFormatConverter::plane_copy_sse2;
-				break;
-			}
-			else if (m_FProps.pftype == PFType_YUV420) {
-				m_pConvertFn = &CFormatConverter::convert_yuv420_nv12;
-				m_RequiredAlignment = 32;
-			}
-			else if (m_FProps.pftype == PFType_P01x) {
-				m_pConvertFn = &CFormatConverter::convert_p010_nv12_sse2;
-			}
-		case PixFmt_YV12:
-			if (m_FProps.pftype == PFType_YUV420Px) {
-				m_pConvertFn = &CFormatConverter::convert_yuv_yv_nv12_dither_le;
-				m_RequiredAlignment = 32;
-			}
-			else if (m_FProps.pftype == PFType_NV12) {
-				m_pConvertFn = &CFormatConverter::convert_nv12_yv12;
-				m_RequiredAlignment = 32;
-			}
-#if (0) // disabled because not increase performance
-			else if (m_FProps.pftype == PFType_YUV420) {
-				pConvertFn = &CFormatConverter::convert_yuv_yv;
-			}
-#endif
-			break;
-		case PixFmt_YV16:
-			if (m_FProps.pftype == PFType_YUV422Px) {
-				m_pConvertFn = &CFormatConverter::convert_yuv_yv_nv12_dither_le;
-				m_RequiredAlignment = 32;
-			}
-#if (0) // disabled because not increase performance
-			else if (m_FProps.pftype == PFType_YUV422) {
-				pConvertFn = &CFormatConverter::convert_yuv_yv;
-			}
-#endif
-			break;
-		case PixFmt_YV24:
-			if (m_FProps.pftype == PFType_YUV444Px) {
-				m_pConvertFn = &CFormatConverter::convert_yuv_yv_nv12_dither_le;
-				m_RequiredAlignment = 32;
-			}
-			else if (m_FProps.pftype == PFType_YUV444) {
-				m_pConvertFn = &CFormatConverter::convert_yuv_yv;
-				m_RequiredAlignment = 0;
-			}
-			break;
-		case PixFmt_RGB32:
-			switch (m_FProps.pftype) {
-				case PFType_YUV420:
-				case PFType_YUV420Px:
-				case PFType_YUV422:
-				case PFType_YUV422Px:
-				case PFType_YUV444:
-				case PFType_YUV444Px:
-				case PFType_NV12:
-				case PFType_P01x:
-					m_pConvertFn = &CFormatConverter::convert_yuv_rgb;
-					m_RequiredAlignment = 4;
-			}
-			break;
-	}
-
-	if (CPUInfo::HaveSSE4()) {
+	// optimized direct function
+	if (m_bDirect && CPUInfo::HaveSSE4()) {
 		if (m_FProps.pftype == PFType_NV12) {
 			if (m_out_pixfmt == PixFmt_NV12) {
-				m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+				m_pConvertFn = &CFormatConverter::plane_copy_direct_nv12_sse4;
 			}
 			else if (m_out_pixfmt == PixFmt_YV12) {
 				m_pConvertFn = &CFormatConverter::convert_nv12_yv12_direct_sse4;
@@ -382,12 +291,164 @@ void CFormatConverter::SetConvertFunc()
 		}
 		else if (m_FProps.pftype == PFType_P01x) {
 			if (m_out_pixfmt == PixFmt_P010 || m_out_pixfmt == PixFmt_P016) {
-				m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+				m_pConvertFn = &CFormatConverter::plane_copy_direct_nv12_sse4;
 			}
 			else if (m_out_pixfmt == PixFmt_NV12) {
 				m_pConvertFn = &CFormatConverter::convert_p010_nv12_direct_sse4;
 			}
 		}
+		else if (m_FProps.pftype == PFType_Y21x) {
+			if (m_out_pixfmt == PixFmt_P210 || m_out_pixfmt == PixFmt_P216) {
+				m_pConvertFn = &CFormatConverter::convert_y210_p210_direct_sse4;
+			}
+		}
+		else if (m_FProps.avpixfmt == AV_PIX_FMT_YUYV422 && m_out_pixfmt == PixFmt_YUY2) {
+			m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+		}
+		else if (m_FProps.avpixfmt == AV_PIX_FMT_VUYX && m_out_pixfmt == PixFmt_AYUV) {
+			m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+		}
+		else if (m_FProps.avpixfmt == AV_PIX_FMT_XV30 && m_out_pixfmt == PixFmt_Y410) {
+			m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+		}
+		else if (m_FProps.avpixfmt == AV_PIX_FMT_XV36 && m_out_pixfmt == PixFmt_Y416) {
+			m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+		}
+	}
+
+	if (m_pConvertFn) {
+		return;
+	}
+
+	m_pConvertFn = &CFormatConverter::ConvertGeneric;
+
+	// optimized function
+	switch (m_out_pixfmt) {
+	case PixFmt_NV12:
+		if (m_FProps.pftype == PFType_NV12) {
+			m_pConvertFn = &CFormatConverter::plane_copy_sse2;
+			m_RequiredAlignment = 0;
+			break;
+		}
+		else if (m_FProps.pftype == PFType_YUV420) {
+			m_pConvertFn = &CFormatConverter::convert_yuv420_nv12;
+			m_RequiredAlignment = 32;
+		}
+		else if (m_FProps.pftype == PFType_P01x) {
+			m_pConvertFn = &CFormatConverter::convert_p010_nv12_sse2;
+		}
+	case PixFmt_YV12:
+		if (m_FProps.pftype == PFType_YUV420Px) {
+			m_pConvertFn = &CFormatConverter::convert_yuv_yv_nv12_dither_le;
+			m_RequiredAlignment = 32;
+		}
+		else if (m_FProps.pftype == PFType_NV12) {
+			m_pConvertFn = &CFormatConverter::convert_nv12_yv12;
+			m_RequiredAlignment = 32;
+		}
+#if (0) // disabled because not increase performance
+		else if (m_FProps.pftype == PFType_YUV420) {
+			pConvertFn = &CFormatConverter::convert_yuv_yv;
+			m_RequiredAlignment = 0;
+		}
+#endif
+		break;
+	case PixFmt_YUY2:
+		if (m_FProps.avpixfmt == AV_PIX_FMT_YUYV422) {
+			m_pConvertFn = &CFormatConverter::plane_copy_sse2;
+			m_RequiredAlignment = 0;
+		}
+		else if (m_FProps.pftype == PFType_YUV422Px) {
+			m_pConvertFn = &CFormatConverter::convert_yuv422_yuy2_uyvy_dither_le;
+			m_RequiredAlignment = 8;
+		}
+		else if (m_FProps.pftype == PFType_YUV420
+			|| (m_FProps.pftype == PFType_YUV420Px && m_FProps.lumabits <= 14)
+			|| m_FProps.pftype == PFType_NV12) {
+			m_pConvertFn = &CFormatConverter::convert_yuv420_yuy2;
+			m_RequiredAlignment = 8;
+		}
+		break;
+	case PixFmt_YV16:
+		if (m_FProps.pftype == PFType_YUV422Px) {
+			m_pConvertFn = &CFormatConverter::convert_yuv_yv_nv12_dither_le;
+			m_RequiredAlignment = 32;
+		}
+#if (0) // disabled because not increase performance
+		else if (m_FProps.pftype == PFType_YUV422) {
+			pConvertFn = &CFormatConverter::convert_yuv_yv;
+			m_RequiredAlignment = 0;
+		}
+#endif
+		break;
+	case PixFmt_AYUV:
+		if (m_FProps.avpixfmt == AV_PIX_FMT_VUYX) {
+			m_pConvertFn = &CFormatConverter::plane_copy_sse2;
+			m_RequiredAlignment = 0;
+		}
+		else if (m_FProps.pftype == PFType_YUV444Px) {
+			m_pConvertFn = &CFormatConverter::convert_yuv444_ayuv_dither_le;
+		}
+		break;
+	case PixFmt_YV24:
+		if (m_FProps.pftype == PFType_YUV444Px) {
+			m_pConvertFn = &CFormatConverter::convert_yuv_yv_nv12_dither_le;
+			m_RequiredAlignment = 32;
+		}
+		else if (m_FProps.pftype == PFType_YUV444) {
+			m_pConvertFn = &CFormatConverter::convert_yuv_yv;
+			m_RequiredAlignment = 0;
+		}
+		break;
+	case PixFmt_P010:
+	case PixFmt_P016:
+		if (m_FProps.pftype == PFType_P01x) {
+			m_pConvertFn = &CFormatConverter::plane_copy_sse2;
+			m_RequiredAlignment = 0;
+		}
+		else if (m_FProps.pftype == PFType_YUV420Px) {
+			m_pConvertFn = &CFormatConverter::convert_yuv420_px1x_le;
+		}
+		break;
+	case PixFmt_P210:
+	case PixFmt_P216:
+		if (m_FProps.pftype == PFType_Y21x && CPUInfo::HaveSSE4()) {
+			m_pConvertFn = &CFormatConverter::convert_y210_p210_sse4;
+			m_RequiredAlignment = 4;
+		}
+		else if (m_FProps.pftype == PFType_YUV422Px) {
+			m_pConvertFn = &CFormatConverter::convert_yuv420_px1x_le;
+		}
+		break;
+	case PixFmt_Y410:
+		if (m_FProps.avpixfmt == AV_PIX_FMT_XV30) {
+			m_pConvertFn = &CFormatConverter::plane_copy_sse2;
+			m_RequiredAlignment = 0;
+		}
+		else if (m_FProps.pftype == PFType_YUV444Px && m_FProps.lumabits <= 10) {
+			m_pConvertFn = &CFormatConverter::convert_yuv444_y410;
+		}
+		break;
+	case PixFmt_Y416:
+		if (m_FProps.avpixfmt == AV_PIX_FMT_XV36) {
+			m_pConvertFn = &CFormatConverter::plane_copy_sse2;
+			m_RequiredAlignment = 0;
+		}
+		break;
+	case PixFmt_RGB32:
+		switch (m_FProps.pftype) {
+		case PFType_YUV420:
+		case PFType_YUV420Px:
+		case PFType_YUV422:
+		case PFType_YUV422Px:
+		case PFType_YUV444:
+		case PFType_YUV444Px:
+		case PFType_NV12:
+		case PFType_P01x:
+			m_pConvertFn = &CFormatConverter::convert_yuv_rgb;
+			m_RequiredAlignment = 4;
+		}
+		break;
 	}
 }
 

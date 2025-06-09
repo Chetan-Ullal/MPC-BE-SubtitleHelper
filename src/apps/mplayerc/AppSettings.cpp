@@ -517,8 +517,6 @@ void CAppSettings::ResetSettings()
 	bShowMilliSecs = false;
 	fUseTimeTooltip = true;
 	nTimeTooltipPosition = TIME_TOOLTIP_ABOVE_SEEKBAR;
-	nOSDSize = 18;
-	strOSDFont = L"Segoe UI";
 
 	// Associated types with icon or not...
 	bAssociatedWithIcons = true;
@@ -660,7 +658,17 @@ void CAppSettings::ResetSettings()
 	nThemeGreen = 255;
 	nThemeBlue  = 255;
 	bDarkMenu = true;
+	bDarkMenuBlurBehind = false;
 	bDarkTitle = true;
+
+	ShowOSD.Enable = 1;
+	bOSDRemainingTime = false;
+	bOSDLocalTime = false;
+	bOSDFileName = false;
+	strOSDFont = L"Segoe UI";
+	nOSDSize = 18;
+	bOSDFontShadow = false;
+	bOSDFontAA = true;
 	nOSDTransparent = 100;
 	nOSDBorder = 1;
 
@@ -736,7 +744,6 @@ void CAppSettings::ResetSettings()
 	bToggleShader = false;
 	bToggleShaderScreenSpace = false;
 
-	ShowOSD.Enable = 1;
 	fFastSeek = true;
 	bHideWindowedMousePointer = false;
 	nMinMPlsDuration = 3;
@@ -752,10 +759,9 @@ void CAppSettings::ResetSettings()
 	iSmartSeekVR = 0;
 	fChapterMarker = false;
 	fFlybar = true;
-	iPlsFontPercent = 100;
 	fFlybarOnTop = false;
-	fFontShadow = false;
-	fFontAA = true;
+	iPlsFontPercent = 100;
+	iToolbarSize = 24;
 
 	// Save analog capture settings
 	iDefaultCaptureDevice = 0;
@@ -810,10 +816,6 @@ void CAppSettings::ResetSettings()
 	nUpdaterDelay = 7;
 
 	tUpdaterLastCheck = 0;
-
-	bOSDRemainingTime = false;
-	bOSDLocalTime = false;
-	bOSDFileName = false;
 
 	bPasteClipboardURL = false;
 
@@ -1244,8 +1246,8 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	profile.ReadUInt(IDS_R_OSD, IDS_RS_SHOWOSD, ShowOSD.value);
 	profile.ReadInt(IDS_R_OSD, IDS_RS_OSD_SIZE, nOSDSize, 8, 40);
 	profile.ReadString(IDS_R_OSD, IDS_RS_OSD_FONT, strOSDFont);
-	profile.ReadBool(IDS_R_OSD, IDS_RS_OSD_FONTSHADOW, fFontShadow);
-	profile.ReadBool(IDS_R_OSD, IDS_RS_OSD_FONTAA, fFontAA);
+	profile.ReadBool(IDS_R_OSD, IDS_RS_OSD_FONTSHADOW, bOSDFontShadow);
+	profile.ReadBool(IDS_R_OSD, IDS_RS_OSD_FONTAA, bOSDFontAA);
 	profile.ReadHex32(IDS_R_OSD, IDS_RS_OSD_FONTCOLOR, *(unsigned*)&clrFontABGR);
 	profile.ReadHex32(IDS_R_OSD, IDS_RS_OSD_GRADCOLOR1, *(unsigned*)&clrGrad1ABGR);
 	profile.ReadHex32(IDS_R_OSD, IDS_RS_OSD_GRADCOLOR2, *(unsigned*)&clrGrad2ABGR);
@@ -1267,6 +1269,7 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	profile.ReadHex32(IDS_R_THEME, IDS_RS_TOOLBARCOLORFACE, *(unsigned*)&clrFaceABGR);
 	profile.ReadHex32(IDS_R_THEME, IDS_RS_TOOLBARCOLOROUTLINE, *(unsigned*)&clrOutlineABGR);
 	profile.ReadBool(IDS_R_THEME, IDS_RS_DARKMENU, bDarkMenu);
+	profile.ReadBool(IDS_R_THEME, IDS_RS_DARKMENU_BLURBEHIND, bDarkMenuBlurBehind);
 	profile.ReadBool(IDS_R_THEME, IDS_RS_DARKTITLE, bDarkTitle);
 
 	// FullScreen
@@ -1433,8 +1436,10 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_SMARTSEEK_VIDEORENDERER, iSmartSeekVR, 0, 1);
 	profile.ReadBool(IDS_R_SETTINGS, IDS_RS_CHAPTER_MARKER, fChapterMarker);
 	profile.ReadBool(IDS_R_SETTINGS, IDS_RS_USE_FLYBAR, fFlybar);
-	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_PLAYLISTFONTPERCENT, iPlsFontPercent, 100, 200);
 	profile.ReadBool(IDS_R_SETTINGS, IDS_RS_USE_FLYBAR_ONTOP, fFlybarOnTop);
+	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_PLAYLISTFONTPERCENT, iPlsFontPercent, 100, 200);
+	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_TOOLBAR_SIZE, iToolbarSize, 24, 48);
+	iToolbarSize -= iToolbarSize % 4;
 
 	// Save analog capture settings
 	profile.ReadInt(IDS_R_SETTINGS, IDS_RS_DEFAULT_CAPTURE, iDefaultCaptureDevice);
@@ -1792,8 +1797,9 @@ void CAppSettings::SaveSettings()
 	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_SMARTSEEK_VIDEORENDERER, iSmartSeekVR);
 	profile.WriteBool(IDS_R_SETTINGS, IDS_RS_CHAPTER_MARKER, fChapterMarker);
 	profile.WriteBool(IDS_R_SETTINGS, IDS_RS_USE_FLYBAR, fFlybar);
-	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_PLAYLISTFONTPERCENT, iPlsFontPercent);
 	profile.WriteBool(IDS_R_SETTINGS, IDS_RS_USE_FLYBAR_ONTOP, fFlybarOnTop);
+	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_PLAYLISTFONTPERCENT, iPlsFontPercent);
+	profile.WriteInt(IDS_R_SETTINGS, IDS_RS_TOOLBAR_SIZE, iToolbarSize);
 
 	// Save analog capture settings
 	profile.WriteInt   (IDS_R_SETTINGS, IDS_RS_DEFAULT_CAPTURE, iDefaultCaptureDevice);
@@ -1883,8 +1889,8 @@ void CAppSettings::SaveSettings()
 	profile.WriteUInt(IDS_R_OSD, IDS_RS_SHOWOSD, ShowOSD.value);
 	profile.WriteInt(IDS_R_OSD, IDS_RS_OSD_SIZE, nOSDSize);
 	profile.WriteString(IDS_R_OSD, IDS_RS_OSD_FONT, strOSDFont);
-	profile.WriteBool(IDS_R_OSD, IDS_RS_OSD_FONTSHADOW, fFontShadow);
-	profile.WriteBool(IDS_R_OSD, IDS_RS_OSD_FONTAA, fFontAA);
+	profile.WriteBool(IDS_R_OSD, IDS_RS_OSD_FONTSHADOW, bOSDFontShadow);
+	profile.WriteBool(IDS_R_OSD, IDS_RS_OSD_FONTAA, bOSDFontAA);
 	profile.WriteHex32(IDS_R_OSD, IDS_RS_OSD_FONTCOLOR, clrFontABGR);
 	profile.WriteHex32(IDS_R_OSD, IDS_RS_OSD_GRADCOLOR1, clrGrad1ABGR);
 	profile.WriteHex32(IDS_R_OSD, IDS_RS_OSD_GRADCOLOR2, clrGrad2ABGR);
@@ -1902,6 +1908,7 @@ void CAppSettings::SaveSettings()
 	profile.WriteHex32(IDS_R_THEME, IDS_RS_TOOLBARCOLORFACE, clrFaceABGR);
 	profile.WriteHex32(IDS_R_THEME, IDS_RS_TOOLBARCOLOROUTLINE, clrOutlineABGR);
 	profile.WriteBool(IDS_R_THEME, IDS_RS_DARKMENU, bDarkMenu);
+	profile.WriteBool(IDS_R_THEME, IDS_RS_DARKMENU_BLURBEHIND, bDarkMenuBlurBehind);
 	profile.WriteBool(IDS_R_THEME, IDS_RS_DARKTITLE, bDarkTitle);
 
 	// FullScreen

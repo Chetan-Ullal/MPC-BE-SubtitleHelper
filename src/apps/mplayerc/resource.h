@@ -782,6 +782,7 @@
 #define IDC_CHECK_AA                    10752
 #define IDC_VIDRND_COMBO                10753
 #define IDC_AUDRND_COMBO                10754
+#define IDC_CONTROLS_SIZE_COMBO         10755
 //
 // 11000...13999 are reserved
 //
@@ -1436,6 +1437,7 @@
 #define IDS_PUBLISHED                   34100
 #define IDS_OPENING_YOUTUBE             34101
 #define IDS_CALLING_YOUTUBEDL           34102
+#define IDS_YOUTUBE_DEFAULT_AUDIO_LANG  34103
 // video files
 #define IDS_MFMT_AVI                    39001
 #define IDS_MFMT_MPEG                   39002

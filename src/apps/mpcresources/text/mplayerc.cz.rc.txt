@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Po ukončení obnovit výchozí rozlišení"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"Use the ""dark"" theme (default)"
 7		"Brightness :"
 9		"Setting the color of the indicator of sound:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"G:"
 17		"B:"
 21		"Enable dark menu"
-22		"Enable dark title (Windows 10 and above)"
-25		"Use time tooltip:"
-27		"Use the preview in the search"
-28		"Size relative to screen width:"
-32		"Online"
-33		"Use chapters marker"
-34		"Use flybar"
-35		"Playlist font size:"
-38		"OSD"
-39		"Font:"
-43		"F"
-44		"Background:"
-45		"G1"
-46		"G2"
-47		"Transparent:"
-49		"Border Size:"
-52		"Shadow"
-53		"Anti-aliasing"
-54		"Use Windows 7 (and above) Taskbar features"
+22		"Use Blur Behind effect (Windows 11)"
+23		"Enable dark title (Windows 10 and above)"
+26		"Use time tooltip:"
+28		"Use the preview in the search"
+29		"Size relative to screen width:"
+33		"Online"
+34		"Use chapters marker"
+35		"Use flybar"
+36		"Playlist font size:"
+39		"Controls size:"
+41		"Use Windows 7 (and above) Taskbar features"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Default"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"Zobrazit OSD (vyžaduje restart)"
+7		"Show name of media file"
+8		"Show seek time"
+10		"Font:"
+14		"F"
+15		"Background:"
+16		"G1"
+17		"G2"
+18		"Transparent:"
+20		"Border Size:"
+23		"Shadow"
+24		"Anti-aliasing"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Přehrávání"
 6		"Přehrát"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Pause the video playback when minimized"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"Možnosti otevírání"
 6		"Force a single process"
 7		"Use same process for every file"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Display title for URL in recent files"
 33		"Ostatní"
 34		"Ikona v oznamovací oblasti"
-35		"Zobrazit OSD (vyžaduje restart)"
-36		"Show name of media file"
-37		"Show seek time"
-38		"Zakázat nabídku Otevřít disk"
-39		"Spouštět se zvýšenou prioritou"
-40		"Network timeouts"
-41		"Connection:"
-44		"sec."
-45		"Receiving data:"
-48		"sec."
+35		"Zakázat nabídku Otevřít disk"
+36		"Spouštět se zvýšenou prioritou"
+37		"Network timeouts"
+38		"Connection:"
+41		"sec."
+42		"Receiving data:"
+45		"sec."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Disabling this option will prevent the 
 STRING IDC_CHECK_RELATIVETO		"Výchozí stav bude převzat ostatními styly ve kterých ještě nebyla tato volba nastavena."
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"Povolí animaci titulků při použití titulkové vyrovnávací paměti větší než 0. Zakázání této volby sníží zatížení procesoru. Také ji zakažte pokud dochází k blikání titulků."
 STRING IDC_CHECK_SUBRESYNC		"Allows to view and edit subtitles(include time code), navigation by subtitle. Can significantly slow down subtitle loading."
+STRING IDC_CONTROLS_SIZE_COMBO		"Applies only to the built-in toolbar or external one in SVG format, and to the flybar"
 STRING IDC_D3D9DEVICE_CHECK		"Specify a graphics adapter for rendering. Warning: possible incorrect work on the displays is connected to another adapter."
 STRING IDC_DX9RESIZER_COMBO		"Pokud není podporován Pixel Shader 2.0, automaticky se použije simple bilinear."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Reduces tearing but prevents the toolbar from being shown. To exit fullscreen in this mode press Ctrl+C."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Interní filtry"
 STRING IDD_PPAGELOGO		"Přehrávač::Logo"
 STRING IDD_PPAGEMISC		"Ostatní"
 STRING IDD_PPAGEMOUSE		"Přehrávač::Mouse"
+STRING IDD_PPAGEOSD		"Přehrávač::OSD"
 STRING IDD_PPAGEPLAYBACK		"Přehrávání"
 STRING IDD_PPAGEPLAYER		"Přehrávač"
 STRING IDD_PPAGESOUNDPROCESSING		"Audio::Sound processing"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Vol: %d%% [Mute]"
 STRING IDS_VTSREADER_LOAD_PGC		"Enable a choice of Title"
 STRING IDS_WEBSERVER_ERROR_TEST		"Než budete moci nová nastavení vyzkoušet, musíte je aplikovat."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"Preview is currently disabled. You can enable it in MPC-BE's options."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Roztáhnout 1"
 STRING IDS_ZOOM2		"Roztáhnout 2"
 STRING IDS_ZOOM_AUTOFIT		"Auto fit"

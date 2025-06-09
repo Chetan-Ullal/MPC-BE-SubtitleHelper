@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Επαναφορά ανάλυσης στην έξοδο του προγράμματος"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"Χρήση του ""σκοτεινού"" θέματος (προεπιλογή)"
 7		"Φωτεινότητα :"
 9		"Ρύθμιση του χρώματος από την ένδειξη του ήχου:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"G:"
 17		"B:"
 21		"Ενεργοποίηση σκοτεινού μενού"
-22		"Enable dark title (Windows 10 and above)"
-25		"Χρήση συμβουλής χρόνου:"
-27		"Χρήση της προεπισκόπησης στην αναζήτηση"
-28		"Μέγεθος σε σχέση με το πλάτος της οθόνης:"
-32		"Online"
-33		"Εμφάνιση σημάνσεων κεφαλαίων στη γραμμή αναζήτησης"
-34		"Χρήση εναέριας μπάρας"
-35		"Μέγεθος γραμματοσειράς λίστας αναπαραγωγής:"
-38		"OSD"
-39		"Γραμματοσ.:"
-43		"F"
-44		"Φόντο:"
-45		"G1"
-46		"G2"
-47		"Διαφάνεια:"
-49		"Περίγραμμα:"
-52		"Σκιά"
-53		"Anti-aliasing"
-54		"Χρήση χαρακτηριστικών γραμμής εργασίας των Windows 7"
+22		"Use Blur Behind effect (Windows 11)"
+23		"Enable dark title (Windows 10 and above)"
+26		"Χρήση συμβουλής χρόνου:"
+28		"Χρήση της προεπισκόπησης στην αναζήτηση"
+29		"Μέγεθος σε σχέση με το πλάτος της οθόνης:"
+33		"Online"
+34		"Εμφάνιση σημάνσεων κεφαλαίων στη γραμμή αναζήτησης"
+35		"Χρήση εναέριας μπάρας"
+36		"Μέγεθος γραμματοσειράς λίστας αναπαραγωγής:"
+39		"Controls size:"
+41		"Χρήση χαρακτηριστικών γραμμής εργασίας των Windows 7"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Προεπιλογή"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"Εμφάνιση OSD (απαιτείται επανεκκίνηση)"
+7		"Εμφάνιση του ονόματος αρχείου"
+8		"Εμφάνιση χρόνου αναζήτησης"
+10		"Γραμματοσ.:"
+14		"F"
+15		"Φόντο:"
+16		"G1"
+17		"G2"
+18		"Διαφάνεια:"
+20		"Περίγραμμα:"
+23		"Σκιά"
+24		"Anti-aliasing"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Αναπαραγωγή"
 6		"Εκτέλεση"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Παύση της αναπαραγωγής βίντεο στην ελαχιστοποίηση"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"Επιλογές ανοίγματος"
 6		"Εξαναγκασμός μίας διεργασίας"
 7		"Χρήση του ίδιου αναπαραγωγού για κάθε αρχείο πολυμέσων"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Display title for URL in recent files"
 33		"Άλλα"
 34		"Εικονίδιο στη γραμμή ειδοποιήσεων"
-35		"Εμφάνιση OSD (απαιτείται επανεκκίνηση)"
-36		"Εμφάνιση του ονόματος αρχείου"
-37		"Εμφάνιση χρόνου αναζήτησης"
-38		"Απενεργοποίηση του μενού "" Άνοιγμα δίσκου"""
-39		"Προτεραιότητα διεργασίας πάνω από κανονική"
-40		"Network timeouts"
-41		"Connection:"
-44		"δευτ."
-45		"Receiving data:"
-48		"sec."
+35		"Απενεργοποίηση του μενού "" Άνοιγμα δίσκου"""
+36		"Προτεραιότητα διεργασίας πάνω από κανονική"
+37		"Network timeouts"
+38		"Connection:"
+41		"δευτ."
+42		"Receiving data:"
+45		"sec."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Η απενεργοποίηση αυτ�
 STRING IDC_CHECK_RELATIVETO		"Η προεπιλεγμένη τιμή χρησιμοποιείται και σε άλλα στυλ, όπου δεν έχει καθοριστεί"
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"Επιτρέπετε η κίνηση του υπότιτλου όταν χρησιμοποιείται μια προσωρινή επιμέρους εικόνα μεγαλύτερη από 0. Η απενεργοποίηση αυτής της επιλογής θα μειώσει τη χρήση της CPU. Επίσης να το απενεργοποιήσετε εάν οι υπότιτλοι αναβοσβήνουν."
 STRING IDC_CHECK_SUBRESYNC		"Επιτρέπει την προβολή και επεξεργασία υποτίτλων (περιλαμβάνουν κωδικό ώρας), πλοήγηση με υπότιτλο. Μπορέστε σημαντικά να επιβραδύνετε τη φόρτωση υποτίτλων."
+STRING IDC_CONTROLS_SIZE_COMBO		"Applies only to the built-in toolbar or external one in SVG format, and to the flybar"
 STRING IDC_D3D9DEVICE_CHECK		"Καθορίστε έναν προσαρμογέα γραφικών για απόδοση. Προειδοποίηση: πιθανή εσφαλμένη εργασία στις οθόνες είναι συνδεδεμένη με άλλο προσαρμογέα."
 STRING IDC_DX9RESIZER_COMBO		"Εάν δεν υπάρχει υποστήριξη Pixel Shader 2.0, χρησιμοποιείται αυτόματα η απλή διγραμμική."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Μειώνει το σχίσιμο, αλλά αποτρέπει την εμφάνιση της γραμμής εργαλείων. Για έξοδο από την πλήρη οθόνη σε αυτήν τη λειτουργία πατήστε Ctrl+C."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Εσωτερικά φίλτρα"
 STRING IDD_PPAGELOGO		"Αναπαραγωγός::Λογότυπο"
 STRING IDD_PPAGEMISC		"Διάφορα"
 STRING IDD_PPAGEMOUSE		"Αναπαραγωγός::Mouse"
+STRING IDD_PPAGEOSD		"Αναπαραγωγός::OSD"
 STRING IDD_PPAGEPLAYBACK		"Αναπαραγωγή"
 STRING IDD_PPAGEPLAYER		"Αναπαραγωγός"
 STRING IDD_PPAGESOUNDPROCESSING		"Ήχος::Επεξεργασία ήχου"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Ένταση: %d%% [Σίγαση]"
 STRING IDS_VTSREADER_LOAD_PGC		"Ενεργοποίηση επιλογής τίτλου"
 STRING IDS_WEBSERVER_ERROR_TEST		"Πρέπει να κάνετε εφαρμογή των νέων ρυθμίσεων πριν από τη δοκιμή τους."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"Η προεπισκόπηση είναι αυτή τη στιγμή απενεργοποιημένη.Μπορείτε να το ενεργοποιήσετε στις επιλογές του MPC-BE."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Μεγέθυνση 1"
 STRING IDS_ZOOM2		"Μεγέθυνση 2"
 STRING IDS_ZOOM_AUTOFIT		"Αυτόματη προσαρμογή"

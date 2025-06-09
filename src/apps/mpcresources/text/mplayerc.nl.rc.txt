@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Herstel resolutie bij afsluiten"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"Gebruik Donker thema (standaard)"
 7		"Helderheid :"
 9		"Kleur van de geluidindicator:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"G:"
 17		"B:"
 21		"Donker menu inschakelen"
-22		"Activeer donkere titelbalk (Windows 10 en hoger)"
-25		"Toon scherminfo voor tijd:"
-27		"Activeer voorvertoning op zoekbalk"
-28		"Grootte op basis v/d schermbreedte:"
-32		"Online"
-33		"Toon hoofdstukmarkeringen op zoekbalk"
-34		"Gebruik flybar"
-35		"Tekengrootte van afspeellijst:"
-38		"OSD"
-39		"Lettertype:"
-43		"F"
-44		"Achtergrond:"
-45		"G1"
-46		"G2"
-47		"Transparantie:"
-49		"Omlijning:"
-52		"Schaduw"
-53		"Anti-aliasing"
-54		"Gebruik mogelijkheden van Windows 7 (en hoger)-taakbalk"
+22		"Use Blur Behind effect (Windows 11)"
+23		"Activeer donkere titelbalk (Windows 10 en hoger)"
+26		"Toon scherminfo voor tijd:"
+28		"Activeer voorvertoning op zoekbalk"
+29		"Grootte op basis v/d schermbreedte:"
+33		"Online"
+34		"Toon hoofdstukmarkeringen op zoekbalk"
+35		"Gebruik flybar"
+36		"Tekengrootte van afspeellijst:"
+39		"Controls size:"
+41		"Gebruik mogelijkheden van Windows 7 (en hoger)-taakbalk"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Resetten"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"Toon OSD (vereist herstart)"
+7		"Toon naam van mediabestand"
+8		"Toon gezochte tijd"
+10		"Lettertype:"
+14		"F"
+15		"Achtergrond:"
+16		"G1"
+17		"G2"
+18		"Transparantie:"
+20		"Omlijning:"
+23		"Schaduw"
+24		"Anti-aliasing"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Afspelen"
 6		"Afspelen"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Weergave pauseren als het venster geminimaliseerd is"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"Opties voor openen"
 6		"Forceer een enkel proces"
 7		"Gebruik hetzelfde proces voor elk bestand"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Titel voor URL in recente bestanden weergeven"
 33		"Overige"
 34		"Pictogram in systeemvak"
-35		"Toon OSD (vereist herstart)"
-36		"Toon naam van mediabestand"
-37		"Toon gezochte tijd"
-38		"Menu ""Schijf openen"" uitschakelen"
-39		"Procesprioriteit ""hoger dan normaal"""
-40		"Netwerktime-outs"
-41		"Time-out voor verbinding:"
-44		"sec."
-45		"Time-out voor ontvangen:"
-48		"sec."
+35		"Menu ""Schijf openen"" uitschakelen"
+36		"Procesprioriteit ""hoger dan normaal"""
+37		"Netwerktime-outs"
+38		"Time-out voor verbinding:"
+41		"sec."
+42		"Time-out voor ontvangen:"
+45		"sec."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Deactivering van deze optie zal de flik
 STRING IDC_CHECK_RELATIVETO		"Standaardwaarden worden ook op andere stijlen toegepast, waar nog geen waarde voor bepaald is."
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"Maakt ondertitelingsanimatie mogelijk bij een subafbeeldingsbuffer groter dan 0. Dit uitzetten zal de CPU ontlasten. Zet dit ook uit als de ondertiteling flikkert."
 STRING IDC_CHECK_SUBRESYNC		"Ondertitelbestanden bekijken en bewerken (ook de tijdcode), navigatie met ondertitel. Het laden van ondertitelbestanden wordt aanzienlijk vertraagd."
+STRING IDC_CONTROLS_SIZE_COMBO		"Applies only to the built-in toolbar or external one in SVG format, and to the flybar"
 STRING IDC_D3D9DEVICE_CHECK		"Specificeer een grafische adapter voor het renderen. Waarschuwing: mogelijkheid tot onjuiste uitvoering op de beeldschermen die op een andere adapter aangesloten zijn."
 STRING IDC_DX9RESIZER_COMBO		"Als er geen Pixel Shader 2.0 ondersteuning is, zal automatisch Simple Bilinear gebruikt worden."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Vermindert tearing, maar blokkeert de weergave van de werkbalk. Om volledig scherm in dit modus te verlaten, druk op Alt+Enter, Ctrl+Enter of Ctrl+C."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Interne Filters"
 STRING IDD_PPAGELOGO		"Speler::Logo"
 STRING IDD_PPAGEMISC		"Overige"
 STRING IDD_PPAGEMOUSE		"Speler::Muis"
+STRING IDD_PPAGEOSD		"Speler::OSD"
 STRING IDD_PPAGEPLAYBACK		"Weergave"
 STRING IDD_PPAGEPLAYER		"Speler"
 STRING IDD_PPAGESOUNDPROCESSING		"Audio::Geluidsbewerking"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Volume: %d%% [Gedempt]"
 STRING IDS_VTSREADER_LOAD_PGC		"Activeer een keuze van titel"
 STRING IDS_WEBSERVER_ERROR_TEST		"U moet de nieuwe instellingen toepassen voordat u hen testen."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"Voorvertoning is momenteel uitgeschakeld. U kunt het in de opties van MPC-BE inschakelen."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Zoom 1"
 STRING IDS_ZOOM2		"Zoom 2"
 STRING IDS_ZOOM_AUTOFIT		"Autom. passend"

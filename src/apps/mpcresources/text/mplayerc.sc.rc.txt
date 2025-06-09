@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"退出后恢复默认分辨率"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"使用暗黑主题 (默认)"
 7		"亮度:"
 9		"设置声音控制条颜色:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"绿:"
 17		"蓝:"
 21		"使用暗黑菜单"
-22		"使用暗黑标题 (Windows 10及以上版本)"
-25		"使用时间工具提示:"
-27		"搜索时显示预览"
-28		"相对于屏幕宽度的缩略图大小:"
-32		"在线视频"
-33		"显示章节标记"
-34		"全屏模式时启用悬浮工具条"
-35		"播放列表字体大小:"
-38		"屏幕显示"
-39		"字体:"
-43		"F"
-44		"背景:"
-45		"G1"
-46		"G2"
-47		"透明:"
-49		"边框大小:"
-52		"阴影"
-53		"抗锯齿"
-54		"使用 Windows 7 (或更高版本) 任务栏功能"
+22		"使用背景模糊效果 (Windows 11)"
+23		"使用暗黑标题 (Windows 10及以上版本)"
+26		"使用时间工具提示:"
+28		"搜索时显示预览"
+29		"相对于屏幕宽度的缩略图大小:"
+33		"在线视频"
+34		"显示章节标记"
+35		"全屏模式时启用悬浮工具栏"
+36		"播放列表字体大小:"
+39		"控制按钮大小:"
+41		"使用 Windows 7 (或更高版本) 任务栏功能"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"重置"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"显示 OSD (需要重新启动播放器)"
+7		"显示媒体文件名称"
+8		"显示搜索时间"
+10		"字体:"
+14		"F"
+15		"背景:"
+16		"G1"
+17		"G2"
+18		"透明:"
+20		"边框大小:"
+23		"阴影"
+24		"抗锯齿"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"回放"
 6		"播放"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"最小化时暂停播放"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"打开选项"
 6		"只播放一个文件"
 7		"为每个媒体文件使用相同的播放器"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"在最近的文件中显示链接页面的标题"
 33		"其它"
 34		"托盘图标"
-35		"显示 OSD (需要重新启动播放器)"
-36		"显示媒体文件名称"
-37		"显示搜索时间"
-38		"隐藏打开光盘菜单"
-39		"高于普通进程优先级"
-40		"网络超时"
-41		"连接:"
-44		"秒"
-45		"接收数据:"
-48		"秒"
+35		"隐藏打开光盘菜单"
+36		"高于普通进程优先级"
+37		"网络超时"
+38		"连接:"
+41		"秒"
+42		"接收数据:"
+45		"秒"
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"禁用此选项可防止字幕闪烁，
 STRING IDC_CHECK_RELATIVETO		"如未定义，默认状态将会从其它风格获取"
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"当字幕图像缓冲数量大于 0 时，可以使用字幕动画效果。禁用此项可以降低 CPU 占用率。如果出现字幕闪烁，亦可禁用此项。"
 STRING IDC_CHECK_SUBRESYNC		"启用后可查看并编辑字幕文件 (包括时间码) ，通过选取字幕预览影片。启用后会明显的降低字幕加载速度。"
+STRING IDC_CONTROLS_SIZE_COMBO		"仅支持内置工具栏或SVG格式的外部工具栏以及全屏下的悬浮工具栏"
 STRING IDC_D3D9DEVICE_CHECK		"指定渲染用的图形适配器。警告：在连接到其他显卡的屏幕上可能无法正常运作。"
 STRING IDC_DX9RESIZER_COMBO		"如果这里不支持像素着色器 2.0，将自动使用简易双线过滤。"
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"减少撕裂，但会阻碍工具栏显示，在这种模式下按 Alt+Enter、Ctrl+Enter 或 Ctrl + C 退出全屏。"
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"内置滤镜"
 STRING IDD_PPAGELOGO		"播放器::徽标"
 STRING IDD_PPAGEMISC		"其它"
 STRING IDD_PPAGEMOUSE		"播放器::鼠标"
+STRING IDD_PPAGEOSD		"播放器::OSD"
 STRING IDD_PPAGEPLAYBACK		"回放"
 STRING IDD_PPAGEPLAYER		"播放器"
 STRING IDD_PPAGESOUNDPROCESSING		"音频::声音处理"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"音量: %d%% [静音]"
 STRING IDS_VTSREADER_LOAD_PGC		"启用标题选择"
 STRING IDS_WEBSERVER_ERROR_TEST		"在测试新的设置之前您需要先应用他们。"
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"预览目前已被禁用。您可以在 MPC-BE 的选项中启用它。"
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"缩放 1"
 STRING IDS_ZOOM2		"缩放 2"
 STRING IDS_ZOOM_AUTOFIT		"自动调整"

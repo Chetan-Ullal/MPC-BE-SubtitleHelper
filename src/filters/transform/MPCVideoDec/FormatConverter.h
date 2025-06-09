@@ -1,5 +1,5 @@
 /*
- * (C) 2014-2024 see Authors.txt
+ * (C) 2014-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -76,6 +76,7 @@ enum MPCPixFmtType {
 	PFType_YUV444Px, // YUV 4:4:4, 9-16 bit
 	PFType_NV12,     // YUV 4:2:0, U/V interleaved
 	PFType_P01x,     // YUV 4:2:0, 10 to 16-bit, U/V interleaved, MSB aligned
+	PFType_Y21x,     // YUV 4:2:0, 10 to 16-bit
 };
 
 struct FrameProps {
@@ -147,6 +148,7 @@ protected:
 	// Conversion function pointer
 	typedef HRESULT (CFormatConverter::*ConverterFn)(CONV_FUNC_PARAMS);
 	ConverterFn m_pConvertFn = nullptr;
+	BOOL m_bDirect = FALSE;
 
 	// from LAV Filters
 	HRESULT ConvertGeneric(CONV_FUNC_PARAMS);
@@ -158,10 +160,14 @@ protected:
 	// optimized function
 	HRESULT plane_copy_sse2(CONV_FUNC_PARAMS);
 	HRESULT convert_p010_nv12_sse2(CONV_FUNC_PARAMS);
+	HRESULT convert_y210_p210_sse4(CONV_FUNC_PARAMS);
 
+	// optimized direct function
 	HRESULT plane_copy_direct_sse4(CONV_FUNC_PARAMS);
+	HRESULT plane_copy_direct_nv12_sse4(CONV_FUNC_PARAMS);
 	HRESULT convert_nv12_yv12_direct_sse4(CONV_FUNC_PARAMS);
 	HRESULT convert_p010_nv12_direct_sse4(CONV_FUNC_PARAMS);
+	HRESULT convert_y210_p210_direct_sse4(CONV_FUNC_PARAMS);
 
 	HRESULT convert_yuv_yv_nv12_dither_le(CONV_FUNC_PARAMS);
 	HRESULT convert_yuv420_px1x_le(CONV_FUNC_PARAMS);
@@ -192,6 +198,7 @@ public:
 	MPCPixelFormat GetOutPixFormat() { return m_out_pixfmt; }
 
 	bool Converting(BYTE* dst, AVFrame* pFrame);
+	void SetDirect(BOOL bDirect) { m_bDirect = bDirect; }
 
 	void Cleanup();
 

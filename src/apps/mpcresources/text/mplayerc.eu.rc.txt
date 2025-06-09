@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Leheneratu bereizmena programatik irtetzerakoan"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 6		"Erabili ""iluna"" azalgaia (berezkoa)"
 7		"Dizdira :"
 9		"Soinu adierazle margo ezarpena:"
@@ -311,25 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 56
 16		"O:"
 17		"U:"
 21		"Enable dark menu"
-22		"Enable dark title (Windows 10 and above)"
-25		"Erabili denbora oharra:"
-27		"Erabili aurrekoa bilaketan"
-28		"Neurria ikusleiho zabaleraren arabera:"
-32		"Online"
-33		"Erabili atal markatzailea"
-34		"Erabili gainbarra"
-35		"Playlist font size:"
-38		"IGE"
-39		"Hizkia:"
-43		"F"
-44		"Barrena:"
-45		"G1"
-46		"G2"
-47		"Gardena:"
-49		"Hertz Neurria:"
-52		"Itzala"
-53		"Hertz-lehunketa"
-54		"Erabili Windows 7 (eta berriagoa) Eginkizun-barra ezaugarriak"
+22		"Use Blur Behind effect (Windows 11)"
+23		"Enable dark title (Windows 10 and above)"
+26		"Erabili denbora oharra:"
+28		"Erabili aurrekoa bilaketan"
+29		"Neurria ikusleiho zabaleraren arabera:"
+33		"Online"
+34		"Erabili atal markatzailea"
+35		"Erabili gainbarra"
+36		"Playlist font size:"
+39		"Controls size:"
+41		"Erabili Windows 7 (eta berriagoa) Eginkizun-barra ezaugarriak"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -384,6 +376,21 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Default"
 END
 
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+6		"Erakutsi IGE (beharrezkoa berrabiaratzea)"
+7		"Erakutsi multimedia agiriaren izena"
+8		"Show seek time"
+10		"Hizkia:"
+14		"F"
+15		"Barrena:"
+16		"G1"
+17		"G2"
+18		"Gardena:"
+20		"Hertz Neurria:"
+23		"Itzala"
+24		"Hertz-lehunketa"
+END
+
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 5		"Irakurketa"
 6		"Irakurri"
@@ -408,7 +415,7 @@ BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
 36		"Pausatu bideo irakurketa txikiendutakoan"
 END
 
-BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
+BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 46
 5		"Ireki aukerak"
 6		"Behartu prozesu bakarra"
 7		"Erabili prozesu berdina agiri guztientzat"
@@ -430,16 +437,13 @@ BEGIN DIALOGEX IDD_PPAGEPLAYER LINES 49
 31		"Display title for URL in recent files"
 33		"Beste"
 34		"Erretilu ikurra"
-35		"Erakutsi IGE (beharrezkoa berrabiaratzea)"
-36		"Erakutsi multimedia agiriaren izena"
-37		"Erakutsi bilaketa denbora"
-38		"Ezgaitu 'Ireki Diska' menua"
-39		"Ekinbide lehentasuna arruntetik gora"
-40		"Network timeouts"
-41		"Connection:"
-44		"sec."
-45		"Receiving data:"
-48		"sec."
+35		"Ezgaitu 'Ireki Diska' menua"
+36		"Ekinbide lehentasuna arruntetik gora"
+37		"Network timeouts"
+38		"Connection:"
+41		"sec."
+42		"Receiving data:"
+45		"sec."
 END
 
 BEGIN DIALOGEX IDD_PPAGESOUNDPROCESSING LINES 40
@@ -1048,6 +1052,7 @@ STRING IDC_CHECK_ALLOW_DROPPING_SUBPIC		"Aukera hau ezgaitzeak azpidatziek keinu
 STRING IDC_CHECK_RELATIVETO		"Berezko egoera beste estilo batzuetatik lortzen da oraindik zehaztugabe dagoenean."
 STRING IDC_CHECK_SPCANIMWITHBUFFER		"Ahalbidetzen du azpidatzi animazioa 0 baino handiagoa den azpirudi buffer bat erabiltzerakoan. Aukera hau ezgaitzeak CPU erabilera gutxiago izango du. Ezgaitu ere azpidatziak keinuka ikusten badituzu."
 STRING IDC_CHECK_SUBRESYNC		"Azpidatziak ikustea eta editatzea (denbora-kodea barne) eta azpidatzi nabigazioa ahalbidetzen du. Azpidatzi gertaketa nabarmen astirotu dezake."
+STRING IDC_CONTROLS_SIZE_COMBO		"Applies only to the built-in toolbar or external one in SVG format, and to the flybar"
 STRING IDC_D3D9DEVICE_CHECK		"Aurkezpenerako grafika egokitzailea adierazten du. Warning: possible incorrect work on the displays is connected to another adapter."
 STRING IDC_DX9RESIZER_COMBO		"Pixel Itzal 2.0 sostengurik ez badago, bilinear arrunta erabiltzen da berezgaitasunez."
 STRING IDC_EXCLUSIVE_FULLSCREEN_CHECK		"Leiho-haustea murrizten du baina tresnabarra eraskustea saihesten du. Modu honetan ikusleiho-osotik irtetzeko sakatu Ktrl+C."
@@ -1072,6 +1077,7 @@ STRING IDD_PPAGEINTERNALFILTERS		"Barneko Iragazkiak"
 STRING IDD_PPAGELOGO		"Irakurgailua::Logoa"
 STRING IDD_PPAGEMISC		"Askotarikoa"
 STRING IDD_PPAGEMOUSE		"Irakurgailua::Mouse"
+STRING IDD_PPAGEOSD		"Irakurgailua::OSD"
 STRING IDD_PPAGEPLAYBACK		"Irakurketa"
 STRING IDD_PPAGEPLAYER		"Irakurgailua"
 STRING IDD_PPAGESOUNDPROCESSING		"Audioa::Soinu prozesapena"
@@ -2088,6 +2094,7 @@ STRING IDS_VOLUME_OSD_MUTE		"Bolumena: %d%% [Mututu]"
 STRING IDS_VTSREADER_LOAD_PGC		"Gaitu Izenburu hautapena"
 STRING IDS_WEBSERVER_ERROR_TEST		"Ezarpen berriak ezarri behar dituzu aztertu aurretik."
 STRING IDS_WEBUI_DISABLED_PREVIEW_MSG		"Preview is currently disabled. You can enable it in MPC-BE's options."
+STRING IDS_YOUTUBE_DEFAULT_AUDIO_LANG		"Default language"
 STRING IDS_ZOOM1		"Zooma 1"
 STRING IDS_ZOOM2		"Zooma 2"
 STRING IDS_ZOOM_AUTOFIT		"Berez finkatu"

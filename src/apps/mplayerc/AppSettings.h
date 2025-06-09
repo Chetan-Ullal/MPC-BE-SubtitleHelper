@@ -718,6 +718,7 @@ public:
 	int				nThemeGreen;
 	int				nThemeBlue;
 	bool			bDarkMenu;
+	bool			bDarkMenuBlurBehind;
 	bool			bDarkTitle;
 	int				nOSDTransparent;
 	int				nOSDBorder;
@@ -738,8 +739,9 @@ public:
 	bool			fChapterMarker;
 	bool			fFlybar;
 	int				iPlsFontPercent;
-	bool			fFontShadow;
-	bool			fFontAA;
+	int				iToolbarSize;
+	bool			bOSDFontShadow;
+	bool			bOSDFontAA;
 	bool			fFlybarOnTop;
 	bool			fUseWin7TaskBar;
 	int				nOSDSize;
