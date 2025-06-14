@@ -135,7 +135,7 @@ BOOL CPPageInterface::OnInitDialog()
 		m_chkDarkTitle.EnableWindow(FALSE);
 	}
 
-	if (!SysVersion::IsWin11orLater()) {
+	if (!SysVersion::IsWin10orLater()) {
 		m_chkDarkMenuBlurBehind.EnableWindow(FALSE);
 	}
 
@@ -319,7 +319,7 @@ void CPPageInterface::OnUpdateCheck3(CCmdUI* pCmdUI)
 	GetDlgItem(IDC_STATIC8)->EnableWindow(bUseDarkTheme);
 	GetDlgItem(IDC_CONTROLS_SIZE_COMBO)->EnableWindow(bUseDarkTheme);
 	m_chkDarkMenu.EnableWindow(bUseDarkTheme);
-	if (SysVersion::IsWin11orLater()) {
+	if (SysVersion::IsWin10orLater()) {
 		m_chkDarkMenuBlurBehind.EnableWindow(bUseDarkTheme && m_chkDarkMenu.GetCheck());
 	}
 	if (SysVersion::IsWin10v1809orLater()) {
@@ -335,9 +335,6 @@ void CPPageInterface::OnClickClrDefault()
 	m_clrOutlineABGR = 0x00868686;
 	GetDlgItem(IDC_BUTTON_CLRFACE)->Invalidate();
 	GetDlgItem(IDC_BUTTON_CLROUTLINE)->Invalidate();
-	GetDlgItem(IDC_BUTTON_CLRFONT)->Invalidate();
-	GetDlgItem(IDC_BUTTON_CLRGRAD1)->Invalidate();
-	GetDlgItem(IDC_BUTTON_CLRGRAD2)->Invalidate();
 	PostMessageW(WM_COMMAND, IDC_CHECK3);
 
 	s.nThemeBrightness		= m_nThemeBrightness	= 15;

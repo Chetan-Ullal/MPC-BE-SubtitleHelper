@@ -457,7 +457,7 @@ static void EnableBlurBehind(HWND hwnd)
 
 	static auto pSetWindowCompositionAttribute = (BOOL(WINAPI*)(HWND, PVOID))GetProcAddress(GetModuleHandleW(L"User32"), "SetWindowCompositionAttribute");
 	if (pSetWindowCompositionAttribute) {
-		static ACCENT_POLICY accent{ ACCENT_ENABLE_BLURBEHIND, 0, 0, 0 };
+		static ACCENT_POLICY accent{ ACCENT_ENABLE_ACRYLICBLURBEHIND, 0, 0xB4000000, 0 };
 		static WINDOWCOMPOSITIONATTRIBDATA data{ WCA_ACCENT_POLICY, &accent, sizeof(accent) };
 
 		pSetWindowCompositionAttribute(hwnd, &data);
@@ -475,10 +475,9 @@ LRESULT CALLBACK CMenuEx::MenuWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM
 				// Windows 10 SDK does not contain some parameters, so we set them with numbers.
 				int preference = 3; // DWMWCP_ROUNDSMALL
 				DwmSetWindowAttribute(hWnd, 33 /*DWMWA_WINDOW_CORNER_PREFERENCE*/, &preference, sizeof(preference));
-
-				if (AfxGetAppSettings().bDarkMenuBlurBehind) {
-					EnableBlurBehind(hWnd);
-				}
+			}
+			if (AfxGetAppSettings().bDarkMenuBlurBehind && SysVersion::IsWin10orLater()) {
+				EnableBlurBehind(hWnd);
 			}
 			break;
 		case WM_DESTROY:

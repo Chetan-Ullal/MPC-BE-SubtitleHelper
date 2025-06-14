@@ -320,7 +320,7 @@ BEGIN
     LISTBOX         IDC_LIST1,79,74,208,66,WS_VSCROLL | WS_GROUP | WS_TABSTOP
     GROUPBOX        "Дополнительные настройки",IDC_STATIC,5,140,286,37
     CONTROL         "Разрешить субтитры для слабослышащих в 'Line 21 Decoder'",IDC_CHECK2,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,152,220,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,152,278,9
     CONTROL         "Начать проигрывание с Главного Меню",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,164,220,9
 END
 
@@ -441,7 +441,7 @@ BEGIN
     CONTROL         "",IDC_SLIDER3,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,233,34,53,12
     CONTROL         "",IDC_SLIDER4,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,233,49,53,12
     CONTROL         "Использовать тёмное меню",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,59,147,8,WS_EX_TRANSPARENT
-    CONTROL         "Blur Behind эффект (Windows 11)",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,71,197,8,WS_EX_TRANSPARENT
+    CONTROL         "Blur Behind эффект (Windows 10 и выше)",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,71,197,8,WS_EX_TRANSPARENT
     CONTROL         "Использовать тёмный заголовок (Windows 10 и выше)",IDC_CHECK5,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,83,238,8,WS_EX_TRANSPARENT
     GROUPBOX        "",IDC_STATIC,7,112,282,91
@@ -2290,6 +2290,11 @@ BEGIN
     0
 END
 
+IDD_PPAGEDVD AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3865,9 +3870,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PUBLISHED                  "Опубликовано : "
-    IDS_OPENING_YOUTUBE            "Открытие YouTube ..."
-    IDS_CALLING_YOUTUBEDL          "Вызов %s ..."
+    IDS_PUBLISHED           "Опубликовано : "
+    IDS_OPENING_YOUTUBE     "Открытие YouTube ..."
+    IDS_CALLING_YOUTUBEDL   "Вызов %s ..."
     IDS_YOUTUBE_DEFAULT_AUDIO_LANG "Язык по умолчанию"
 END
 
