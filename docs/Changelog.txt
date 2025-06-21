@@ -1,6 +1,16 @@
 ﻿This file includes only a short list of the changes between Media Player Classic - BE's versions.
 
-1.8.4.x dev
+1.8.5.x dev
+=============================
+Updated Romanian translation (by Andrei Miloiu).
+Updated Italian translation (by mapi68).
+
+Updated libraries:
+	ffmpeg n7.2-dev-2767-g8aa6df663e;
+	vvdec v3.0.0-35-g2eaccd0.
+
+
+1.8.5 - 2025-06-17
 =============================
 AviSplitter
 Improved support for VP9 and AV1 video.
@@ -32,11 +42,14 @@ Player
 Fixed saving of video frame image with subtitles when using MPC Video Renderer.
 HLS M3U files are no longer processed as normal playlists, but are passed to the source filter as is.
 Added the ability to save the "Show milliseconds" setting.
-Added settings "Controls size" and "Use Blur Behind effect (Windows 11)".
+Added settings "Controls size" and "Use Blur Behind effect (Windows 10 and above)".
 Added OSD settings panel.
+Added a Debanding shader.
+Various interface fixes.
 
 Installer
 Updated MPC Video Renderer 0.9.9.
+Updated MPC Script Source 0.2.9.
 
 Updated Bulgarian translation (by jekovcar).
 Updated Romanian translation (by Andrei Miloiu).
@@ -52,7 +65,10 @@ Updated Korean translation (by Hackjjang).
 Updated Dutch and Chinese (Traditional) translation (by beter).
 
 Updated libraries:
-	ffmpeg n7.2-dev-2722-gfb65ecbc9b.
+	ffmpeg n7.2-dev-2722-gfb65ecbc9b;
+	Little-CMS git-lcms2.17-31-g9ac94ea;
+	MediaInfo git-v25.04-121-gf842d2fea;
+	ZenLib git-v0.4.41-76-gf5f6974.
 
 
 1.8.4 - 2025-04-19

@@ -99,7 +99,7 @@ BEGIN DIALOGEX IDD_GOTO_DLG LINES 14
 6		"특정 시간으로 이동하기 위해서는 [hh:]mm:ss.ms 형식으로 타임 코드를 설정하세요. 명시적으로 구분 기호를 넣을 필요는 없습니다."
 7		"시간 :"
 9		"이동"
-10		"프레임이나 프레임률을 입력하면 특정 프레임으로 이동, 재생할 수 있습니다.\n예) 12345, 20.25 → 12345프레임 20.25fps"
+10		"프레임이나 프레임률을 입력하면 특정 프레임으로 이동, 재생할 수 있습니다.\n예) 12345, 20.25 → 12345프레임 초당 20.25프레임"
 11		"프레임 :"
 13		"이동"
 END
@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"종료 후, 해상도 복원"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 44
 6		"다크 테마 사용(기본값)"
 7		"명도 :"
 9		"음량 조절 색 설정 :"
@@ -312,16 +312,16 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 17		"B :"
 21		"다크 메뉴 활성화"
 22		"Use Blur Behind effect (Windows 10 and above)"
-23		"다크 타이틀 활성화(윈도11)"
-26		"시간 툴팁 사용 :"
-28		"탐색 표시줄에서 미리 보기 사용"
-29		"화면 너비 대비 크기 :"
-33		"Online"
-34		"챕터 구분 표기 사용"
-35		"플라이바 사용"
-36		"재생 목록 글자 크기 :"
-39		"크기 조절 :"
-41		"(윈도7 이상) 작업 표시줄 기능 사용"
+24		"다크 타이틀 활성화(윈도11)"
+27		"시간 툴팁 사용 :"
+29		"탐색 표시줄에서 미리 보기 사용"
+30		"화면 너비 대비 크기 :"
+34		"Online"
+35		"챕터 구분 표기 사용"
+36		"플라이바 사용"
+37		"재생 목록 글자 크기 :"
+40		"크기 조절 :"
+42		"(윈도7 이상) 작업 표시줄 기능 사용"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -376,7 +376,7 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"기본값"
 END
 
-BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 26
 6		"화면 표시 보이기(다시 시작 필요)"
 7		"미디어 파일명 표기"
 8		"탐색 시간 표기"
@@ -389,6 +389,7 @@ BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
 20		"경계 크기 :"
 23		"그림자"
 24		"위신호 제거"
+25		"기본값"
 END
 
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
@@ -603,7 +604,7 @@ BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 5		"유튜브"
 6		"내장된 웹 페이지 파서 사용"
 7		"선호하는 비디오 형식 :"
-10		"60fps"
+10		"초당 60프레임"
 11		"HDR"
 12		"선호하는 오디오 형식 :"
 14		"선호하는 오디오 트랙 언어 :"
@@ -611,7 +612,7 @@ BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
 18		"youtube-dl, yt-dlp"
 19		"실행 파일 :"
 21		"최대 영상 높이 :"
-23		"최대 fps 또는 비트 전송률 선택"
+23		"최대 초당 프레임 수 또는 비트 전송률 선택"
 24		"AceStream 주소 :"
 26		"MatriX(TorrServer) 주소 :"
 29		"사용자 에이전트 :"

@@ -674,9 +674,11 @@ void CAppSettings::ResetSettings()
 
 	clrFaceABGR = 0x00ffffff;
 	clrOutlineABGR = 0x00868686;
-	clrFontABGR = 0x00E0E0E0;
-	clrGrad1ABGR = 0x00302820;
-	clrGrad2ABGR = 0x00302820;
+
+
+	clrFontABGR  = RGB(224, 224, 224);
+	clrGrad1ABGR = RGB(32, 40, 48);
+	clrGrad2ABGR = RGB(32, 40, 48);
 
 	nJumpDistS = DEFAULT_JUMPDISTANCE_1;
 	nJumpDistM = DEFAULT_JUMPDISTANCE_2;
@@ -1484,11 +1486,12 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	// OnlineServices
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_PAGEPARSER, bYoutubePageParser);
 	str.Empty();
-	profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_VIDEOFORMAT, str);
-	YoutubeFormat.vfmt =
-		(str == L"VP9") ? Youtube::y_webm_vp9
-		: (str == L"AV1") ? Youtube::y_mp4_av1
-		: Youtube::y_mp4_avc; // "H264" or unknown
+	if (profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_VIDEOFORMAT, str)) {
+		YoutubeFormat.vfmt =
+			(str == L"H264") ? Youtube::y_mp4_avc
+			: (str == L"AV1") ? Youtube::y_mp4_av1
+			: Youtube::y_webm_vp9;
+	}
 	profile.ReadInt(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_RESOLUTION, YoutubeFormat.res);
 	YoutubeFormat.res = discard(YoutubeFormat.res, 720, s_CommonVideoHeights);
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_60FPS, YoutubeFormat.fps60);
@@ -1498,10 +1501,11 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 		YoutubeFormat.hdr = false;
 	}
 	str.Empty();
-	profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_AUDIOFORMAT, str);
-	YoutubeFormat.afmt =
-		(str == L"OPUS") ? Youtube::y_webm_opus
-		: Youtube::y_mp4_aac; // "AAC" or unknown
+	if (profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_AUDIOFORMAT, str)) {
+		YoutubeFormat.afmt =
+			(str == L"AAC") ? Youtube::y_mp4_aac
+			: Youtube::y_webm_opus;
+	}
 	profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_AUDIOLANGUAGE, strYoutubeAudioLang);
 	strYoutubeAudioLang.Trim();
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_LOAD_PLAYLIST, bYoutubeLoadPlaylist);

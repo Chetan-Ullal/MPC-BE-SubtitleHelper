@@ -298,7 +298,7 @@ BEGIN DIALOGEX IDD_PPAGEFULLSCREEN LINES 34
 32		"Felbontás visszaállítása kilépéskor"
 END
 
-BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
+BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 44
 6		"Használja a ""sötét"" témát (alapértelmezett)"
 7		"Fényerősség:"
 9		"A hangjelző színének beállítása:"
@@ -311,17 +311,17 @@ BEGIN DIALOGEX IDD_PPAGEINTERFACE LINES 43
 16		"G:"
 17		"B:"
 21		"Sötét menü engedélyezése"
-22		"Használja az Elmosódás mögötti effektust (Windows 10 and above)"
-23		"Sötét cím engedélyezése (Windows 10 és felette)"
-26		"Használja az időtippet:"
-28		"Használja az előnézetet a keresésben"
-29		"A képernyő szélességéhez viszonyított méret:"
-33		"Online"
-34		"Használjon fejezetjelölőt"
-35		"Használjon léptéket"
-36		"Lejátszási lista betüméret:"
-39		"Vezérlők mérete:"
-41		"Használja a Windows 7 (és újabb) tálca szolgáltatásait"
+22		"Használja az Elmosódás mögötti effektust (Windows 10 és újabb)"
+24		"Sötét cím engedélyezése (Windows 10 és újabb)"
+27		"Használja az időtippet:"
+29		"Használja az előnézetet a keresésben"
+30		"A képernyő szélességéhez viszonyított méret:"
+34		"Online"
+35		"Használjon fejezetjelölőt"
+36		"Használjon léptéket"
+37		"Lejátszási lista betüméret:"
+40		"Vezérlők mérete:"
+42		"Használja a Windows 7 (és újabb) tálca szolgáltatásait"
 END
 
 BEGIN DIALOGEX IDD_PPAGEINTERNALFILTERS LINES 22
@@ -376,7 +376,7 @@ BEGIN DIALOGEX IDD_PPAGEMOUSE LINES 17
 16		"Alapértelmezett"
 END
 
-BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
+BEGIN DIALOGEX IDD_PPAGEOSD LINES 26
 6		"OSD megjelenítése (újraindítást igényel)"
 7		"Médiafájl nevének megjelenítése"
 8		"Keresési idő megjelenítése"
@@ -389,6 +389,7 @@ BEGIN DIALOGEX IDD_PPAGEOSD LINES 25
 20		"Szegély mérete:"
 23		"Árnyék"
 24		"Élsimítás"
+25		"Alapértelmezett"
 END
 
 BEGIN DIALOGEX IDD_PPAGEPLAYBACK LINES 38
