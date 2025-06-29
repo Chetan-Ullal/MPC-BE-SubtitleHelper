@@ -287,6 +287,7 @@ void CFormatConverter::SetConvertFunc()
 			}
 			else if (m_out_pixfmt == PixFmt_YV12) {
 				m_pConvertFn = &CFormatConverter::convert_nv12_yv12_direct_sse4;
+				m_RequiredAlignment = 32;
 			}
 		}
 		else if (m_FProps.pftype == PFType_P01x) {
@@ -302,8 +303,13 @@ void CFormatConverter::SetConvertFunc()
 				m_pConvertFn = &CFormatConverter::convert_y210_p210_direct_sse4;
 			}
 		}
-		else if (m_FProps.avpixfmt == AV_PIX_FMT_YUYV422 && m_out_pixfmt == PixFmt_YUY2) {
-			m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+		else if (m_FProps.avpixfmt == AV_PIX_FMT_YUYV422) {
+			if (m_out_pixfmt == PixFmt_YUY2) {
+				m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
+			}
+			else if (m_out_pixfmt == PixFmt_YV16) {
+				//m_pConvertFn = &CFormatConverter::convert_yuy2_yv16_direct_sse4;
+			}
 		}
 		else if (m_FProps.avpixfmt == AV_PIX_FMT_VUYX && m_out_pixfmt == PixFmt_AYUV) {
 			m_pConvertFn = &CFormatConverter::plane_copy_direct_sse4;
@@ -376,10 +382,13 @@ void CFormatConverter::SetConvertFunc()
 		}
 #if (0) // disabled because not increase performance
 		else if (m_FProps.pftype == PFType_YUV422) {
-			pConvertFn = &CFormatConverter::convert_yuv_yv;
+			m_pConvertFn = &CFormatConverter::convert_yuv_yv;
 			m_RequiredAlignment = 0;
 		}
 #endif
+		else if (m_FProps.avpixfmt == AV_PIX_FMT_YUYV422) {
+			m_pConvertFn = &CFormatConverter::convert_yuy2_yv16_sse2;
+		}
 		break;
 	case PixFmt_AYUV:
 		if (m_FProps.avpixfmt == AV_PIX_FMT_VUYX) {

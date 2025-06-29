@@ -105,9 +105,10 @@ typedef struct _RGBCoeffs {
 
 typedef int (__stdcall *YUVRGBConversionFunc)(const uint8_t *srcY, const uint8_t *srcU, const uint8_t *srcV, uint8_t *dst, int width, int height, ptrdiff_t srcStrideY, ptrdiff_t srcStrideUV, ptrdiff_t dstStride, ptrdiff_t sliceYStart, ptrdiff_t sliceYEnd, const RGBCoeffs *coeffs, const uint16_t *dithers);
 
+#define CONV_FUNC_PARAMS const uint8_t* const src[4], const ptrdiff_t srcStride[4], uint8_t* dst[], int width, int height, const ptrdiff_t dstStride[]
+
 class CFormatConverter
 {
-#define CONV_FUNC_PARAMS const uint8_t* const src[4], const ptrdiff_t srcStride[4], uint8_t* dst[], int width, int height, const ptrdiff_t dstStride[]
 
 protected:
 	SwsContext*		m_pSwsContext = nullptr;
@@ -161,6 +162,7 @@ protected:
 	HRESULT plane_copy_sse2(CONV_FUNC_PARAMS);
 	HRESULT convert_p010_nv12_sse2(CONV_FUNC_PARAMS);
 	HRESULT convert_y210_p210_sse4(CONV_FUNC_PARAMS);
+	HRESULT convert_yuy2_yv16_sse2(CONV_FUNC_PARAMS);
 
 	// optimized direct function
 	HRESULT plane_copy_direct_sse4(CONV_FUNC_PARAMS);
@@ -168,6 +170,7 @@ protected:
 	HRESULT convert_nv12_yv12_direct_sse4(CONV_FUNC_PARAMS);
 	HRESULT convert_p010_nv12_direct_sse4(CONV_FUNC_PARAMS);
 	HRESULT convert_y210_p210_direct_sse4(CONV_FUNC_PARAMS);
+	HRESULT convert_yuy2_yv16_direct_sse4(CONV_FUNC_PARAMS);
 
 	HRESULT convert_yuv_yv_nv12_dither_le(CONV_FUNC_PARAMS);
 	HRESULT convert_yuv420_px1x_le(CONV_FUNC_PARAMS);
@@ -184,6 +187,7 @@ protected:
 	HRESULT convert_yuv420_yuy2(CONV_FUNC_PARAMS);
 
 	HRESULT convert_yuv_rgb(CONV_FUNC_PARAMS);
+
 	void InitRGBConvDispatcher();
 	const RGBCoeffs* getRGBCoeffs(int width, int height);
 

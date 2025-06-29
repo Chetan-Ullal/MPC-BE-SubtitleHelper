@@ -441,7 +441,7 @@ BEGIN
     CONTROL         "",IDC_SLIDER3,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,233,34,53,12
     CONTROL         "",IDC_SLIDER4,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,233,49,53,12
     CONTROL         "Использовать тёмное меню",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,59,147,9,WS_EX_TRANSPARENT
-    CONTROL         "Blur Behind эффект (Windows 10 и выше)",IDC_CHECK7,
+    CONTROL         "Эффект размытия фона меню (Windows 10 и выше)",IDC_CHECK7,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,71,232,9,WS_EX_TRANSPARENT
     CONTROL         "Использовать тёмный заголовок (Windows 10 и выше)",IDC_CHECK5,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,83,238,9,WS_EX_TRANSPARENT
@@ -454,7 +454,7 @@ BEGIN
     LTEXT           "%",IDC_STATIC7,194,149,10,8
     COMBOBOX        IDC_COMBO4,207,148,42,64,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Онлайн",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,241,135,47,9,WS_EX_TRANSPARENT
-    CONTROL         "Использовать маркер для чаптеров",IDC_CHECK_CHM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,161,182,9
+    CONTROL         "Отображать метки глав на полосе прокрутки",IDC_CHECK_CHM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,161,182,9
     CONTROL         "Показать панель управления поверх видео",IDC_CHECK_FLYBAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,174,182,9
     LTEXT           "Размер шрифта плейлиста:",IDC_STATIC,13,187,110,8
     EDITTEXT        IDC_EDIT2,127,185,25,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
@@ -755,10 +755,10 @@ BEGIN
     GROUPBOX        "Стиль границы",IDC_STATIC,5,121,105,68
     CONTROL         "Контур",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,133,95,8
     CONTROL         "Заливка",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,10,145,95,8
-    LTEXT           "Ширина границы",IDC_STATIC,10,159,56,8
-    EDITTEXT        IDC_EDIT1,70,157,35,13,ES_RIGHT | ES_AUTOHSCROLL
-    LTEXT           "Глубина тени",IDC_STATIC,10,174,56,8
-    EDITTEXT        IDC_EDIT2,70,172,35,13,ES_RIGHT | ES_AUTOHSCROLL
+    LTEXT           "Ширина границы",IDC_STATIC,10,159,72,8
+    EDITTEXT        IDC_EDIT1,84,157,21,13,ES_RIGHT | ES_AUTOHSCROLL
+    LTEXT           "Глубина тени",IDC_STATIC,10,174,72,8
+    EDITTEXT        IDC_EDIT2,84,172,21,13,ES_RIGHT | ES_AUTOHSCROLL
     GROUPBOX        "Выравнивание и отступы",IDC_STATIC,114,5,177,60
     CONTROL         "",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | WS_GROUP,119,41,10,8
     CONTROL         "",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,131,41,10,8
@@ -1180,14 +1180,14 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     GROUPBOX        "Настройки EVR (custom presenter)",IDC_STATIC,5,3,286,61
     CONTROL         "VSync",IDC_VSYNC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,14,121,10
-    CONTROL         "Встроенный VSync",IDC_VSYNC_INTERNAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,26,121,10
+    CONTROL         "Встроенный VSync",IDC_VSYNC_INTERNAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,26,127,10
     CONTROL         "Включить коррекцию времени кадра",IDC_CHECK8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,51,170,10
     CONTROL         "Заполнить GPU перед VSync",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,14,140,10
     CONTROL         "Заполнить GPU после представления",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,26,142,10
     CONTROL         "Ожидать заполнения",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,38,100,10
     GROUPBOX        "Настройки EVR Sync",IDC_STATIC2,5,67,286,117
     CONTROL         "Синхронизировать видео с дисплеем",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,79,142,8
-    CONTROL         "Представлять с ближайшим vsync",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,10,109,170,8
+    CONTROL         "Представлять с ближайшим vsync",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,10,109,274,8
     LTEXT           "Коррекция частоты:",IDC_STATIC5,20,93,85,8
     EDITTEXT        IDC_CYCLEDELTA,109,91,40,13,ES_RIGHT | ES_AUTOHSCROLL,WS_EX_RIGHT
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,10,123,278,1
@@ -2297,6 +2297,11 @@ BEGIN
     0
 END
 
+IDD_PPAGESUBSTYLE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2896,8 +2901,8 @@ BEGIN
     IDS_FRAME_FROMOUTSIDE   "Заполнить экран и обрезать кадр"
     IDS_CENTER_LEVEL_INC    "Центр. канал - увеличить"
     IDS_CENTER_LEVEL_DEC    "Центр. канал - уменьшить"
-    IDS_CENTER_LEVEL        "Центр. канал (%+.1f dB)"
-    IDS_CENTER_LEVEL_OSD    "Центр. канал: %+.1f dB"
+    IDS_CENTER_LEVEL        "Центр. канал (%+.1f дБ)"
+    IDS_CENTER_LEVEL_OSD    "Центр. канал: %+.1f дБ"
     IDS_SURROUND_LEVEL      "Окруж. звук (%+.1f dB)"
 END
 
