@@ -33,6 +33,8 @@
 #include "AC3Encoder.h"
 #include "FloatingAverage.h"
 
+#include "PackerMAT.h"
+
 #define MPCAudioDecName L"MPC Audio Decoder"
 
 struct ps2_state_t {
@@ -87,6 +89,8 @@ class __declspec(uuid("3D446B6F-71DE-4437-BE15-8CE47174340F"))
 
 		// E-AC3 Bitstreaming
 		struct {
+			bool sync;
+
 			int count;
 			int repeat;
 			int samples;
@@ -97,21 +101,10 @@ class __declspec(uuid("3D446B6F-71DE-4437-BE15-8CE47174340F"))
 			}
 		} EAC3State;
 
-		// TrueHD Bitstreaming
+		// TrueHD/MLP Bitstreaming
 		struct {
 			bool sync;
-
-			bool init;
-			int ratebits;
-
-			uint16_t prev_frametime;
-			bool prev_frametime_valid;
-
-			uint32_t mat_framesize;
-			uint32_t prev_mat_framesize;
-
-			DWORD padding;
-			std::vector<BYTE> paddingData;
+			CPackerMAT packerMAT;
 		} TrueHDMATState;
 
 		void Clear()
@@ -119,7 +112,9 @@ class __declspec(uuid("3D446B6F-71DE-4437-BE15-8CE47174340F"))
 			size = 0;
 			count = 0;
 			EAC3State = {};
-			TrueHDMATState = {};
+
+			TrueHDMATState.sync = false;
+			TrueHDMATState.packerMAT.Clear();
 		}
 	} m_hdmi_bitstream = {};
 
@@ -135,6 +130,8 @@ class __declspec(uuid("3D446B6F-71DE-4437-BE15-8CE47174340F"))
 	BOOL            m_bNeedSyncPoint = FALSE;
 
 	BYTE            m_DTSHDProfile = 0;
+
+	bool            m_bAtmos = false;
 
 	REFERENCE_TIME  m_rtStartInput;
 	REFERENCE_TIME  m_rtStopInput;
@@ -173,10 +170,6 @@ class __declspec(uuid("3D446B6F-71DE-4437-BE15-8CE47174340F"))
 	HRESULT ProcessAC3_SPDIF();
 	HRESULT ProcessEAC3_SPDIF(BOOL bEOF = FALSE);
 
-	void MATWriteHeader();
-	void MATWritePadding();
-	void MATAppendData(const BYTE *p, int size);
-	int MATFillDataBuffer(const BYTE *p, int size, bool padding = false);
 	HRESULT MATDeliverPacket();
 	HRESULT ProcessTrueHD_SPDIF();
 	HRESULT ProcessMLP_SPDIF();
