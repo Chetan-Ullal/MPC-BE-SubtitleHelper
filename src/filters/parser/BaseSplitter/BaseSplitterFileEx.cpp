@@ -769,57 +769,48 @@ bool CBaseSplitterFileEx::Read(ac3hdr& h, int len, CMediaType* pmt, bool find_sy
 	return true;
 }
 
-bool CBaseSplitterFileEx::Read(ac4hdr& h, int len, CMediaType* pmt)
+bool CBaseSplitterFileEx::Read(ac4hdr& h, int len, CMediaType* pmt, bool find_sync)
 {
-	auto variable_bits = [this](int bits) {
-		int value = 0;
-		int read_more;
+	h = {};
 
-		do {
-			value += BitRead(bits);
-			read_more = BitRead(1);
-			if (read_more) {
-				value <<= bits;
-				value += 1 << bits;
-			}
-		} while (read_more);
+	if (find_sync) {
+		uint16_t sync = BitRead(16, true);
+		for (; len >= 7 && sync != AC4_SYNC_WORD && sync != AC4_SYNC_WORD_CRC; len--) {
+			BitRead(8);
+			sync = BitRead(16, true);
+		}
+	}
 
-		return value;
-	};
+	if (len < 8) {
+		return false;
+	}
+
+	h.sync = BitRead(16, true);
+	if (!(h.sync == AC4_SYNC_WORD || h.sync == AC4_SYNC_WORD_CRC)) {
+		return false;
+	}
 
 	auto pos = GetPos();
 
-	memset(&h, 0, sizeof(h));
-
-	h.sync = BitRead(16);
-	if (!(h.sync == 0xAC40 || h.sync == 0xAC41)) {
+	len = std::min(128, len);
+	auto buffer = std::make_unique<uint8_t[]>(len);
+	if (FAILED(ByteRead(buffer.get(), len))) {
 		return false;
 	}
-	const int frame_size = BitRead(16);
-	if (frame_size == 0xFFFF) {
-		Skip(3);
-	}
-	int bitstream_version = BitRead(2);
-	if (bitstream_version == 3) {
-		bitstream_version += variable_bits(2);
+
+	Seek(pos);
+
+	audioframe_t frame;
+	if (!ParseAC4Header(buffer.get(), len, &frame)) {
+		return false;
 	}
 
-	int sequence_counter = BitRead(10);
-	if (BitRead(1)) { // b_wait_frames
-		if (BitRead(3) > 0) { // wait_frames
-			BitRead(2); // reserved
-		}
-	}
+	h.channels = frame.channels;
+	h.samplerate = frame.samplerate;
 
-	h.samplerate = BitRead(1) ? 48000 : 44100;
-	BitRead(4); // frame_rate_index
-	if (!BitRead(1)) { // iframe_global
-		if (sequence_counter > 1020) {
-			return false;
-		}
-	}
-
-	h.channels = 2; // TODO
+	h.FrameSize = frame.size;
+	h.FrameSamples = frame.samples;
+	h.rtDuration = 10000000i64 * h.FrameSamples / h.samplerate;
 
 	if (pmt) {
 		WAVEFORMATEX wfe = {};
