@@ -2250,8 +2250,10 @@ LRESULT CMainFrame::OnDwmCompositionChanged(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnSysCommand(UINT nID, LPARAM lParam)
 {
+	auto fs = GetMediaState();
+
 	// Only stop screensaver if video playing; allow for audio only
-	if ((GetMediaState() == State_Running && !m_bAudioOnly) && (((nID & 0xFFF0) == SC_SCREENSAVE) || ((nID & 0xFFF0) == SC_MONITORPOWER))) {
+	if ((fs == State_Running && !m_bAudioOnly) && (((nID & 0xFFF0) == SC_SCREENSAVE) || ((nID & 0xFFF0) == SC_MONITORPOWER))) {
 		DLog(L"SC_SCREENSAVE, nID = %d, lParam = %d", nID, lParam);
 		return;
 	} else if ((nID & 0xFFF0) == SC_MINIMIZE && m_bTrayIcon) {
@@ -2267,6 +2269,14 @@ void CMainFrame::OnSysCommand(UINT nID, LPARAM lParam)
 			}
 		}
 		ShowWindow(SW_HIDE);
+
+		if (AfxGetAppSettings().bPauseMinimizedVideo
+				&& m_eMediaLoadState == MLS_LOADED
+				&& fs == State_Running) {
+			m_bWasPausedOnMinimizedVideo = true;
+			SendMessageW(WM_COMMAND, ID_PLAY_PAUSE);
+		}
+
 		return;
 	} else if ((nID & 0xFFF0) == SC_MINIMIZE) {
 		if (IsSomethingLoaded() && m_bAudioOnly && m_pfnDwmSetIconicLivePreviewBitmap) {
@@ -2395,8 +2405,9 @@ LRESULT CMainFrame::OnAppCommand(WPARAM wParam, LPARAM lParam)
 	UINT uDevice = GET_DEVICE_LPARAM(lParam);
 
 	if (uDevice != FAPPCOMMAND_OEM ||
-			cmd == APPCOMMAND_MEDIA_PLAY || cmd == APPCOMMAND_MEDIA_PAUSE || cmd == APPCOMMAND_MEDIA_CHANNEL_UP ||
-			cmd == APPCOMMAND_MEDIA_CHANNEL_DOWN || cmd == APPCOMMAND_MEDIA_RECORD ||
+			cmd == APPCOMMAND_MEDIA_PLAY || cmd == APPCOMMAND_MEDIA_PAUSE ||
+			cmd == APPCOMMAND_MEDIA_CHANNEL_UP || cmd == APPCOMMAND_MEDIA_CHANNEL_DOWN ||
+			cmd == APPCOMMAND_MEDIA_RECORD ||
 			cmd == APPCOMMAND_MEDIA_FAST_FORWARD || cmd == APPCOMMAND_MEDIA_REWIND ) {
 		const CAppSettings& s = AfxGetAppSettings();
 
@@ -5652,6 +5663,13 @@ LRESULT CMainFrame::OnRestore(WPARAM wParam, LPARAM lParam)
 				ShowControlBar(pDockingBar, TRUE, FALSE);
 			}
 			m_dockingbarsVisible.clear();
+
+			if (m_bWasPausedOnMinimizedVideo) {
+				if (m_eMediaLoadState == MLS_LOADED) {
+					SendMessageW(WM_COMMAND, ID_PLAY_PLAY);
+				}
+				m_bWasPausedOnMinimizedVideo = false;
+			}
 		} else {
 			SetForegroundWindow();
 		}
@@ -8827,8 +8845,6 @@ void CMainFrame::OnPlayFiltersCopyToClipboard()
 
 void CMainFrame::OnPlayFilters(UINT nID)
 {
-	//ShowPPage(m_spparray[nID - ID_FILTERS_SUBITEM_START], m_hWnd);
-
 	CComPtr<IUnknown> pUnk = m_pparray[nID - ID_FILTERS_SUBITEM_START];
 
 	CComPropertySheet ps(ResStr(IDS_PROPSHEET_PROPERTIES), GetModalParent());

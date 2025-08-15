@@ -1,16 +1,59 @@
 ﻿This file includes only a short list of the changes between Media Player Classic - BE's versions.
 
-1.8.5.x dev
+1.8.6.x dev
 =============================
+MpcAudioRenderer
+Fixed interface display when used in third-party players.
+
+Player
+Increased the maximum size of downloaded M3U playlists to 3 MB.
+Fixed the behavior of the "Pause the video playback when minimized" setting when the "Tray icon" setting is active.
+
+Updated Japanese translation (by tsubasanouta).
+Updated Romanian translation (by Andrei Miloiu).
+
+Updated libraries:
+	ffmpeg n7.2-dev-3483-g9895c4222c.
+
+
+1.8.6 - 2025-08-07
+=============================
+MpaSplitter
+Added experimental support for Audio Dolby AC-4.
+
+MP4Splitter
+Improved Dolby Atmos support.
+Added experimental support for Audio Dolby AC-4.
+
+MatroskaSplitter
+Improved Dolby Atmos support.
+
+MpegSplitter
+Added experimental support for Audio Dolby AC-4.
+Improved AAC Latm support.
+
+FlvSplitter
+Added support for audio opus.
+
 MpaDecFilter
-Improve TrueHD + Atmos bitstream passthrough.
+Improved transmission TrueHD + Dolby Atmos via HDMI Passthrough.
+Added experimental support for Audio Dolby AC-4.
 
 MPCVideoDec
 Fixed a crash when converting NV12 to YV12 when using the D3D11cb, D3D12cb or NVDEC decoder.
 
+YouTube
+Fixed the selection of default format (VP9 720p + OPUS) after resetting the settings.
+Improved the choice of an audio track for yt-dlp.
+Fixed the choice of audio track format.
+
 Player
-Fixed YouTube format selection (VP9 720p + Opus) after resetting settings.
+Fixed the ending of files in which the time exceeds the total duration.
+Added the ability to turn on and turn off the sound delay using the keys.
 Various interface fixes.
+
+Installer
+Updated MPC Video Renderer 0.9.11.
 
 Updated Romanian translation (by Andrei Miloiu).
 Updated Italian translation (by mapi68).
