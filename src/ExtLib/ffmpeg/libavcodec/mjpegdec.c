@@ -53,9 +53,8 @@
 #include "jpeglsdec.h"
 #include "profiles.h"
 #include "put_bits.h"
-#include "exif.h"
+#include "exif_internal.h"
 #include "bytestream.h"
-#include "tiff_common.h"
 
 
 static int init_default_huffman_tables(MJpegDecodeContext *s)
@@ -2043,8 +2042,7 @@ static int mjpeg_decode_app(MJpegDecodeContext *s)
 
     /* EXIF metadata */
     if (s->start_code == APP1 && id == AV_RB32("Exif") && len >= 2) {
-        GetByteContext gbytes;
-        int ret, le, ifd_offset, bytes_read;
+        int ret;
         const uint8_t *aligned;
 
         skip_bits(&s->gb, 16); // skip padding
@@ -2052,26 +2050,15 @@ static int mjpeg_decode_app(MJpegDecodeContext *s)
 
         // init byte wise reading
         aligned = align_get_bits(&s->gb);
-        bytestream2_init(&gbytes, aligned, len);
 
-        // read TIFF header
-        ret = ff_tdecode_header(&gbytes, &le, &ifd_offset);
-        if (ret) {
-            av_log(s->avctx, AV_LOG_ERROR, "mjpeg: invalid TIFF header in EXIF data\n");
-        } else {
-            bytestream2_seek(&gbytes, ifd_offset, SEEK_SET);
-
-            // read 0th IFD and store the metadata
-            // (return values > 0 indicate the presence of subimage metadata)
-            ret = ff_exif_decode_ifd(s->avctx, &gbytes, le, 0, &s->exif_metadata);
-            if (ret < 0) {
-                av_log(s->avctx, AV_LOG_ERROR, "mjpeg: error decoding EXIF data\n");
-            }
+        ret = av_exif_parse_buffer(s->avctx, aligned, len, &s->exif_metadata, AV_EXIF_TIFF_HEADER);
+        if (ret < 0) {
+            av_log(s->avctx, AV_LOG_WARNING, "unable to parse EXIF buffer\n");
+            goto out;
         }
 
-        bytes_read = bytestream2_tell(&gbytes);
-        skip_bits(&s->gb, bytes_read << 3);
-        len -= bytes_read;
+        skip_bits(&s->gb, ret << 3);
+        len -= ret;
 
         goto out;
     }
@@ -2384,13 +2371,12 @@ int ff_mjpeg_decode_frame_from_buf(AVCodecContext *avctx, AVFrame *frame,
     int index;
     int ret = 0;
     int is16bit;
-    AVDictionaryEntry *e = NULL;
 
     s->force_pal8 = 0;
 
     s->buf_size = buf_size;
 
-    av_dict_free(&s->exif_metadata);
+    av_exif_free(&s->exif_metadata);
     av_freep(&s->stereo3d);
     s->adobe_transform = -1;
 
@@ -2463,9 +2449,6 @@ redo_for_pal8:
             case SOF2:
             case SOF3:
             case SOF48:
-            case SOI:
-            case SOS:
-            case EOI:
                 break;
             default:
                 goto skip;
@@ -2541,7 +2524,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
             break;
         case EOI:
 eoi_parser:
-            if (!avctx->hwaccel && avctx->skip_frame != AVDISCARD_ALL &&
+            if (!avctx->hwaccel &&
                 s->progressive && s->cur_scan && s->got_picture)
                 mjpeg_idct_scan_progressive_ac(s);
             s->cur_scan = 0;
@@ -2555,10 +2538,6 @@ eoi_parser:
                 /* if not bottom field, do not output image yet */
                 if (s->bottom_field == !s->interlace_polarity)
                     break;
-            }
-            if (avctx->skip_frame == AVDISCARD_ALL) {
-                s->got_picture = 0;
-                goto the_end_no_picture;
             }
             if (avctx->hwaccel) {
                 ret = FF_HW_SIMPLE_CALL(avctx, end_frame);
@@ -2588,10 +2567,6 @@ eoi_parser:
             s->raw_scan_buffer_size = buf_end - buf_ptr;
 
             s->cur_scan++;
-            if (avctx->skip_frame == AVDISCARD_ALL) {
-                skip_bits(&s->gb, get_bits_left(&s->gb));
-                break;
-            }
 
             if ((ret = ff_mjpeg_decode_sos(s, NULL, 0, NULL)) < 0 &&
                 (avctx->err_recognition & AV_EF_EXPLODE))
@@ -2614,6 +2589,18 @@ eoi_parser:
             av_log(avctx, AV_LOG_ERROR,
                    "mjpeg: unsupported coding type (%x)\n", start_code);
             break;
+        }
+
+        if (avctx->skip_frame == AVDISCARD_ALL) {
+            switch(start_code) {
+            case SOF0:
+            case SOF1:
+            case SOF2:
+            case SOF3:
+            case SOF48:
+                s->got_picture = 0;
+                goto the_end_no_picture;
+            }
         }
 
 skip:
@@ -2867,59 +2854,12 @@ the_end:
         }
     }
 
-    if (e = av_dict_get(s->exif_metadata, "Orientation", e, AV_DICT_IGNORE_SUFFIX)) {
-        char *value = e->value + strspn(e->value, " \n\t\r"), *endptr;
-        int orientation = strtol(value, &endptr, 0);
-
-        if (!*endptr) {
-            AVFrameSideData *sd = NULL;
-
-            if (orientation >= 2 && orientation <= 8) {
-                int32_t *matrix;
-
-                sd = av_frame_new_side_data(frame, AV_FRAME_DATA_DISPLAYMATRIX, sizeof(int32_t) * 9);
-                if (!sd) {
-                    av_log(avctx, AV_LOG_ERROR, "Could not allocate frame side data\n");
-                    return AVERROR(ENOMEM);
-                }
-
-                matrix = (int32_t *)sd->data;
-
-                switch (orientation) {
-                case 2:
-                    av_display_rotation_set(matrix, 0.0);
-                    av_display_matrix_flip(matrix, 1, 0);
-                    break;
-                case 3:
-                    av_display_rotation_set(matrix, 180.0);
-                    break;
-                case 4:
-                    av_display_rotation_set(matrix, 180.0);
-                    av_display_matrix_flip(matrix, 1, 0);
-                    break;
-                case 5:
-                    av_display_rotation_set(matrix, 90.0);
-                    av_display_matrix_flip(matrix, 1, 0);
-                    break;
-                case 6:
-                    av_display_rotation_set(matrix, 90.0);
-                    break;
-                case 7:
-                    av_display_rotation_set(matrix, -90.0);
-                    av_display_matrix_flip(matrix, 1, 0);
-                    break;
-                case 8:
-                    av_display_rotation_set(matrix, -90.0);
-                    break;
-                default:
-                    av_assert0(0);
-                }
-            }
-        }
+    if (s->exif_metadata.entries) {
+        ret = ff_decode_exif_attach_ifd(avctx, frame, &s->exif_metadata);
+        av_exif_free(&s->exif_metadata);
+        if (ret < 0)
+            av_log(avctx, AV_LOG_WARNING, "couldn't attach EXIF metadata\n");
     }
-
-    av_dict_copy(&frame->metadata, s->exif_metadata, 0);
-    av_dict_free(&s->exif_metadata);
 
     if (avctx->codec_id != AV_CODEC_ID_SMVJPEG &&
         (avctx->codec_tag == MKTAG('A', 'V', 'R', 'n') ||
@@ -2972,7 +2912,7 @@ av_cold int ff_mjpeg_decode_end(AVCodecContext *avctx)
         av_freep(&s->blocks[i]);
         av_freep(&s->last_nnz[i]);
     }
-    av_dict_free(&s->exif_metadata);
+    av_exif_free(&s->exif_metadata);
 
     reset_icc_profile(s);
 
