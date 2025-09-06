@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -207,52 +207,10 @@ static std::wstring SSAColorTagCS(std::wstring arg, CStringW ctag = L"c") {
 
 //
 
-BYTE CharSetList[] = {
-	ANSI_CHARSET,
-	DEFAULT_CHARSET,
-	SHIFTJIS_CHARSET,
-	HANGUL_CHARSET,
-	GB2312_CHARSET,
-	CHINESEBIG5_CHARSET,
-	JOHAB_CHARSET,
-	HEBREW_CHARSET,
-	ARABIC_CHARSET,
-	GREEK_CHARSET,
-	TURKISH_CHARSET,
-	VIETNAMESE_CHARSET,
-	THAI_CHARSET,
-	EASTEUROPE_CHARSET,
-	RUSSIAN_CHARSET,
-	BALTIC_CHARSET
-};
-
-const WCHAR* CharSetNames[] = {
-	L"ANSI",
-	L"DEFAULT",
-	L"SHIFTJIS",
-	L"HANGUL",
-	L"GB2312",
-	L"CHINESEBIG5",
-	L"JOHAB",
-	L"HEBREW",
-	L"ARABIC",
-	L"GREEK",
-	L"TURKISH",
-	L"VIETNAMESE",
-	L"THAI",
-	L"EASTEUROPE",
-	L"RUSSIAN",
-	L"BALTIC",
-};
-
-int CharSetLen = std::size(CharSetList);
-
-//
-
-static DWORD CharSetToCodePage(DWORD dwCharSet)
+static UINT CharSetToCodePage(UINT charSet)
 {
-	CHARSETINFO cs = {0};
-	::TranslateCharsetInfo((DWORD*)(DWORD_PTR)dwCharSet, &cs, TCI_SRCCHARSET);
+	CHARSETINFO cs = {};
+	::TranslateCharsetInfo((DWORD*)(DWORD_PTR)charSet, &cs, TCI_SRCCHARSET);
 	return cs.ciACP;
 }
 
@@ -264,7 +222,7 @@ static int FindChar(CStringW str, WCHAR c, int pos, bool fUnicode, int CharSet)
 
 	int fStyleMod = 0;
 
-	DWORD cp = CharSetToCodePage(CharSet);
+	UINT cp = CharSetToCodePage(CharSet);
 	int OrgCharSet = CharSet;
 
 	for (int i = 0, j = str.GetLength(), k; i < j; i++) {
@@ -304,7 +262,7 @@ static CStringW ToMBCS(CStringW str, DWORD CharSet)
 {
 	CStringW ret;
 
-	DWORD cp = CharSetToCodePage(CharSet);
+	UINT cp = CharSetToCodePage(CharSet);
 
 	for (int i = 0, j = str.GetLength(); i < j; i++) {
 		WCHAR wc = str.GetAt(i);
@@ -367,11 +325,11 @@ static CStringW UnicodeSSAToMBCS(CStringW str, DWORD CharSet)
 	return ret;
 }
 
-static CStringW ToUnicode(CStringW str, DWORD CharSet)
+static CStringW ToUnicode(const CStringW& str, UINT CharSet)
 {
 	CStringW ret;
 
-	DWORD cp = CharSetToCodePage(CharSet);
+	UINT cp = CharSetToCodePage(CharSet);
 
 	for (int i = 0, j = str.GetLength(); i < j; i++) {
 		WCHAR wc = str.GetAt(i);
@@ -480,7 +438,7 @@ static CStringW SubRipper2SSA(CStringW str)
 	return str;
 }
 
-CStringW WebVTTCueStrip(CStringW& str)
+static CStringW WebVTTCueStrip(CStringW& str)
 {
 	CStringW cues;
 	int p = str.Find(L'\n');

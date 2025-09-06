@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -28,21 +28,22 @@
 class CTextFile
 {
 public:
-	enum enc {
-		ASCII,
-		UTF8,
-		LE16,
-		BE16,
-		ANSI
+	enum enc { // supported code pages
+		ANSI    = 0,     // CP_ACP
+		UTF16LE = 1200,
+		UTF16BE = 1201,
+		ASCII   = 20127,
+		UTF8    = 65001, // CP_UTF8
 	};
 
 private:
 	enc m_encoding, m_defaultencoding;
-	int m_offset;
-	ULONGLONG m_posInFile;
+	int m_offset = 0;
+	ULONGLONG m_posInFile = 0;
 	std::unique_ptr<char[]> m_buffer;
 	std::unique_ptr<WCHAR[]> m_wbuffer;
-	LONGLONG m_posInBuffer, m_nInBuffer;
+	LONGLONG m_posInBuffer = 0;
+	LONGLONG m_nInBuffer = 0;
 
 	std::unique_ptr<FILE, std::integral_constant<decltype(&fclose), &fclose>> m_pFile;
 	std::unique_ptr<CStdioFile> m_pStdioFile;
@@ -58,7 +59,6 @@ public:
 	bool Save(LPCWSTR lpszFileName, enc e /*= ASCII*/);
 	void Close();
 
-	void SetEncoding(enc e);
 	enc GetEncoding() const;
 	bool IsUnicode() const;
 
@@ -72,7 +72,6 @@ public:
 
 	void WriteString(LPCSTR lpsz/*CStringA str*/);
 	void WriteString(LPCWSTR lpsz/*CStringW str*/);
-	bool ReadString(CStringA& str);
 	bool ReadString(CStringW& str);
 
 protected:
