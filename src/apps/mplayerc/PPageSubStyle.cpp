@@ -23,42 +23,26 @@
 #include "MainFrm.h"
 #include "PPageSubStyle.h"
 
-BYTE CharSetList[] = {
-	ANSI_CHARSET,
-	DEFAULT_CHARSET,
-	SHIFTJIS_CHARSET,
-	HANGUL_CHARSET,
-	GB2312_CHARSET,
-	CHINESEBIG5_CHARSET,
-	JOHAB_CHARSET,
-	HEBREW_CHARSET,
-	ARABIC_CHARSET,
-	GREEK_CHARSET,
-	TURKISH_CHARSET,
-	VIETNAMESE_CHARSET,
-	THAI_CHARSET,
-	EASTEUROPE_CHARSET,
-	RUSSIAN_CHARSET,
-	BALTIC_CHARSET
-};
-
-const WCHAR* CharSetNames[] = {
-	L"ANSI",
-	L"DEFAULT",
-	L"SHIFTJIS",
-	L"HANGUL",
-	L"GB2312",
-	L"CHINESEBIG5",
-	L"JOHAB",
-	L"HEBREW",
-	L"ARABIC",
-	L"GREEK",
-	L"TURKISH",
-	L"VIETNAMESE",
-	L"THAI",
-	L"EASTEUROPE",
-	L"RUSSIAN",
-	L"BALTIC",
+const struct {
+	BYTE charSet;
+	const WCHAR* name;
+} s_CharSetTable[] = {
+	{ ANSI_CHARSET,        L"ANSI"        },
+	{ DEFAULT_CHARSET,     L"DEFAULT"     },
+	{ SHIFTJIS_CHARSET,    L"SHIFTJIS"    },
+	{ HANGUL_CHARSET,      L"HANGUL"      },
+	{ GB2312_CHARSET,      L"GB2312"      },
+	{ CHINESEBIG5_CHARSET, L"CHINESEBIG5" },
+	{ JOHAB_CHARSET,       L"JOHAB"       },
+	{ HEBREW_CHARSET,      L"HEBREW"      },
+	{ ARABIC_CHARSET,      L"ARABIC"      },
+	{ GREEK_CHARSET,       L"GREEK"       },
+	{ TURKISH_CHARSET,     L"TURKISH"     },
+	{ VIETNAMESE_CHARSET,  L"VIETNAMESE"  },
+	{ THAI_CHARSET,        L"THAI"        },
+	{ EASTEUROPE_CHARSET,  L"EASTEUROPE"  },
+	{ RUSSIAN_CHARSET,     L"RUSSIAN"     },
+	{ BALTIC_CHARSET,      L"BALTIC"      },
 };
 
 // CPPageSubStyle dialog
@@ -104,8 +88,6 @@ void CPPageSubStyle::DoDataExchange(CDataExchange* pDX)
 	CPPageBase::DoDataExchange(pDX);
 
 	DDX_Control(pDX, IDC_BUTTON1, m_font);
-	DDX_CBIndex(pDX, IDC_COMBO1, m_iCharset);
-	DDX_Control(pDX, IDC_COMBO1, m_charset);
 	DDX_Control(pDX, IDC_EDIT3, m_spacing);
 	DDX_Control(pDX, IDC_EDIT4, m_angle);
 	DDX_Control(pDX, IDC_SPIN10, m_anglespin);
@@ -198,19 +180,6 @@ BOOL CPPageSubStyle::OnInitDialog()
 void CPPageSubStyle::Init()
 {
 	m_font.SetWindowTextW(m_stss->fontName);
-	m_iCharset = -1;
-
-	ASSERT(std::size(CharSetList) == std::size(CharSetNames));
-
-	for (size_t i = 0; i < std::size(CharSetList); i++) {
-		CString str;
-		str.Format(L"%s (%d)", CharSetNames[i], CharSetList[i]);
-		AddStringData(m_charset, str, CharSetList[i]);
-
-		if (m_stss->charSet == CharSetList[i]) {
-			m_iCharset = i;
-		}
-	}
 
 	// TODO: allow floats in these edit boxes
 	m_spacing = m_stss->fontSpacing;
@@ -250,10 +219,6 @@ void CPPageSubStyle::Init()
 BOOL CPPageSubStyle::OnApply()
 {
 	UpdateData();
-
-	if (m_iCharset >= 0) {
-		m_stss->charSet = m_charset.GetItemData(m_iCharset);
-	}
 
 	m_stss->fontSpacing   = m_spacing;
 	m_stss->fontAngleZ    = m_angle;
@@ -297,8 +262,6 @@ void CPPageSubStyle::OnBnClickedButton1()
 		}
 
 		m_font.SetWindowTextW(str);
-
-		SelectByItemData(m_charset, lf.lfCharSet);
 
 		*m_stss = lf;
 

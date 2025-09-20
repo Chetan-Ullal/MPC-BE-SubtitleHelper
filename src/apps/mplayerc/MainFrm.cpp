@@ -14372,6 +14372,7 @@ bool CMainFrame::OpenMediaPrivate(std::unique_ptr<OpenMediaData>& pOMD)
 				if (pIExFilterConfig = pBF) {
 					pIExFilterConfig->Flt_SetInt("queueDuration", s.iBufferDuration);
 					//pIExFilterConfig->SetInt("networkTimeout", s.iNetworkTimeout);
+					pIExFilterConfig->Flt_SetInt("codePage", s.iSubtitleDefaultCodePage);
 				}
 			}
 			EndEnumFilters;
@@ -16353,7 +16354,7 @@ bool CMainFrame::LoadSubtitle(const CExtraFileItem& subItem, ISubStream **actual
 
 		if (!pSubStream) {
 			std::unique_ptr<CRenderedTextSubtitle> pRTS(DNew CRenderedTextSubtitle(&m_csSubLock));
-			if (pRTS->Open(fname, DEFAULT_CHARSET, subItem.GetTitle(), videoName) && pRTS->GetStreamCount() > 0) {
+			if (pRTS->Open(fname, s.iSubtitleDefaultCodePage, s.bSubtitleAutoDetectCodePage, subItem.GetTitle(), videoName) && pRTS->GetStreamCount() > 0) {
 				pSubStream = pRTS.release();
 			}
 		}
@@ -19341,7 +19342,7 @@ BOOL CMainFrame::OpenBD(const CString& path, REFERENCE_TIME rtStart, BOOL bAddRe
 				CString infFile = bdmv_folder.Left(bdmv_folder.GetLength() - 5) + L"\\disc.inf";
 
 				if (::PathFileExistsW(infFile)) {
-					CTextFile cf(CTextFile::UTF8, CTextFile::ANSI);
+					CTextFile cf(CP_UTF8, CP_ACP);
 					if (cf.Open(infFile)) {
 						CString line;
 						while (cf.ReadString(line)) {
@@ -19363,7 +19364,7 @@ BOOL CMainFrame::OpenBD(const CString& path, REFERENCE_TIME rtStart, BOOL bAddRe
 						bdmt_xml_file = bdmv_folder + L"\\META\\DL\\bdmt_eng.xml";
 					}
 					if (::PathFileExistsW(bdmt_xml_file)) {
-						CTextFile cf(CTextFile::UTF8, CTextFile::ANSI);
+						CTextFile cf(CP_UTF8, CP_ACP);
 						if (cf.Open(bdmt_xml_file)) {
 							CString line;
 							while (cf.ReadString(line)) {

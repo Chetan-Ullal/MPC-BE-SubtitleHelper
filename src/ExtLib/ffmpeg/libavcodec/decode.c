@@ -2320,6 +2320,8 @@ void ff_decode_internal_sync(AVCodecContext *dst, const AVCodecContext *src)
     const DecodeContext *src_dc = decode_ctx(src->internal);
     DecodeContext *dst_dc = decode_ctx(dst->internal);
 
+    dst_dc->initial_pict_type = src_dc->initial_pict_type;
+    dst_dc->intra_only_flag   = src_dc->intra_only_flag;
     av_refstruct_replace(&dst_dc->lcevc, src_dc->lcevc);
 }
 
@@ -2337,7 +2339,7 @@ static int attach_displaymatrix(AVCodecContext *avctx, AVFrame *frame, int orien
     int32_t *matrix;
     int ret;
     /* invalid orientation */
-    if (orientation < 2 || orientation > 8)
+    if (orientation < 1 || orientation > 8)
         return AVERROR_INVALIDDATA;
     ret = ff_frame_new_side_data(avctx, frame, AV_FRAME_DATA_DISPLAYMATRIX, sizeof(int32_t) * 9, &sd);
     if (ret < 0) {

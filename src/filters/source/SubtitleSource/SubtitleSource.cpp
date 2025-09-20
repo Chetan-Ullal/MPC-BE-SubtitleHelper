@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -228,7 +228,7 @@ CSubtitleStream::CSubtitleStream(const WCHAR* wfn, CSubtitleSource* pParent, HRE
 
 	CString fn(wfn);
 
-	if (!m_rts.Open(fn, DEFAULT_CHARSET)) {
+	if (!m_rts.Open(fn, DEFAULT_CHARSET, false, {}, {})) {
 		if (phr) {
 			*phr = E_FAIL;
 		}
@@ -631,7 +631,7 @@ HRESULT CSubtitleSourceSSA::GetMediaType(CMediaType* pmt)
 	pmt->SetFormatType(&FORMAT_SubtitleInfo);
 
 	CSimpleTextSubtitle sts;
-	sts.Open(CString(m_fn), DEFAULT_CHARSET);
+	sts.Open(m_fn, DEFAULT_CHARSET, false, {}, {});
 	sts.RemoveAll();
 
 	CFile f;
@@ -643,7 +643,7 @@ HRESULT CSubtitleSourceSSA::GetMediaType(CMediaType* pmt)
 	_wremove(fn);
 	wcscat_s(fn, L".ssa");
 
-	if (!sts.SaveAs(fn, Subtitle::SSA, -1, 0, CTextFile::UTF8, false) || !f.Open(fn, CFile::modeRead)) {
+	if (!sts.SaveAs(fn, Subtitle::SSA, -1, 0, CP_UTF8, false) || !f.Open(fn, CFile::modeRead)) {
 		return E_FAIL;
 	}
 
@@ -681,7 +681,7 @@ HRESULT CSubtitleSourceASS::GetMediaType(CMediaType* pmt)
 	pmt->SetFormatType(&FORMAT_SubtitleInfo);
 
 	CSimpleTextSubtitle sts;
-	sts.Open(CString(m_fn), DEFAULT_CHARSET);
+	sts.Open(m_fn, DEFAULT_CHARSET, false, {}, {});
 	sts.RemoveAll();
 
 	CFile f;
@@ -694,7 +694,7 @@ HRESULT CSubtitleSourceASS::GetMediaType(CMediaType* pmt)
 
 	wcscat_s(fn, L".ass");
 
-	if (!sts.SaveAs(fn, Subtitle::ASS, -1, CTextFile::UTF8) || !f.Open(fn, CFile::modeRead)) {
+	if (!sts.SaveAs(fn, Subtitle::ASS, -1, CP_UTF8) || !f.Open(fn, CFile::modeRead)) {
 		return E_FAIL;
 	}
 

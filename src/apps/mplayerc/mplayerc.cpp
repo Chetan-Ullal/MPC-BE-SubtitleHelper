@@ -34,7 +34,6 @@
 #include "DSUtil/FileHandle.h"
 #include "DSUtil/FileVersion.h"
 #include "DSUtil/GUIDString.h"
-#include <winddk/ntddcdvd.h>
 #include <ExtLib/Detours/src/detours.h>
 #include <afxsock.h>
 #include "UpdateChecker.h"
@@ -50,6 +49,7 @@ extern "C" {
 #define MPC_FAVORITES_FILENAME "favorites.mpc_lst"
 
 const LanguageResource CMPlayerCApp::languageResources[] = {
+	{ID_LANGUAGE_ARABIC,				1025,	L"Arabic",					L"ar",	L"ara"},
 	{ID_LANGUAGE_ARMENIAN,				1067,	L"Armenian",				L"hy",	L"arm"},
 	{ID_LANGUAGE_BASQUE,				1069,	L"Basque",					L"eu",	L"baq"},
 	{ID_LANGUAGE_BELARUSIAN,			1059,	L"Belarusian",				L"by",	L"bel"},
@@ -73,13 +73,14 @@ const LanguageResource CMPlayerCApp::languageResources[] = {
 	{ID_LANGUAGE_PORTUGUESE_BR,			1046,	L"Portuguese (Brazil)",		L"br",	L"por"},
 	{ID_LANGUAGE_ROMANIAN,				1048,	L"Romanian",				L"ro",	L"ron"},
 	{ID_LANGUAGE_RUSSIAN,				1049,	L"Russian",					L"ru",	L"rus"},
-	{ID_LANGUAGE_SLOVAK,				1053,	L"Slovak",					L"sk",	L"slo"},
+	{ID_LANGUAGE_SLOVAK,				1051,	L"Slovak",					L"sk",	L"slo"},
 	{ID_LANGUAGE_SLOVENIAN,				1060,	L"Slovenian",				L"sl",	L"slv"},
-	{ID_LANGUAGE_SWEDISH,				1051,	L"Swedish",					L"sv",	L"swe"},
+	{ID_LANGUAGE_SWEDISH,				1053,	L"Swedish",					L"sv",	L"swe"},
 	{ID_LANGUAGE_SPANISH,				1034,	L"Spanish",					L"es",	L"spa"},
 	{ID_LANGUAGE_TURKISH,				1055,	L"Turkish",					L"tr",	L"tur"},
 	{ID_LANGUAGE_UKRAINIAN,				1058,	L"Ukrainian",				L"ua",	L"ukr"},
 };
+// LANGIDs: https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/6c085406-a698-4e12-9d4d-c3b0ee3dbc4a
 
 const size_t CMPlayerCApp::languageResourcesCount = std::size(CMPlayerCApp::languageResources);
 

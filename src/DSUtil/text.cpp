@@ -23,7 +23,7 @@
 #include "SysVersion.h"
 #include "text.h"
 
-UINT CharSetToCodePage(UINT charSet)
+UINT CharSetToCodePage(const UINT charSet)
 {
 	if (charSet == CP_UTF8) {
 		return CP_UTF8;
@@ -36,7 +36,7 @@ UINT CharSetToCodePage(UINT charSet)
 	return cs.ciACP;
 }
 
-UINT CodePageToCharSet(UINT codePage)
+UINT CodePageToCharSet(const UINT codePage)
 {
 	if (codePage == CP_ACP) {
 		return DEFAULT_CHARSET;
@@ -307,11 +307,11 @@ CStringW AltUTF8ToWStr(LPCSTR lpUTF8Str) // Use if MultiByteToWideChar() functio
 	return str;
 }
 
-CStringW UTF8orLocalToWStr(LPCSTR lpMultiByteStr)
+CStringW UTF8orLocalToWStr(LPCSTR lpMultiByteStr, UINT CodePage/* = CP_ACP*/)
 {
 	CStringW str = AltUTF8ToWStr(lpMultiByteStr);
 	if (str.IsEmpty()) {
-		str = ConvertToWStr(lpMultiByteStr, CP_ACP); // Trying Local...
+		str = ConvertToWStr(lpMultiByteStr, CodePage); // Trying Local...
 	}
 
 	return str;
