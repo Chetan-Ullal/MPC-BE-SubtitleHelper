@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -34,7 +34,7 @@ class __declspec(uuid("0E49B128-9547-4423-88F9-897837E298F5"))
 	, public IAMMediaContent
 {
 	CLiveStream m_stream;
-	CString    m_fn;
+	CStringW    m_fn;
 
 public:
 	CUDPReader(IUnknown* pUnk, HRESULT* phr);
@@ -63,7 +63,7 @@ public:
 	STDMETHODIMP get_Rating(BSTR* pbstrRating) { return E_NOTIMPL; }
 	STDMETHODIMP get_Description(BSTR* pbstrDescription);
 	STDMETHODIMP get_Copyright(BSTR* pbstrCopyright) { return E_NOTIMPL; }
-	STDMETHODIMP get_BaseURL(BSTR* pbstrBaseURL) { return E_NOTIMPL; }
+	STDMETHODIMP get_BaseURL(BSTR* pbstrBaseURL);
 	STDMETHODIMP get_LogoURL(BSTR* pbstrLogoURL) { return E_NOTIMPL; }
 	STDMETHODIMP get_LogoIconURL(BSTR* pbstrLogoURL) { return E_NOTIMPL; }
 	STDMETHODIMP get_WatermarkURL(BSTR* pbstrWatermarkURL) { return E_NOTIMPL; }

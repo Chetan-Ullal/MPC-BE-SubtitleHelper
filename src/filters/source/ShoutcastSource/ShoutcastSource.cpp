@@ -139,7 +139,7 @@ STDMETHODIMP CShoutcastSource::Load(LPCOLESTR pszFileName, const AM_MEDIA_TYPE* 
 
 	HRESULT hr = E_OUTOFMEMORY;
 
-	if (!(DNew CShoutcastStream(pszFileName, this, &hr)) || FAILED(hr)) {
+	if (!(DNew CShoutcastStream(pszFileName, this, m_codePage, &hr)) || FAILED(hr)) {
 		return hr;
 	}
 
@@ -215,6 +215,18 @@ STDMETHODIMP CShoutcastSource::get_Description(BSTR* pbstrDescription)
 	return E_UNEXPECTED;
 }
 
+STDMETHODIMP CShoutcastSource::get_BaseURL(BSTR* pbstrBaseURL)
+{
+	CheckPointer(pbstrBaseURL, E_POINTER);
+
+	if (m_iPins == 1) {
+		*pbstrBaseURL = (static_cast<CShoutcastStream*>(m_paStreams[0]))->GetBaseURL().AllocSysString();
+		return S_OK;
+	}
+
+	return E_UNEXPECTED;
+}
+
 STDMETHODIMP CShoutcastSource::QueryFilterInfo(FILTER_INFO* pInfo)
 {
 	CheckPointer(pInfo, E_POINTER);
@@ -231,13 +243,8 @@ STDMETHODIMP CShoutcastSource::QueryFilterInfo(FILTER_INFO* pInfo)
 STDMETHODIMP CShoutcastSource::Flt_SetInt(LPCSTR field, int value)
 {
 	if (strcmp(field, "codePage") == 0) {
-		
-		if (m_iPins == 1) {
-			static_cast<CShoutcastStream*>(m_paStreams[0])->SetCodePage(value);
-			return S_OK;
-		}
-
-		return E_ABORT;
+		CAutoLock cAutoLock(pStateLock());
+		m_codePage = value;
 	}
 
 	return E_INVALIDARG;
@@ -245,7 +252,7 @@ STDMETHODIMP CShoutcastSource::Flt_SetInt(LPCSTR field, int value)
 
 // CShoutcastStream
 
-CShoutcastStream::CShoutcastStream(const WCHAR* wfn, CShoutcastSource* pParent, HRESULT* phr)
+CShoutcastStream::CShoutcastStream(const WCHAR* wfn, CShoutcastSource* pParent, const UINT codePage, HRESULT* phr)
 	: CSourceStream(L"ShoutcastStream", phr, pParent, L"Output")
 {
 	ASSERT(phr);
@@ -271,8 +278,9 @@ redirect:
 	}
 
 	m_socket.SetUserAgent("MPC ShoutCast Source");
+	m_socket.SetCodePage(codePage);
 
-	CString redirectUrl;
+	CStringW redirectUrl;
 	if (!m_socket.Connect(m_urlParser, redirectUrl)) {
 		int nError = GetLastError();
 		if (nError == WSAEINTR) {
@@ -329,22 +337,25 @@ LONGLONG CShoutcastStream::GetBufferFullness()
 	return std::min(ret, 100LL);
 }
 
-void CShoutcastStream::SetCodePage(const UINT codePage)
+CStringW CShoutcastStream::GetTitle()
 {
 	CAutoLock cAutoLock(&m_queue);
-	m_codePage = codePage;
+	if (m_StreamTitle.GetLength()) {
+		return m_StreamTitle;
+	}
+	return m_StationName;
 }
 
-CString CShoutcastStream::GetTitle()
+CStringW CShoutcastStream::GetDescription()
 {
 	CAutoLock cAutoLock(&m_queue);
-	return m_title;
+	return m_Description;
 }
 
-CString CShoutcastStream::GetDescription()
+CStringW CShoutcastStream::GetBaseURL()
 {
 	CAutoLock cAutoLock(&m_queue);
-	return m_description;
+	return m_StationUrl;
 }
 
 HRESULT CShoutcastStream::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
@@ -425,7 +436,7 @@ HRESULT CShoutcastStream::FillBuffer(IMediaSample* pSample)
 			memcpy(pData, p->data.get(), len);
 			pSample->SetActualDataLength(len);
 			pSample->SetTime(&p->rtStart, &p->rtStop);
-			m_title = p->title;
+			m_StreamTitle = p->title;
 		}
 	}
 
@@ -445,7 +456,7 @@ HRESULT CShoutcastStream::GetMediaType(int iPosition, CMediaType* pmt)
 		return VFW_S_NO_MORE_ITEMS;
 	}
 
-	if (m_socket.m_Format == AUDIO_MPEG) {
+	if (m_socket.m_format == AUDIO_MPEG) {
 		pmt->SetType(&MEDIATYPE_Audio);
 		pmt->SetSubtype(&MEDIASUBTYPE_MP3);
 		pmt->SetFormatType(&FORMAT_WaveFormatEx);
@@ -458,7 +469,7 @@ HRESULT CShoutcastStream::GetMediaType(int iPosition, CMediaType* pmt)
 		wfe->nAvgBytesPerSec	= m_socket.m_bitrate / 8;
 		wfe->nBlockAlign		= 1;
 		wfe->wBitsPerSample		= 0;
-	} else if (m_socket.m_Format == AUDIO_AAC) {
+	} else if (m_socket.m_format == AUDIO_AAC) {
 		pmt->SetType(&MEDIATYPE_Audio);
 		pmt->SetSubtype(&MEDIASUBTYPE_RAW_AAC1);
 		pmt->SetFormatType(&FORMAT_WaveFormatEx);
@@ -485,8 +496,8 @@ HRESULT CShoutcastStream::GetMediaType(int iPosition, CMediaType* pmt)
 HRESULT CShoutcastStream::CheckMediaType(const CMediaType* pmt)
 {
 	if (pmt->majortype == MEDIATYPE_Audio
-			&& ((pmt->subtype == MEDIASUBTYPE_MP3 && m_socket.m_Format == AUDIO_MPEG) ||
-				(pmt->subtype == MEDIASUBTYPE_RAW_AAC1 && m_socket.m_Format == AUDIO_AAC))
+			&& ((pmt->subtype == MEDIASUBTYPE_MP3 && m_socket.m_format == AUDIO_MPEG) ||
+				(pmt->subtype == MEDIASUBTYPE_RAW_AAC1 && m_socket.m_format == AUDIO_AAC))
 			&& pmt->formattype == FORMAT_WaveFormatEx) {
 		return S_OK;
 	}
@@ -517,7 +528,7 @@ UINT CShoutcastStream::SocketThreadProc()
 	}
 
 	if (m_hSocket == INVALID_SOCKET) {
-		CString redirectUrl;
+		CStringW redirectUrl;
 		if (!m_socket.Create() || !m_socket.Connect(m_urlParser, redirectUrl)) {
 			return 1;
 		}
@@ -528,12 +539,11 @@ UINT CShoutcastStream::SocketThreadProc()
 	soc.Attach(m_hSocket);
 	soc = m_socket;
 
-	soc.SetCodePage(m_codePage);
+	m_StationName = soc.m_title;
+	m_StationUrl  = soc.m_url;
+	m_Description = soc.m_description;
 
-	m_title       = soc.m_title;
-	m_description = soc.m_description;
-
-	REFERENCE_TIME rtSampleTime = 0;
+	int64_t total_samples = 0;
 	CSimpleBuffer<BYTE> buffer;
 	size_t bufdatalen = 0;
 
@@ -552,7 +562,7 @@ UINT CShoutcastStream::SocketThreadProc()
 		}
 		if (len == SOCKET_ERROR) {
 			soc.Close();
-			CString redirectUrl;
+			CStringW redirectUrl;
 			if (!soc.Create() || !soc.Connect(m_urlParser, redirectUrl)) {
 				break;
 			}
@@ -563,7 +573,7 @@ UINT CShoutcastStream::SocketThreadProc()
 			}
 		}
 
-		if (m_socket.m_Format != AUDIO_MPEG && m_socket.m_Format != AUDIO_AAC) {
+		if (m_socket.m_format != AUDIO_MPEG && m_socket.m_format != AUDIO_AAC) {
 			continue; // Hmm.
 		}
 
@@ -574,7 +584,7 @@ UINT CShoutcastStream::SocketThreadProc()
 		BYTE* pos = buffer.Data();
 		const BYTE* end = pos + bufdatalen;
 
-		if (m_socket.m_Format == AUDIO_MPEG) {
+		if (m_socket.m_format == AUDIO_MPEG) {
 			for(;;) {
 				while (pos + 2 <= end && ((GETU16(pos) & MPA_SYNCWORD) != MPA_SYNCWORD)) {
 					pos++;
@@ -584,7 +594,8 @@ UINT CShoutcastStream::SocketThreadProc()
 					break;
 				}
 
-				int size = ParseMPAHeader(pos);
+				audioframe_t aframe;
+				int size = ParseMPAHeader(pos, &aframe);
 				if (size == 0) {
 					pos++;
 					continue;
@@ -594,6 +605,7 @@ UINT CShoutcastStream::SocketThreadProc()
 				}
 
 				if (pos + size + MPA_HEADER_SIZE <= end) {
+					// additional check of the next packet
 					int size2 = ParseMPAHeader(pos + size);
 					if (size2 == 0) {
 						pos++;
@@ -602,10 +614,12 @@ UINT CShoutcastStream::SocketThreadProc()
 				}
 
 				std::unique_ptr<CShoutCastPacket> p2(DNew CShoutCastPacket(pos, size));
-				p2->rtStart = rtSampleTime;
-				p2->rtStop  = rtSampleTime + (10000000i64 * size * 8/soc.m_bitrate);
-				rtSampleTime = p2->rtStop;
-				p2->title = !soc.m_title.IsEmpty() ? soc.m_title : soc.m_url;
+
+				p2->rtStart = 10000000i64 * total_samples / aframe.samplerate;
+				total_samples += aframe.samples;
+				p2->rtStop  = 10000000i64 * total_samples / aframe.samplerate;
+
+				p2->title = soc.m_title;
 
 				{
 					CAutoLock cAutoLock(&m_queue);
@@ -615,7 +629,7 @@ UINT CShoutcastStream::SocketThreadProc()
 				pos += size;
 			}
 		}
-		else if (m_socket.m_Format == AUDIO_AAC) {
+		else if (m_socket.m_format == AUDIO_AAC) {
 			for(;;) {
 				while (pos + 2 <= end && ((GETU16(pos) & AAC_ADTS_SYNCWORD) != AAC_ADTS_SYNCWORD)) {
 					pos++;
@@ -636,7 +650,8 @@ UINT CShoutcastStream::SocketThreadProc()
 				}
 
 				if (pos + size + ADTS_HEADER_SIZE <= end) {
-					int size2 = ParseADTSAACHeader(pos + size, &aframe);
+					// additional check of the next packet
+					int size2 = ParseADTSAACHeader(pos + size);
 					if (size2 == 0) {
 						pos++;
 						continue;
@@ -644,10 +659,12 @@ UINT CShoutcastStream::SocketThreadProc()
 				}
 
 				std::unique_ptr<CShoutCastPacket> p2(DNew CShoutCastPacket(pos + aframe.param1, size - aframe.param1));
-				p2->rtStart = rtSampleTime;
-				p2->rtStop  = rtSampleTime + (10000000i64 * size * 8/soc.m_bitrate);
-				rtSampleTime = p2->rtStop;
-				p2->title = !soc.m_title.IsEmpty() ? soc.m_title : soc.m_url;
+
+				p2->rtStart = 10000000i64 * total_samples / aframe.samplerate;
+				total_samples += aframe.samples;
+				p2->rtStop  = 10000000i64 * total_samples / aframe.samplerate;
+
+				p2->title = soc.m_title;
 
 				{
 					CAutoLock cAutoLock(&m_queue);
@@ -716,7 +733,7 @@ HRESULT CShoutcastStream::SetName(LPCWSTR pName)
 	return S_OK;
 }
 
-//
+// CShoutcastSocket
 
 void CShoutcastStream::CShoutcastSocket::SetCodePage(const UINT codePage)
 {
@@ -746,7 +763,7 @@ int CShoutcastStream::CShoutcastSocket::Receive(void* lpBuf, int nBufLen, int nF
 		if (1 == __super::Receive(&b, 1) && b && b*16 == __super::Receive(buff, b*16)) {
 			int len = decode_html_entities_utf8((char*)buff, nullptr);
 
-			CStringW str = UTF8orLocalToWStr((LPCSTR)buff, m_codepage);
+			const CStringW str = UTF8orLocalToWStr((LPCSTR)buff, m_codepage);
 
 			DLog(L"CShoutcastStream(): Metainfo: %s", str);
 
@@ -762,7 +779,7 @@ int CShoutcastStream::CShoutcastSocket::Receive(void* lpBuf, int nBufLen, int nF
 
 					// special code for 101.ru - it's use json format in MetaInfo
 					if (!m_title.IsEmpty() && m_title.GetAt(0) == L'{') {
-						CString tmp(m_title);
+						CStringW tmp(m_title);
 						const auto pos = tmp.ReverseFind(L'}');
 						if (pos > 0) {
 							tmp.Delete(pos + 1, tmp.GetLength() - pos);
@@ -786,6 +803,7 @@ int CShoutcastStream::CShoutcastSocket::Receive(void* lpBuf, int nBufLen, int nF
 				DLog(L"CShoutcastStream(): StreamTitle is missing");
 			}
 
+			/*
 			i = str.Find(L"StreamUrl='");
 			if (i >= 0) {
 				i += 11;
@@ -794,12 +812,10 @@ int CShoutcastStream::CShoutcastSocket::Receive(void* lpBuf, int nBufLen, int nF
 					j = str.ReverseFind('\'');
 				}
 				if (j > i) {
-					str = str.Mid(i, j - i);
-					if (!str.IsEmpty()) {
-						m_url = str;
-					}
+					m_url = str.Mid(i, j - i);
 				}
 			}
+			*/
 		}
 	} else if (m_metaint > 0) {
 		char* p = (char*)lpBuf;
@@ -846,7 +862,7 @@ int CShoutcastStream::CShoutcastSocket::Receive(void* lpBuf, int nBufLen, int nF
 	return len;
 }
 
-bool CShoutcastStream::CShoutcastSocket::Connect(const CUrlParser& urlParser, CString& redirectUrl)
+bool CShoutcastStream::CShoutcastSocket::Connect(const CUrlParser& urlParser, CStringW& redirectUrl)
 {
 	redirectUrl.Empty();
 
@@ -888,23 +904,23 @@ bool CShoutcastStream::CShoutcastSocket::Connect(const CUrlParser& urlParser, CS
 			else if (param == "content-type") {
 				value.MakeLower();
 				if (value == "audio/mpeg") {
-					m_Format = AUDIO_MPEG;
+					m_format = AUDIO_MPEG;
 					DLog(L"CShoutcastSocket::Connect() - detected MPEG Audio format");
 				}
 				else if (value == "audio/aac" || value == "audio/aacp") {
-					m_Format = AUDIO_AAC;
+					m_format = AUDIO_AAC;
 					DLog(L"CShoutcastSocket::Connect() - detected AAC Audio format");
 				}
 				else if (value == "audio/x-scpls") {
-					m_Format = AUDIO_PLS;
+					m_format = AUDIO_PLS;
 					DLog(L"CShoutcastSocket::Connect() - detected PLS playlist format");
 				}
 				else if (value == "audio/x-mpegurl") {
-					m_Format = AUDIO_M3U;
+					m_format = AUDIO_M3U;
 					DLog(L"CShoutcastSocket::Connect() - detected M3U playlist format");
 				}
 				else if (value == "application/xspf+xml") {
-					m_Format = AUDIO_XSPF;
+					m_format = AUDIO_XSPF;
 					DLog(L"CShoutcastSocket::Connect() - detected XSPF playlist format");
 				}
 				else if (value == "application/ogg") {
@@ -921,7 +937,7 @@ bool CShoutcastStream::CShoutcastSocket::Connect(const CUrlParser& urlParser, CS
 			else if (param == "content-disposition") {
 				int pos = value.Find("filename=");
 				if (pos >= 0) {
-					redirectUrl = L"/" + CString(value.Mid(pos + 9).Trim());
+					redirectUrl = L"/" + CStringW(value.Mid(pos + 9).Trim());
 				}
 			}
 			else if (param == "icy-br") {
@@ -931,13 +947,13 @@ bool CShoutcastStream::CShoutcastSocket::Connect(const CUrlParser& urlParser, CS
 				metaint = atoi(value);
 			}
 			else if (param == "icy-name") {
-				m_title = UTF8orLocalToWStr(value);
+				m_title = UTF8orLocalToWStr(value, m_codepage);
 			}
 			else if (param == "icy-url") {
 				m_url = value;
 			}
 			else if (param == "icy-description") {
-				m_description = UTF8orLocalToWStr(value);
+				m_description = UTF8orLocalToWStr(value, m_codepage);
 			}
 		}
 
@@ -950,39 +966,39 @@ bool CShoutcastStream::CShoutcastSocket::Connect(const CUrlParser& urlParser, CS
 	} while (fTryAgain);
 
 	if (!fOK || (m_bitrate == 0 && metaint == 0 && m_title.IsEmpty())) {
-		if (ContentLength && m_Format >= AUDIO_PLS) {
+		if (ContentLength && m_format >= AUDIO_PLS) {
 			char* buf = DNew char[ContentLength + 1];
 
 			if (ContentLength == Receive((void*)buf, ContentLength)) {
 				buf[ContentLength] = 0;
 
-				if (m_Format == AUDIO_PLS) {
+				if (m_format == AUDIO_PLS) {
 					const char* reg_esp = "File\\d[ \\t]*=[ \\t]*\"*(http\\://[^\\n\"]+)";
 					std::regex rgx(reg_esp/*, std::regex_constants::icase*/);
 					std::cmatch match;
 
 					if (std::regex_search(buf, match, rgx) && match.size() == 2) {
-						redirectUrl = CString(match[1].first, match[1].length());
+						redirectUrl = CStringW(match[1].first, match[1].length());
 						redirectUrl.Trim();
 					}
 				}
-				else if (m_Format == AUDIO_M3U) {
+				else if (m_format == AUDIO_M3U) {
 					const char* reg_esp = "(^|\\n)(http\\://[^\\n]+)";
 					std::regex rgx(reg_esp);
 					std::cmatch match;
 
 					if (std::regex_search(buf, match, rgx) && match.size() == 3) {
-						redirectUrl = CString(match[2].first, match[2].length());
+						redirectUrl = CStringW(match[2].first, match[2].length());
 						redirectUrl.Trim();
 					}
 				}
-				else if (m_Format == AUDIO_XSPF) {
+				else if (m_format == AUDIO_XSPF) {
 					const char* reg_esp = "<location>(http\\://[^<]+)</location>";
 					std::regex rgx(reg_esp);
 					std::cmatch match;
 
 					if (std::regex_search(buf, match, rgx) && match.size() == 2) {
-						redirectUrl = CString(match[1].first, match[1].length());
+						redirectUrl = CStringW(match[1].first, match[1].length());
 						redirectUrl.Trim();
 					}
 				}
@@ -1004,7 +1020,7 @@ bool CShoutcastStream::CShoutcastSocket::FindSync()
 {
 	m_nBytesRead = 0;
 
-	if (m_Format == AUDIO_NONE || m_Format >= AUDIO_PLS) {
+	if (m_format == AUDIO_NONE || m_format >= AUDIO_PLS) {
 		return false; // not supported
 	}
 
@@ -1014,7 +1030,7 @@ bool CShoutcastStream::CShoutcastSocket::FindSync()
 	BYTE buff[10];
 	BYTE b;
 
-	if (m_Format == AUDIO_MPEG) {
+	if (m_format == AUDIO_MPEG) {
 		for (int i = MAXFRAMESIZE; i > 0; i--, Receive(&b, 1)) {
 			if (4 == Receive(buff, 4, MSG_PEEK) && ParseMPAHeader(buff)) {
 				audioframe_t aframe;
@@ -1028,7 +1044,7 @@ bool CShoutcastStream::CShoutcastSocket::FindSync()
 				return true;
 			}
 		}
-	} else if (m_Format == AUDIO_AAC) {
+	} else if (m_format == AUDIO_AAC) {
 		for (int i = MAXFRAMESIZE; i > 0; i--, Receive(&b, 1)) {
 			if (9 == Receive(buff, 9, MSG_PEEK) && ParseADTSAACHeader(buff)) {
 				audioframe_t aframe;
@@ -1036,6 +1052,9 @@ bool CShoutcastStream::CShoutcastSocket::FindSync()
 				m_samplerate	= aframe.samplerate;
 				m_channels		= aframe.channels;
 				m_aacprofile	= aframe.param2;
+				if (m_bitrate == 0) {
+					m_bitrate = CalcBitrate(aframe);
+				}
 
 				return true;
 			}

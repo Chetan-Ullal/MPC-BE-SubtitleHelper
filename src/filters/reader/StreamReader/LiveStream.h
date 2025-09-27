@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2023 see Authors.txt
+ * (C) 2020-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -53,7 +53,7 @@ private:
 	CCritSec           m_csLock;
 	CCritSec           m_csPacketsLock;
 
-	CString            m_url_str;
+	CStringW           m_url_str;
 	protocol           m_protocol   = protocol::PR_NONE;
 	GUID               m_subtype    = MEDIASUBTYPE_NULL;
 	DWORD              m_RequestCmd = 0;
@@ -77,24 +77,26 @@ private:
 
 	struct {
 		DWORD metaint = 0;
-		CString name;
-		CString genre;
-		CString description;
-		CString url;
+		CStringW stationName;
+		CStringW genre;
+		CStringW description;
+		CStringW stationUrl;
+		CStringW streamTitle;
+		//CStringW streamUrl;
 	} m_icydata;
 
 	struct hlsData_t {
 		bool                bInit = {};
 
-		std::deque<CString> Segments;
-		std::list<CString>  DiscontinuitySegments;
-		uint64_t            SequenceNumber = {};
-		CString             PlaylistUrl;
-		int64_t             PlaylistDuration = {};
-		uint64_t            SegmentSize = {};
-		uint64_t            SegmentPos = {};
-		bool                bEndList = {};
-		bool                bRunning = {};
+		std::deque<CStringW> Segments;
+		std::list<CStringW>  DiscontinuitySegments;
+		uint64_t             SequenceNumber = {};
+		CStringW             PlaylistUrl;
+		int64_t              PlaylistDuration = {};
+		uint64_t             SegmentSize = {};
+		uint64_t             SegmentPos = {};
+		bool                 bEndList = {};
+		bool                 bRunning = {};
 		std::chrono::high_resolution_clock::time_point PlaylistParsingTime = {};
 
 		bool                bAes128 = {};
@@ -114,7 +116,7 @@ private:
 
 	DWORD ThreadProc();
 
-	bool ParseM3U8(const CString& url, CString& realUrl);
+	bool ParseM3U8(const CStringW& url, CStringW& realUrl);
 
 	bool OpenHLSSegment();
 
@@ -142,6 +144,7 @@ public:
 	GUID GetSubtype() const { return m_subtype; }
 	protocol GetProtocol() const { return m_protocol; }
 
-	CString GetTitle() const { return m_icydata.name.IsEmpty() ? m_icydata.url : m_icydata.name; }
-	CString GetDescription() const { return m_icydata.description; }
+	CStringW CLiveStream::GetTitle() const;
+	CStringW GetDescription() const { return m_icydata.description; }
+	CStringW GetUrl() const { return m_icydata.stationUrl; }
 };

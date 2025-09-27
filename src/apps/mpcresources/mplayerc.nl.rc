@@ -1262,9 +1262,9 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,79,285,9
     CONTROL         "Activeer ondertitelings-resync",IDC_CHECK_SUBRESYNC,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,5,91,285,9
     GROUPBOX        "",IDC_STATIC,4,103,286,47
-    LTEXT           "Default code page:",IDC_STATIC,10,108,120,8
+    LTEXT           "Standaardcodepagina:",IDC_STATIC,10,108,120,8
     COMBOBOX        IDC_COMBO3,10,120,277,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Automatically detect code page",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,135,178,10
+    CONTROL         "Codepagina automatisch detecteren",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,135,178,10
 END
 
 IDD_UPDATE_DIALOG DIALOGEX 0, 0, 238, 60
@@ -2451,6 +2451,15 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_SUBTITLES_SYSTEM_CODEPAGE "Systeemcodepagina - %u"
+    IDS_FRAME_HALF          "Halve grootte"
+    IDS_FRAME_NORMAL        "Normale grootte"
+    IDS_FRAME_DOUBLE        "Dubbele grootte"
+    IDS_FRAME_STRETCH       "Spreiden"
+END
+
+STRINGTABLE
+BEGIN
     IDS_FILE_FAV_ADDED      "Bestand aan favoriet toegevoegd"
     IDS_DVD_FAV_ADDED       "Dvd aan favoriet toegevoegd"
     IDS_CAPTURE_SETTINGS    "Opname-instellingen"
@@ -2897,14 +2906,6 @@ BEGIN
     IDS_AG_PREVIOUS         "Vorige"
     IDS_AG_NEXT_FILE        "Volgend bestand"
     IDS_AG_PREVIOUS_FILE    "Vorig bestand"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_FRAME_HALF          "Halve grootte"
-    IDS_FRAME_NORMAL        "Normale grootte"
-    IDS_FRAME_DOUBLE        "Dubbele grootte"
-    IDS_FRAME_STRETCH       "Spreiden"
 END
 
 STRINGTABLE

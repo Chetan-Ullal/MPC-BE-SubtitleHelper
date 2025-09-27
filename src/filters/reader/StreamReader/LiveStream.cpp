@@ -119,7 +119,7 @@ HRESULT CLiveStream::HTTPRead(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRe
 				if (S_OK == m_HTTPAsync.Read(buff, b * 16, _dwSizeRead, dwTimeOut) && _dwSizeRead == b * 16) {
 					int len = decode_html_entities_utf8((char*)buff, nullptr);
 
-					CString str = UTF8orLocalToWStr((LPCSTR)buff);
+					CStringW str = UTF8orLocalToWStr((LPCSTR)buff);
 
 					DLog(L"CLiveStream::HTTPRead(): Metainfo: %s", str);
 
@@ -131,11 +131,11 @@ HRESULT CLiveStream::HTTPRead(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRe
 							j = str.ReverseFind('\'');
 						}
 						if (j > i) {
-							m_icydata.name = str.Mid(i, j - i);
+							m_icydata.streamTitle = str.Mid(i, j - i);
 
 							// special code for 101.ru - it's use json format in MetaInfo
-							if (!m_icydata.name.IsEmpty() && m_icydata.name.GetAt(0) == L'{') {
-								CString tmp(m_icydata.name);
+							if (m_icydata.streamTitle.GetLength() && m_icydata.streamTitle.GetAt(0) == L'{') {
+								CStringW tmp(m_icydata.streamTitle);
 								const auto pos = tmp.ReverseFind(L'}');
 								if (pos > 0) {
 									tmp.Delete(pos + 1, tmp.GetLength() - pos);
@@ -143,10 +143,13 @@ HRESULT CLiveStream::HTTPRead(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRe
 									rapidjson::GenericDocument<rapidjson::UTF16<>> d;
 									if (!d.Parse(tmp.GetString()).HasParseError()) {
 										if (d.HasMember(L"t") && d[L"t"].IsString()) {
-											m_icydata.name = d[L"t"].GetString();
+											m_icydata.streamTitle = d[L"t"].GetString();
 										}
 										else if (d.HasMember(L"title") && d[L"title"].IsString()) {
-											m_icydata.name = d[L"title"].GetString();
+											m_icydata.streamTitle = d[L"title"].GetString();
+										}
+										else if (d.HasMember(L"status")) {
+											m_icydata.streamTitle.Empty();
 										}
 									}
 								}
@@ -156,6 +159,7 @@ HRESULT CLiveStream::HTTPRead(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRe
 						DLog(L"CLiveStream::HTTPRead(): StreamTitle is missing");
 					}
 
+					/*
 					i = str.Find(L"StreamUrl='");
 					if (i >= 0) {
 						i += 11;
@@ -164,12 +168,10 @@ HRESULT CLiveStream::HTTPRead(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRe
 							j = str.ReverseFind('\'');
 						}
 						if (j > i) {
-							str = str.Mid(i, j - i);
-							if (!str.IsEmpty()) {
-								m_icydata.url = str;
-							}
+							m_icydata.streamUrl = str.Mid(i, j - i);
 						}
 					}
+					*/
 				}
 			}
 		}
@@ -212,21 +214,21 @@ static void GetType(const BYTE* buf, int size, GUID& subtype)
 	}
 }
 
-bool CLiveStream::ParseM3U8(const CString& url, CString& realUrl)
+bool CLiveStream::ParseM3U8(const CStringW& url, CStringW& realUrl)
 {
 	CWebTextFile f(CP_UTF8, CP_ACP, false, 10 * MEGABYTE);
 	if (!f.Open(url)) {
 		return false;
 	}
 
-	CString str;
+	CStringW str;
 	if (!f.ReadString(str) || str != L"#EXTM3U") {
 		return false;
 	}
 
 	realUrl = url;
 
-	CString base(url);
+	CStringW base(url);
 	if (!f.GetRedirectURL().IsEmpty()) {
 		base = f.GetRedirectURL();
 	}
@@ -243,11 +245,11 @@ bool CLiveStream::ParseM3U8(const CString& url, CString& realUrl)
 	auto segmentsCount = m_hlsData.Segments.size();
 
 	int32_t bandwidth = {};
-	std::list<std::pair<uint32_t, CString>> PlaylistItems;
+	std::list<std::pair<uint32_t, CStringW>> PlaylistItems;
 
 	m_hlsData.PlaylistDuration = {};
 
-	auto CombinePath = [](const CString& base, const CString& relative) {
+	auto CombinePath = [](const CStringW& base, const CStringW& relative) {
 		CUrlParser urlParser(relative.GetString());
 		if (urlParser.IsValid()) {
 			return relative;
@@ -304,9 +306,9 @@ bool CLiveStream::ParseM3U8(const CString& url, CString& realUrl)
 			if (!m_hlsData.bInit) {
 				DeleteLeft(11, str);
 
-				CString method, uri, iv;
+				CStringW method, uri, iv;
 
-				std::list<CString> attributes;
+				std::list<CStringW> attributes;
 				Explode(str, attributes, L',');
 				for (const auto& attribute : attributes) {
 					const auto pos = attribute.Find(L'=');
@@ -369,7 +371,7 @@ bool CLiveStream::ParseM3U8(const CString& url, CString& realUrl)
 		} else if (StartsWith(str, L"#EXT-X-MAP:")) {
 			if (!m_hlsData.bInit) {
 				DeleteLeft(11, str);
-				std::list<CString> attributes;
+				std::list<CStringW> attributes;
 				Explode(str, attributes, L',');
 				for (const auto& attribute : attributes) {
 					const auto pos = attribute.Find(L'=');
@@ -465,7 +467,7 @@ bool CLiveStream::ParseM3U8(const CString& url, CString& realUrl)
 		PlaylistItems.sort([](const auto& itemleft, const auto& itemright) {
 			return itemleft.first > itemright.first;
 		});
-		CString newUrl = PlaylistItems.front().second;
+		CStringW newUrl = PlaylistItems.front().second;
 		return ParseM3U8(newUrl, realUrl);
 	}
 
@@ -494,7 +496,7 @@ bool CLiveStream::Load(const WCHAR* fnw)
 
 	m_url_str = fnw;
 	CUrlParser urlParser;
-	CString str_protocol;
+	CStringW str_protocol;
 
 	if (StartsWith(m_url_str, L"pipe:")) {
 		str_protocol = L"pipe";
@@ -590,20 +592,20 @@ bool CLiveStream::Load(const WCHAR* fnw)
 			return false;
 		}
 
-		DLog(L"CLiveStream::Load() - HTTP content type: %s", m_HTTPAsync.GetContentType());
+		DLog(L"CLiveStream::Load() - HTTP content type: %S", m_HTTPAsync.GetContentType());
 
 		BOOL bConnected = FALSE;
 
 		if (!m_HTTPAsync.GetLenght()) { // only streams without content length
 			BOOL bIcyFound = FALSE;
-			const CString& hdr = m_HTTPAsync.GetHeader();
+			const CStringW hdr = UTF8orLocalToWStr(m_HTTPAsync.GetHeader());
 			DLog(L"CLiveStream::Load() - HTTP hdr:\n%s", hdr);
 
-			std::list<CString> sl;
+			std::list<CStringW> sl;
 			Explode(hdr, sl, '\n');
 
 			for (const auto& hdrline : sl) {
-				CString param, value;
+				CStringW param, value;
 				int k = hdrline.Find(':');
 				if (k > 0 && k + 1 < hdrline.GetLength()) {
 					param = hdrline.Left(k).Trim().MakeLower();
@@ -614,24 +616,24 @@ bool CLiveStream::Load(const WCHAR* fnw)
 					bIcyFound = TRUE;
 				}
 
-				if (param == "icy-metaint") {
+				if (param == L"icy-metaint") {
 					m_icydata.metaint = static_cast<DWORD>(_wtol(value));
-				} else if (param == "icy-name") {
-					m_icydata.name = value;
-				} else if (param == "icy-genre") {
+				} else if (param == L"icy-name") {
+					m_icydata.stationName = value;
+				} else if (param == L"icy-genre") {
 					m_icydata.genre = value;
-				} else if (param == "icy-url") {
-					m_icydata.url = value;
-				} else if (param == "icy-description") {
+				} else if (param == L"icy-url") {
+					m_icydata.stationUrl = value;
+				} else if (param == L"icy-description") {
 					m_icydata.description = value;
 				}
 			}
 
 			bConnected = TRUE;
-			CString contentType = m_HTTPAsync.GetContentType();
+			CStringA contentType = m_HTTPAsync.GetContentType();
 
-			if (contentType == L"application/octet-stream"
-					|| contentType == L"video/unknown" || contentType == L"none"
+			if (contentType == "application/octet-stream"
+					|| contentType == "video/unknown" || contentType == "none"
 					|| contentType.IsEmpty()) {
 				BYTE buf[1024] = {};
 				DWORD dwSizeRead = 0;
@@ -639,19 +641,19 @@ bool CLiveStream::Load(const WCHAR* fnw)
 					GetType(buf, dwSizeRead, m_subtype);
 					Append(buf, dwSizeRead);
 				}
-			} else if (contentType == L"video/mp2t" || contentType == L"video/mpeg") {
+			} else if (contentType == "video/mp2t" || contentType == "video/mpeg") {
 				m_subtype = MEDIASUBTYPE_MPEG2_TRANSPORT;
-			} else if (contentType == L"application/x-ogg" || contentType == L"application/ogg" || contentType == L"audio/ogg") {
+			} else if (contentType == "application/x-ogg" || contentType == "application/ogg" || contentType == "audio/ogg") {
 				m_subtype = MEDIASUBTYPE_Ogg;
-			} else if (contentType == L"video/webm") {
+			} else if (contentType == "video/webm") {
 				m_subtype = MEDIASUBTYPE_Matroska;
-			} else if (contentType == L"video/mp4" || contentType == L"video/3gpp") {
+			} else if (contentType == "video/mp4" || contentType == "video/3gpp") {
 				m_subtype = MEDIASUBTYPE_MP4;
-			} else if (contentType == L"video/x-flv") {
+			} else if (contentType == "video/x-flv") {
 				m_subtype = MEDIASUBTYPE_FLV;
-			} else if (contentType.Find(L"audio/wav") == 0) {
+			} else if (contentType.Find("audio/wav") == 0) {
 				m_subtype = MEDIASUBTYPE_WAVE;
-			} else if (contentType.Find(L"audio/") == 0) {
+			} else if (contentType.Find("audio/") == 0) {
 				m_subtype = MEDIASUBTYPE_MPEG1Audio;
 			} else if (!bIcyFound) { // other ...
 					// not supported content-type
@@ -659,8 +661,8 @@ bool CLiveStream::Load(const WCHAR* fnw)
 			}
 		}
 
-		if (!bConnected && (m_HTTPAsync.GetLenght() || m_HTTPAsync.GetContentType().Find(L"mpegurl") > 0)) {
-			DLog(L"CLiveStream::Load() - HTTP hdr:\n%s", m_HTTPAsync.GetHeader());
+		if (!bConnected && (m_HTTPAsync.GetLenght() || m_HTTPAsync.GetContentType().Find("mpegurl") > 0)) {
+			DLog(L"CLiveStream::Load() - HTTP hdr:\n%s", UTF8orLocalToWStr(m_HTTPAsync.GetHeader()));
 
 			bool ret = {};
 			if (m_HTTPAsync.IsCompressed()) {
@@ -848,6 +850,14 @@ void CLiveStream::Unlock()
 	m_csLock.Unlock();
 }
 
+CStringW CLiveStream::GetTitle() const
+{
+	if (m_icydata.streamTitle.GetLength()) {
+		return m_icydata.streamTitle;
+	}
+	return m_icydata.stationName;
+}
+
 inline const ULONGLONG CLiveStream::GetPacketsSize()
 {
 	CAutoLock cPacketLock(&m_csPacketsLock);
@@ -891,7 +901,7 @@ DWORD CLiveStream::ThreadProc()
 	SYSTEMTIME st;
 	::GetLocalTime(&st);
 
-	CString dump_filename;
+	CStringW dump_filename;
 	dump_filename.Format(L"%s__%04u_%02u_%02u__%02u_%02u_%02u.dump", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
 	FILE* dump_file = nullptr;

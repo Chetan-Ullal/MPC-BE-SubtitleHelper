@@ -65,7 +65,7 @@ int g_cTemplates = std::size(g_Templates);
 
 STDAPI DllRegisterServer()
 {
-	/*CString clsid = CStringFromGUID(__uuidof(CSubtitleSourcePreview));
+	/*CStringW clsid = CStringFromGUID(__uuidof(CSubtitleSourcePreview));
 
 	SetRegKeyValue(
 		L"Media Type\\Extensions", L".sub",
@@ -226,9 +226,9 @@ CSubtitleStream::CSubtitleStream(const WCHAR* wfn, CSubtitleSource* pParent, HRE
 {
 	CAutoLock cAutoLock(&m_cSharedState);
 
-	CString fn(wfn);
+	CStringW fn(wfn);
 
-	if (!m_rts.Open(fn, DEFAULT_CHARSET, false, {}, {})) {
+	if (!m_rts.Open(fn, CP_ACP, false, {}, {})) {
 		if (phr) {
 			*phr = E_FAIL;
 		}
@@ -631,7 +631,7 @@ HRESULT CSubtitleSourceSSA::GetMediaType(CMediaType* pmt)
 	pmt->SetFormatType(&FORMAT_SubtitleInfo);
 
 	CSimpleTextSubtitle sts;
-	sts.Open(m_fn, DEFAULT_CHARSET, false, {}, {});
+	sts.Open(m_fn, CP_ACP, false, {}, {});
 	sts.RemoveAll();
 
 	CFile f;
@@ -681,7 +681,7 @@ HRESULT CSubtitleSourceASS::GetMediaType(CMediaType* pmt)
 	pmt->SetFormatType(&FORMAT_SubtitleInfo);
 
 	CSimpleTextSubtitle sts;
-	sts.Open(m_fn, DEFAULT_CHARSET, false, {}, {});
+	sts.Open(m_fn, CP_ACP, false, {}, {});
 	sts.RemoveAll();
 
 	CFile f;
