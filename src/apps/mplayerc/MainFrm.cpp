@@ -3067,6 +3067,10 @@ bool CMainFrame::DoAfterPlaybackEvent()
 	} else if (s.bCloseFileAfterPlayback) {
 		SendMessageW(WM_COMMAND, ID_FILE_CLOSEMEDIA);
 		return true;
+	} else if (s.bCloseFileAfterPlaybackAndMinimize) {
+		SendMessageW(WM_COMMAND, ID_FILE_CLOSEMEDIA);
+		ShowWindow(SW_MINIMIZE);
+		return true;
 	}
 
 	return bExit;
@@ -4983,7 +4987,11 @@ void CMainFrame::OnStreamSub(UINT nID)
 					CString	strMessage;
 
 					if (iSelected < (nLangs - 1)) {
-						m_pDVS->put_SelectedLanguage(iSelected);
+						if (CComQIPtr<IAMStreamSelect> pSSDVS = m_pDVS) {
+							pSSDVS->Enable(iSelected + 1, AMSTREAMSELECTENABLE_ENABLE);
+						} else {
+							m_pDVS->put_SelectedLanguage(iSelected);
+						}
 						m_pDVS->get_LanguageName(iSelected, &pName);
 
 						strMessage.Format(ResStr(IDS_SUBTITLE_STREAM), pName);
@@ -5031,7 +5039,11 @@ void CMainFrame::OnStreamSub(UINT nID)
 				int iSelected = 0;
 				m_pDVS->get_SelectedLanguage(&iSelected);
 				iSelected = (iSelected + (nID == 0 ? 1 : nLangs - 1)) % nLangs;
-				m_pDVS->put_SelectedLanguage(iSelected);
+				if (CComQIPtr<IAMStreamSelect> pSSDVS = m_pDVS) {
+					pSSDVS->Enable(iSelected + 1, AMSTREAMSELECTENABLE_ENABLE);
+				} else {
+					m_pDVS->put_SelectedLanguage(iSelected);
+				}
 
 				WCHAR* pName = nullptr;
 				m_pDVS->get_LanguageName(iSelected, &pName);
@@ -9403,6 +9415,7 @@ void CMainFrame::OnAfterplayback(UINT nID)
 		case ID_AFTERPLAYBACK_NEXT:
 			s.fExitAfterPlayback = false;
 			s.bCloseFileAfterPlayback = false;
+			s.bCloseFileAfterPlaybackAndMinimize = false;
 			s.fNextInDirAfterPlayback = true;
 			s.fNextInDirAfterPlaybackLooped = false;
 			osdMsg = ResStr(IDS_AFTERPLAYBACK_NEXT);
@@ -9410,6 +9423,7 @@ void CMainFrame::OnAfterplayback(UINT nID)
 		case ID_AFTERPLAYBACK_NEXT_LOOPED:
 			s.fExitAfterPlayback = false;
 			s.bCloseFileAfterPlayback = false;
+			s.bCloseFileAfterPlaybackAndMinimize = false;
 			s.fNextInDirAfterPlayback = true;
 			s.fNextInDirAfterPlaybackLooped = true;
 			osdMsg = ResStr(IDS_AFTERPLAYBACK_NEXT);
@@ -9417,6 +9431,7 @@ void CMainFrame::OnAfterplayback(UINT nID)
 		case ID_AFTERPLAYBACK_EXIT:
 			s.fExitAfterPlayback = true;
 			s.bCloseFileAfterPlayback = false;
+			s.bCloseFileAfterPlaybackAndMinimize = false;
 			s.fNextInDirAfterPlayback = false;
 			s.fNextInDirAfterPlaybackLooped = false;
 			osdMsg = ResStr(IDS_AFTERPLAYBACK_EXIT);
@@ -9424,13 +9439,23 @@ void CMainFrame::OnAfterplayback(UINT nID)
 		case ID_AFTERPLAYBACK_CLOSE_FILE:
 			s.fExitAfterPlayback = false;
 			s.bCloseFileAfterPlayback = true;
+			s.bCloseFileAfterPlaybackAndMinimize = false;
 			s.fNextInDirAfterPlayback = false;
 			s.fNextInDirAfterPlaybackLooped = false;
 			osdMsg = ResStr(IDS_AFTERPLAYBACK_CLOSE_FILE);
 			break;
+		case ID_AFTERPLAYBACK_CLOSE_FILE_AND_MINIMIZE:
+			s.fExitAfterPlayback = false;
+			s.bCloseFileAfterPlayback = false;
+			s.bCloseFileAfterPlaybackAndMinimize = true;
+			s.fNextInDirAfterPlayback = false;
+			s.fNextInDirAfterPlaybackLooped = false;
+			osdMsg = ResStr(IDS_AFTERPLAYBACK_CLOSE_FILE_AND_MINIMIZE);
+			break;
 		case ID_AFTERPLAYBACK_EVERYTIMEDONOTHING:
 			s.fExitAfterPlayback = false;
 			s.bCloseFileAfterPlayback = false;
+			s.bCloseFileAfterPlaybackAndMinimize = false;
 			s.fNextInDirAfterPlayback = false;
 			s.fNextInDirAfterPlaybackLooped = false;
 			osdMsg = ResStr(IDS_AFTERPLAYBACK_DONOTHING);
@@ -9472,6 +9497,9 @@ void CMainFrame::OnUpdateAfterplayback(CCmdUI* pCmdUI)
 			break;
 		case ID_AFTERPLAYBACK_CLOSE_FILE:
 			bChecked = !!s.bCloseFileAfterPlayback;
+			break;
+		case ID_AFTERPLAYBACK_CLOSE_FILE_AND_MINIMIZE:
+			bChecked = !!s.bCloseFileAfterPlaybackAndMinimize;
 			break;
 		case ID_AFTERPLAYBACK_NEXT:
 			bChecked = !!s.fNextInDirAfterPlayback && !s.fNextInDirAfterPlaybackLooped;
@@ -9867,7 +9895,11 @@ void CMainFrame::SelectSubtilesAMStream(UINT id)
 
 				if (nLangs > 1) {
 					if (i < (nLangs-1)) {
-						m_pDVS->put_SelectedLanguage(i);
+						if (CComQIPtr<IAMStreamSelect> pSSDVS = m_pDVS) {
+							pSSDVS->Enable(i + 1, AMSTREAMSELECTENABLE_ENABLE);
+						} else {
+							m_pDVS->put_SelectedLanguage(i);
+						}
 						return;
 					} else {
 						m_pDVS->put_SelectedLanguage(nLangs - 1);
@@ -9896,7 +9928,11 @@ void CMainFrame::SelectSubtilesAMStream(UINT id)
 			}
 
 			if (i <= (nLangs - 1)) {
-				m_pDVS->put_SelectedLanguage(i);
+				if (CComQIPtr<IAMStreamSelect> pSSDVS = m_pDVS) {
+					pSSDVS->Enable(i + 1, AMSTREAMSELECTENABLE_ENABLE);
+				} else {
+					m_pDVS->put_SelectedLanguage(i);
+				}
 			}
 		}
 
