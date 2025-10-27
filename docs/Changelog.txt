@@ -1,6 +1,11 @@
 ﻿This file includes only a short list of the changes between Media Player Classic - BE's versions.
 
-1.8.7.x dev
+1.8.8.x dev
+=============================
+Updated Bulgarian translation (by jekovcar).
+
+
+1.8.8 - 2025-10-26
 =============================
 ShoutcastSource
 Fixed the display of radio station names.
@@ -18,6 +23,9 @@ Added support for Advanced Professional Video (APV).
 MatroskaSplitter
 Added support for Advanced Professional Video (APV).
 
+MpaDecFilter
+Updated AC-4 decoder.
+
 MPCVideoDec
 The D3D11 hardware decoder for HEVC 4:4:4 10/16 bit will not be used for madVR because the renderer does not support it.
 
@@ -28,10 +36,12 @@ Subtitles
 Implemented a workaround for a bug in some VSFilters where it resets the selected subtitle track after changing one of the subtitle files.
 
 Player
+Added the command "After Playback: Close file and minimize player"
 Various interface fixes.
 
 Installer
-Updated MPC Video Renderer 0.9.15.
+Updated MPC Video Renderer 0.9.17.
+Updated MPC Script Source 0.2.13.
 
 Updated Korean translation (by Hackjjang).
 Added Arabic translation (by Alhlhli).
@@ -47,9 +57,11 @@ Updated Spanish translation (by IPeluchito).
 Updated Japanese translation (by tsubasanouta).
 
 Updated libraries:
-	ffmpeg n8.1-dev-839-ged007ad427;
+	ffmpeg n8.1-dev-878-g7b5b29910a;
 	Little-CMS git-lcms2.17-46-g5cdf304;
 	MediaInfo git-v25.09-31-gc75d2c8ad;
+	nanosvg git-6657908;
+	vvdec v3.0.0-50-g8c7d663;
 	ZenLib git-v0.4.41-85-g490e242.
 
 
