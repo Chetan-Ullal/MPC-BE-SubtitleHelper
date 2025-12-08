@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2024 see Authors.txt
+ * (C) 2020-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -78,10 +78,11 @@ void CFLACFile::SetProperties(IBaseFilter* pBF)
 		}
 	}
 
-	if (m_cover.size()) {
+	if (m_covers.size()) {
 		if (CComQIPtr<IDSMResourceBag> pRB = pBF) {
-			CString cover; cover.Format(L"cover.%s", m_covermime == L"image/png" ? L"png" : L"jpg");
-			pRB->ResAppend(cover, L"cover", m_covermime, m_cover.data(), (DWORD)m_cover.size(), 0);
+			for (auto& cover : m_covers) {
+				pRB->ResAppend(cover.name, cover.desc, cover.mime, cover.picture.data(), (DWORD)cover.picture.size(), 0);
+			}
 		}
 	}
 
@@ -279,11 +280,25 @@ void CFLACFile::UpdateFromMetadata(void* pBuffer)
 		}
 	} else if (pMetadata->type == FLAC__METADATA_TYPE_PICTURE) {
 		const auto& pic = pMetadata->data.picture;
-
-		if (m_cover.empty() && pic.data_length) {
-			m_covermime = pic.mime_type;
-			m_cover.resize(pic.data_length);
-			memcpy(m_cover.data(), pic.data, pic.data_length);
+		if (pic.data_length && pic.mime_type) {
+			CoverInfo_t cover;
+			switch (pic.type) { // https://www.rfc-editor.org/rfc/rfc9639.html#table13
+			default: 
+			case 0: cover.name = "Other";       break;
+			case 1:
+			case 2: cover.name = "Icon";        break;
+			case 3: cover.name = "Front cover"; break;
+			case 4: cover.name = "Back cover";  break;
+			case 7: cover.name = "Lead artist"; break;
+			case 8: cover.name = "Artist";      break;
+			}
+			if (pic.description) {
+				cover.desc = AltUTF8ToWStr((char*)pic.description);
+			}
+			cover.mime = pic.mime_type;
+			cover.picture.resize(pic.data_length);
+			memcpy(cover.picture.data(), pic.data, pic.data_length);
+			m_covers.emplace_back(cover);
 		}
 	} else if (pMetadata->type == FLAC__METADATA_TYPE_CUESHEET) {
 		if (!m_chapters.empty()) {

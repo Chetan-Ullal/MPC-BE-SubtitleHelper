@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,17 +21,20 @@
 
 #include "stdafx.h"
 #include "DSUtil/std_helper.h"
+#include <HighDPI.h>
 #include "PPageFileInfoRes.h"
 #include "FileDialogs.h"
 #include "Misc.h"
+#include "WicUtils.h"
 
 // CPPageFileInfoRes dialog
 
 IMPLEMENT_DYNAMIC(CPPageFileInfoRes, CPPageBase)
-CPPageFileInfoRes::CPPageFileInfoRes(const CString& fn, IFilterGraph* pFG)
+CPPageFileInfoRes::CPPageFileInfoRes(const CString& fn, IFilterGraph* pFG, CDPI* pSheetDpi)
 	: CPPageBase(CPPageFileInfoRes::IDD, CPPageFileInfoRes::IDD)
 	, m_fn(fn)
 	, m_fullfn(fn)
+	, m_pSheetDpi(pSheetDpi)
 {
 	m_fn.TrimRight('/');
 	int i = std::max(m_fn.ReverseFind('\\'), m_fn.ReverseFind('/'));
@@ -77,12 +80,13 @@ void CPPageFileInfoRes::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_DEFAULTICON, m_icon);
 	DDX_Text(pDX, IDC_EDIT1, m_fn);
 	DDX_Control(pDX, IDC_LIST1, m_list);
+	DDX_Control(pDX, IDC_STATIC1, m_picPreview);
 }
 
 BEGIN_MESSAGE_MAP(CPPageFileInfoRes, CPPageBase)
 	ON_WM_SIZE()
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST1, OnItemchangedList)
 	ON_BN_CLICKED(IDC_BUTTON1, OnSaveAs)
-	ON_UPDATE_COMMAND_UI(IDC_BUTTON1, OnUpdateSaveAs)
 	ON_MESSAGE(SETPAGEFOCUS, OnSetPageFocus)
 END_MESSAGE_MAP()
 
@@ -99,58 +103,149 @@ BOOL CPPageFileInfoRes::OnInitDialog()
 
 	m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 
-	m_list.InsertColumn(0, L"Name", LVCFMT_LEFT, 187);
-	m_list.InsertColumn(1, L"Mime Type", LVCFMT_LEFT, 127);
+	m_list.InsertColumn(0, L"#", LVCFMT_RIGHT, m_pSheetDpi->ScaleX(20));
+	m_list.InsertColumn(1, L"Name", LVCFMT_LEFT, m_pSheetDpi->ScaleX(150));
+	m_list.InsertColumn(2, L"Mime Type", LVCFMT_LEFT, m_pSheetDpi->ScaleX(150));
+	m_list.InsertColumn(3, L"Description", LVCFMT_LEFT, m_pSheetDpi->ScaleX(60));
+	m_list.InsertColumn(4, L"-", LVCFMT_LEFT, m_pSheetDpi->ScaleX(20)); // dummy column
 
+	int n = 0;
 	for (const auto& resource : m_resources) {
-		int iItem = m_list.InsertItem(m_list.GetItemCount(), resource.name);
-		m_list.SetItemText(iItem, 1, resource.mime);
-		m_list.SetItemData(iItem, (DWORD_PTR)&resource);
+		int iItem = m_list.InsertItem(m_list.GetItemCount(), std::to_wstring(++n).c_str());
+		m_list.SetItemText(iItem, 1, resource.name);
+		m_list.SetItemText(iItem, 2, resource.mime);
+		m_list.SetItemText(iItem, 3, resource.desc);
 	}
+
+	for (int iCol = 0; iCol < 4; iCol++) {
+		m_list.SetColumnWidth(iCol, LVSCW_AUTOSIZE_USEHEADER);
+	}
+	m_list.DeleteColumn(4); // delete the dummy column
+
+	GetDlgItem(IDC_BUTTON1)->EnableWindow(FALSE);
 
 	UpdateData(FALSE);
 
 	return TRUE;
 }
 
+const CDSMResource* CPPageFileInfoRes::GetResource(int idx)
+{
+	ASSERT(m_list.GetItemCount() == (int)m_resources.size());
+
+	if (idx < 0 || idx >= (int)m_resources.size()) {
+		return nullptr;
+	}
+
+	auto it = m_resources.cbegin();
+	std::advance(it, idx);
+
+	return &(*it);
+}
+
+void CPPageFileInfoRes::OnItemchangedList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	if (pNMLV->uChanged & LVIF_STATE) {
+		if (pNMLV->uNewState & (LVIS_SELECTED | LVNI_FOCUSED)) {
+			GetDlgItem(IDC_BUTTON1)->EnableWindow(TRUE);
+
+			HRESULT hr = E_NOT_SET;
+			CComPtr<IWICBitmap> pBitmap;
+			CComPtr<IWICBitmap> pBitmapScaled;
+
+			auto resource = GetResource(pNMLV->iItem);
+			if (resource && StartsWith(resource->mime, L"image/")) {
+				UINT bm_w, bm_h;
+
+				hr = WicLoadImage(&pBitmap, true, const_cast<BYTE*>(resource->data.data()), resource->data.size());
+				if (SUCCEEDED(hr)) {
+					hr = pBitmap->GetSize(&bm_w, &bm_h);
+				}
+
+				if (SUCCEEDED(hr)) {
+					CRect rect = {};
+					m_picPreview.GetClientRect(&rect);
+					UINT w = rect.Width();
+					UINT h = rect.Height();
+
+					if (bm_w > w || bm_h > h) {
+						UINT wy = w * bm_h;
+						UINT hx = h * bm_w;
+						if (wy > hx) {
+							w = hx / bm_h;
+						}
+						else {
+							h = wy / bm_w;
+						}
+
+						hr = WicCreateBitmapScaled(&pBitmapScaled, w, h, pBitmap);
+						pBitmap.Release();
+					}
+				}
+			}
+
+			HBITMAP hBitmap = nullptr;
+			if (SUCCEEDED(hr)) {
+				hr = WicCreateDibSecton(hBitmap, pBitmapScaled ? pBitmapScaled : pBitmap);
+			}
+			hBitmap = m_picPreview.SetBitmap(hBitmap);
+			DeleteObject(hBitmap);
+		}
+		else {
+			GetDlgItem(IDC_BUTTON1)->EnableWindow(FALSE);
+
+			HBITMAP hBitmap = m_picPreview.SetBitmap(nullptr);
+			DeleteObject(hBitmap);
+		}
+	}
+
+	*pResult = 0;
+}
+
 void CPPageFileInfoRes::OnSaveAs()
 {
-	int i = m_list.GetSelectionMark();
-
-	if (i < 0) {
+	auto resource = GetResource(m_list.GetSelectionMark());
+	if (!resource) {
 		return;
 	}
 
-	if (m_list.GetItemData(i) == NULL) {
-		return;
-	}
-
-	auto it = FindInListByPointer(m_resources, (CDSMResource*)m_list.GetItemData(i));
-	if (it == m_resources.end()) {
-		ASSERT(0);
-		return;
-	}
-
-	CString fname((*it).name);
+	CString fname(resource->name);
 	CString ext = ::PathFindExtensionW(fname);
 
 	CString ext_list = L"All files|*.*|";
-	CString mime((*it).mime);
+	CString mime(resource->mime);
 	mime.MakeLower();
+	
 	if (mime == L"application/x-truetype-font" || mime == L"application/x-font-ttf") {
 		ext_list = L"TrueType Font (*.ttf)|*.ttf|";
 		if (ext.IsEmpty()) {
 			fname += L".ttf";
 		}
-	} else if (mime == L"image/jpeg" || mime == L"image/jpg") {
-		ext_list = L"JPG - JPEG Image (*.jpg)|*.jpg|";
+	}
+	else if (mime == L"application/vnd.ms-opentype") {
+		ext_list = L"OpenType Font (*.otf)|*.otf|";
+		if (ext.IsEmpty()) {
+			fname += L".ttf";
+		}
+	}
+	else if (mime == L"image/jpeg" || mime == L"image/jpg") {
+		ext_list = L"JPEG Image (*.jpg)|*.jpg|";
 		if (ext.IsEmpty()) {
 			fname += L".jpg";
 		}
-	} else if (mime == L"image/png") {
+	}
+	else if (mime == L"image/png") {
 		ext_list = L"PNG - Portable Network Graphics (*.png)|*.png|";
 		if (ext.IsEmpty()) {
 			fname += L".png";
+		}
+	}
+	else if (mime == L"image/webp") {
+		ext_list = L"WebP (*.webp)|*.webp|";
+		if (ext.IsEmpty()) {
+			fname += L".webp";
 		}
 	}
 
@@ -160,15 +255,10 @@ void CPPageFileInfoRes::OnSaveAs()
 	if (fd.DoModal() == IDOK) {
 		FILE* f = nullptr;
 		if (_wfopen_s(&f, fd.GetPathName(), L"wb") == 0) {
-			fwrite((*it).data.data(), 1, (*it).data.size(), f);
+			fwrite(resource->data.data(), 1, resource->data.size(), f);
 			fclose(f);
 		}
 	}
-}
-
-void CPPageFileInfoRes::OnUpdateSaveAs(CCmdUI* pCmdUI)
-{
-	pCmdUI->Enable(m_list.GetSelectedCount());
 }
 
 void CPPageFileInfoRes::OnSize(UINT nType, int cx, int cy)
@@ -188,7 +278,7 @@ void CPPageFileInfoRes::OnSize(UINT nType, int cx, int cy)
 
 	HDWP hDWP = ::BeginDeferWindowPos(1);
 	for (CWnd *pChild = GetWindow(GW_CHILD); pChild != nullptr; pChild = pChild->GetWindow(GW_HWNDNEXT)) {
-		if (pChild->SendMessageW(WM_GETDLGCODE) & DLGC_BUTTON) {
+		if (pChild->SendMessageW(WM_GETDLGCODE) & DLGC_BUTTON || pChild == GetDlgItem(IDC_STATIC1)) {
 			pChild->GetWindowRect(&r);
 			ScreenToClient(&r);
 			r.top += dy;

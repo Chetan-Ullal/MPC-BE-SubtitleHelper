@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -36,14 +36,18 @@ class CPPageFileInfoRes : public CPPageBase
 private:
 	HICON     m_hIcon = nullptr;
 	std::list<CDSMResource> m_resources;
+	CDPI* m_pSheetDpi;
 
 	CStatic   m_icon;
 	CString   m_fn;
 	CString   m_fullfn;
 	CListCtrl m_list;
+	CStatic   m_picPreview;
+
+	const CDSMResource* GetResource(int idx);
 
 public:
-	CPPageFileInfoRes(const CString& fn, IFilterGraph* pFG);
+	CPPageFileInfoRes(const CString& fn, IFilterGraph* pFG, CDPI* pSheetDpi);
 	virtual ~CPPageFileInfoRes();
 
 	enum { IDD = IDD_FILEPROPRES };
@@ -58,6 +62,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	CRect  m_rCrt;
 public:
+	afx_msg void OnItemchangedList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnSaveAs();
-	afx_msg void OnUpdateSaveAs(CCmdUI* pCmdUI);
 };
