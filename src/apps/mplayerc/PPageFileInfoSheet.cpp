@@ -34,7 +34,7 @@ CMPCPropertySheet::CMPCPropertySheet(LPCWSTR pszCaption, CWnd* pParentWnd, UINT 
 // CPPageFileInfoSheet
 
 IMPLEMENT_DYNAMIC(CPPageFileInfoSheet, CMPCPropertySheet)
-CPPageFileInfoSheet::CPPageFileInfoSheet(const std::list<CString>& files, CMainFrame* pMainFrame, CWnd* pParentWnd, const bool bOnlyMI/* = false*/)
+CPPageFileInfoSheet::CPPageFileInfoSheet(const std::list<CStringW>& files, CMainFrame* pMainFrame, CWnd* pParentWnd, const bool bOnlyMI/* = false*/)
 	: CMPCPropertySheet(ResStr(IDS_PROPSHEET_PROPERTIES), pParentWnd, 0)
 	, m_clip(files.front(), pMainFrame->m_pGB)
 	, m_details(files.front(), pMainFrame->m_pGB, pMainFrame->m_pCAP, pMainFrame->m_pDVDI)
@@ -45,14 +45,9 @@ CPPageFileInfoSheet::CPPageFileInfoSheet(const std::list<CString>& files, CMainF
 		AddPage(&m_details);
 		AddPage(&m_clip);
 
-		BeginEnumFilters(pMainFrame->m_pGB, pEF, pBF) {
-			if (CComQIPtr<IDSMResourceBag> pRB = pBF.p)
-				if (pRB && pRB->ResGetCount() > 0) {
-					AddPage(&m_res);
-					break;
-				}
+		if (m_res.GetResourceCount()) {
+			AddPage(&m_res);
 		}
-		EndEnumFilters;
 	}
 
 	if (!::PathIsURLW(files.front())) {
@@ -138,7 +133,7 @@ BOOL CPPageFileInfoSheet::OnInitDialog()
 
 void CPPageFileInfoSheet::OnSaveAs()
 {
-	CString file = m_mi.MI_File;
+	CStringW file = m_mi.MI_File;
 	file.TrimRight('/');
 	int i = std::max(file.ReverseFind('\\'), file.ReverseFind('/'));
 

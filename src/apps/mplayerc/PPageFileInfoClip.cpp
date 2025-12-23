@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,12 +22,13 @@
 #include "stdafx.h"
 #include "MainFrm.h"
 #include "PPageFileInfoClip.h"
+#include <wmsdkidl.h>
 
 
 // CPPageFileInfoClip dialog
 
 IMPLEMENT_DYNAMIC(CPPageFileInfoClip, CPropertyPage)
-CPPageFileInfoClip::CPPageFileInfoClip(const CString& fn, IFilterGraph* pFG)
+CPPageFileInfoClip::CPPageFileInfoClip(const CStringW& fn, IFilterGraph* pFG)
 	: CPropertyPage(CPPageFileInfoClip::IDD, CPPageFileInfoClip::IDD)
 	, m_fn(fn)
 	, m_clip(ResStr(IDS_AG_NONE))
@@ -37,14 +38,15 @@ CPPageFileInfoClip::CPPageFileInfoClip(const CString& fn, IFilterGraph* pFG)
 	, m_location_str(ResStr(IDS_AG_NONE))
 	, m_album(ResStr(IDS_AG_NONE))
 {
+	HRESULT hr = E_NOT_SET;
 	auto pFrame = AfxGetMainFrame();
 
 	BeginEnumFilters(pFG, pEF, pBF) {
-		if (CComQIPtr<IPropertyBag> pPB = pBF.p) {
-			if (!pFrame->CheckMainFilter(pBF)) {
-				continue;
-			}
+		if (!pFrame->CheckMainFilter(pBF)) {
+			continue;
+		}
 
+		if (CComQIPtr<IPropertyBag> pPB = pBF.p) {
 			CComVariant var;
 			if (SUCCEEDED(pPB->Read(CComBSTR(L"ALBUM"), &var, nullptr))) {
 				m_album = var.bstrVal;
@@ -60,11 +62,12 @@ CPPageFileInfoClip::CPPageFileInfoClip(const CString& fn, IFilterGraph* pFG)
 		}
 
 		if (CComQIPtr<IAMMediaContent, &IID_IAMMediaContent> pAMMC = pBF.p) {
-			if (!pFrame->CheckMainFilter(pBF)) {
-				continue;
-			}
-
 			CComBSTR bstr;
+			if (SUCCEEDED(pAMMC->get_Title(&bstr)) && bstr.Length()) {
+				m_clip = bstr.m_str;
+				bstr.Empty();
+				break;
+			}
 			if (SUCCEEDED(pAMMC->get_AuthorName(&bstr)) && bstr.Length()) {
 				m_author = bstr.m_str;
 				bstr.Empty();
@@ -85,10 +88,28 @@ CPPageFileInfoClip::CPPageFileInfoClip(const CString& fn, IFilterGraph* pFG)
 				m_descText.Replace(L";", L"\r\n");
 				bstr.Empty();
 			}
-			if (SUCCEEDED(pAMMC->get_Title(&bstr)) && bstr.Length()) {
-				m_clip = bstr.m_str;
-				bstr.Empty();
-				break;
+		}
+		else if (CComQIPtr<IWMHeaderInfo> pWMHI = pBF.p) {
+			WORD streamNum = 0;
+			WMT_ATTR_DATATYPE type;
+			WORD length;
+			std::vector<BYTE> value;
+
+			hr = pWMHI->GetAttributeByName(&streamNum, L"Title", &type, nullptr, &length);
+			if (SUCCEEDED(hr) && type == WMT_TYPE_STRING && length > sizeof(wchar_t)) {
+				value.resize(length);
+				hr = pWMHI->GetAttributeByName(&streamNum, L"Title", &type, value.data(), &length);
+				if (SUCCEEDED(hr)) {
+					m_clip.SetString((LPCWSTR)value.data(), length / sizeof(wchar_t));
+				}
+			}
+			hr = pWMHI->GetAttributeByName(&streamNum, L"Author", &type, nullptr, &length);
+			if (SUCCEEDED(hr) && type == WMT_TYPE_STRING && length > sizeof(wchar_t)) {
+				value.resize(length);
+				hr = pWMHI->GetAttributeByName(&streamNum, L"Author", &type, value.data(), &length);
+				if (SUCCEEDED(hr)) {
+					m_author.SetString((LPCWSTR)value.data(), length / sizeof(wchar_t));
+				}
 			}
 		}
 	}
@@ -105,7 +126,7 @@ CPPageFileInfoClip::~CPPageFileInfoClip()
 BOOL CPPageFileInfoClip::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_LBUTTONDBLCLK && pMsg->hwnd == m_location.m_hWnd && !m_location_str.IsEmpty()) {
-		CString path = m_location_str;
+		CStringW path = m_location_str;
 
 		if (path[path.GetLength() - 1] != '\\') {
 			path += L"\\";

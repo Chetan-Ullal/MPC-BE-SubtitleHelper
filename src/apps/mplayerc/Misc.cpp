@@ -123,7 +123,7 @@ CString GetLastErrorMsg(LPWSTR lpszFunction, DWORD dw/* = GetLastError()*/)
 		(wcslen((LPCWSTR)lpMsgBuf) + wcslen((LPCWSTR)lpszFunction) + 40) * sizeof(WCHAR));
 	StringCchPrintfW((LPWSTR)lpDisplayBuf,
 		LocalSize(lpDisplayBuf) / sizeof(WCHAR),
-		L"Function '%s' failed with error %d: %s",
+		L"Function '%s' failed with error %u: %s",
 		lpszFunction, dw, lpMsgBuf);
 
 	CString ret = (LPCWSTR)lpDisplayBuf;
@@ -170,8 +170,8 @@ HICON LoadIcon(const CString& fn, bool fSmall)
 		CRegKey key;
 		ULONG len;
 
-		CString RegPathAssociated;
-		RegPathAssociated.Format(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%ws\\UserChoice", ext);
+		CStringW RegPathAssociated;
+		RegPathAssociated.Format(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%s\\UserChoice", ext);
 
 		if (ERROR_SUCCESS == key.Open(HKEY_CURRENT_USER, RegPathAssociated, KEY_READ)) {
 			len = std::size(buff);

@@ -671,7 +671,7 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 					"sRGB", "2.8 gamma", "Log100", "Log316", "Symmetric BT.709", "Constant luminance BT.2020", "Non-constant luminance BT.2020",
 					"2.6 gamma", "SMPTE ST 2084 (PQ)", "ARIB STD-B67 (HLG)"};
 
-#define ADD_PARAM_DESC(str, parameter, descs) if (parameter < std::size(descs) && descs[parameter]) str.AppendFormat(L" (%hS)", descs[parameter])
+#define ADD_PARAM_DESC(str, parameter, descs) if (parameter < std::size(descs) && descs[parameter]) str.AppendFormat(L" (%hs)", descs[parameter])
 
 				DXVA2_ExtendedFormat exfmt;
 				exfmt.value = vih2.dwControlFlags;
@@ -720,9 +720,9 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 			MPEG2VIDEOINFO& mvih = *(MPEG2VIDEOINFO*)pbFormat;
 
 			sl.emplace_back(L"MPEG2VIDEOINFO:");
-			str.Format(L"dwStartTimeCode: %d", mvih.dwStartTimeCode);
+			str.Format(L"dwStartTimeCode: %u", mvih.dwStartTimeCode);
 			sl.emplace_back(str);
-			str.Format(L"cbSequenceHeader: %d", mvih.cbSequenceHeader);
+			str.Format(L"cbSequenceHeader: %u", mvih.cbSequenceHeader);
 			sl.emplace_back(str);
 			str.Format(L"dwProfile: 0x%08x", mvih.dwProfile);
 			sl.emplace_back(str);
@@ -747,7 +747,7 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 		sl.emplace_back(str);
 		str.Format(L"biCompression: %s", FourccToWStr(bih->biCompression));
 		sl.emplace_back(str);
-		str.Format(L"biSizeImage: %d", bih->biSizeImage);
+		str.Format(L"biSizeImage: %u", bih->biSizeImage);
 		sl.emplace_back(str);
 		str.Format(L"biXPelsPerMeter: %d", bih->biXPelsPerMeter);
 		sl.emplace_back(str);

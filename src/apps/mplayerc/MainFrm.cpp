@@ -54,6 +54,7 @@
 #include <moreuuids.h>
 #include <clsids.h>
 #include <psapi.h>
+#include <wmsdkidl.h>
 
 #include "GraphThread.h"
 #include "FGManager.h"
@@ -2253,7 +2254,7 @@ void CMainFrame::OnSysCommand(UINT nID, LPARAM lParam)
 
 	// Only stop screensaver if video playing; allow for audio only
 	if ((fs == State_Running && !m_bAudioOnly) && (((nID & 0xFFF0) == SC_SCREENSAVE) || ((nID & 0xFFF0) == SC_MONITORPOWER))) {
-		DLog(L"SC_SCREENSAVE, nID = %d, lParam = %d", nID, lParam);
+		DLog(L"SC_SCREENSAVE, nID = %u, lParam = %Id", nID, lParam);
 		return;
 	} else if ((nID & 0xFFF0) == SC_MINIMIZE && m_bTrayIcon) {
 		if (m_wndFlyBar && m_wndFlyBar.IsWindowVisible()) {
@@ -2375,7 +2376,7 @@ void CMainFrame::OnActivateApp(BOOL bActive, DWORD dwThreadID)
 					HMODULE hModule;
 					DWORD cbNeeded;
 
-					if (EnumProcessModules(hProcess, &hModule, sizeof(hModule), &cbNeeded)) {
+					if (EnumProcessModulesEx(hProcess, &hModule, sizeof(hModule), &cbNeeded, LIST_MODULES_DEFAULT)) {
 						module.ReleaseBufferSetLength(GetModuleFileNameExW(hProcess, hModule, module.GetBuffer(MAX_PATH), MAX_PATH));
 					}
 
@@ -3197,7 +3198,7 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
 				DLog(L"OnGraphNotify: EC_ERRORABORT -> hr = %08x", (HRESULT)evParam1);
 				break;
 			case EC_BUFFERING_DATA:
-				DLog(L"OnGraphNotify: EC_BUFFERING_DATA -> %d, %d", evParam1, evParam2);
+				DLog(L"OnGraphNotify: EC_BUFFERING_DATA -> %Id, %Id", evParam1, evParam2);
 
 				m_bBuffering = ((HRESULT)evParam1 != S_OK);
 				break;
@@ -3447,7 +3448,7 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
 				break;
 			case EC_DVD_ERROR:
 				if (m_pDVDC) {
-					DLog(L"OnGraphNotify: EC_DVD_ERROR -> %d, %d", evParam1, evParam2);
+					DLog(L"OnGraphNotify: EC_DVD_ERROR -> %Id, %Id", evParam1, evParam2);
 
 					CString err;
 
@@ -3489,7 +3490,7 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
 				break;
 			case EC_DVD_WARNING:
 				if (m_pDVDC) {
-					DLog(L"OnGraphNotify: EC_DVD_WARNING -> %d, %d", evParam1, evParam2);
+					DLog(L"OnGraphNotify: EC_DVD_WARNING -> %Id, %Id", evParam1, evParam2);
 				}
 				break;
 			case EC_VIDEO_SIZE_CHANGED: {
@@ -12691,12 +12692,36 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 						}
 					}
 				}
-
-				if (m_SessionInfo.Title.IsEmpty()) {
-					CPlaylistItem pli;
-					if (m_wndPlaylistBar.GetCur(pli) && pli.m_fi.Valid() && pli.m_label.GetLength() && !pli.m_autolabel) {
-						m_SessionInfo.Title = pli.m_label;
+			}
+			else if (m_pGB) {
+				BeginEnumFilters(m_pGB, pEF, pBF) {
+					if (!CheckMainFilter(pBF)) {
+						continue;
 					}
+
+					if (CComQIPtr<IWMHeaderInfo> pWMHI = pBF.p) {
+						WORD streamNum = 0;
+						WMT_ATTR_DATATYPE type;
+						WORD length;
+						std::vector<BYTE> value;
+
+						HRESULT hr = pWMHI->GetAttributeByName(&streamNum, L"Title", &type, nullptr, &length);
+						if (SUCCEEDED(hr) && type == WMT_TYPE_STRING && length > sizeof(wchar_t)) {
+							value.resize(length);
+							hr = pWMHI->GetAttributeByName(&streamNum, L"Title", &type, value.data(), &length);
+							if (SUCCEEDED(hr)) {
+								m_SessionInfo.Title.SetString((LPCWSTR)value.data(), length / sizeof(wchar_t));
+							}
+						}
+					}
+				}
+				EndEnumFilters;
+			}
+
+			if (m_SessionInfo.Title.IsEmpty()) {
+				CPlaylistItem pli;
+				if (m_wndPlaylistBar.GetCur(pli) && pli.m_fi.Valid() && pli.m_label.GetLength() && !pli.m_autolabel) {
+					m_SessionInfo.Title = pli.m_label;
 				}
 			}
 
@@ -13362,35 +13387,37 @@ void CMainFrame::OpenSetupCaptureBar()
 void CMainFrame::OpenSetupInfoBar()
 {
 	if (GetPlaybackMode() == PM_FILE) {
-		bool fEmpty = true;
+		HRESULT hr = E_NOT_SET;
+		bool filled = false;
+
 		for (const auto& pAMMC : m_pAMMC) {
 			if (pAMMC) {
 				CComBSTR bstr;
 				if (SUCCEEDED(pAMMC->get_Title(&bstr))) {
 					m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_TITLE), bstr.m_str);
 					if (bstr.Length()) {
-						fEmpty = false;
+						filled = true;
 					}
 					bstr.Empty();
 				}
 				if (SUCCEEDED(pAMMC->get_AuthorName(&bstr))) {
 					m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_AUTHOR), bstr.m_str);
 					if (bstr.Length()) {
-						fEmpty = false;
+						filled = true;
 					}
 					bstr.Empty();
 				}
 				if (SUCCEEDED(pAMMC->get_Copyright(&bstr))) {
 					m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_COPYRIGHT), bstr.m_str);
 					if (bstr.Length()) {
-						fEmpty = false;
+						filled = true;
 					}
 					bstr.Empty();
 				}
 				if (SUCCEEDED(pAMMC->get_Rating(&bstr))) {
 					m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_RATING), bstr.m_str);
 					if (bstr.Length()) {
-						fEmpty = false;
+						filled = true;
 					}
 					bstr.Empty();
 				}
@@ -13404,21 +13431,62 @@ void CMainFrame::OpenSetupInfoBar()
 					}
 					m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_DESCRIPTION), str);
 					if (bstr.Length()) {
-						fEmpty = false;
+						filled = true;
 					}
 					bstr.Empty();
 				}
-				if (!fEmpty) {
-					RecalcLayout();
+				if (filled) {
 					break;
 				}
 			}
 		}
 
+		if (!filled && m_pGB) {
+			BeginEnumFilters(m_pGB, pEF, pBF) {
+				if (!CheckMainFilter(pBF)) {
+					continue;
+				}
+
+				if (CComQIPtr<IWMHeaderInfo> pWMHI = pBF.p) {
+					WORD streamNum = 0;
+					WMT_ATTR_DATATYPE type;
+					WORD length;
+					std::vector<BYTE> value;
+
+					hr = pWMHI->GetAttributeByName(&streamNum, L"Title", &type, nullptr, &length);
+					if (SUCCEEDED(hr) && type == WMT_TYPE_STRING && length > sizeof(wchar_t)) {
+						value.resize(length);
+						hr = pWMHI->GetAttributeByName(&streamNum, L"Title", &type, value.data(), &length);
+						if (SUCCEEDED(hr)) {
+							CStringW str((LPCWSTR)value.data(), length / sizeof(wchar_t));
+							m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_TITLE), str);
+						}
+					}
+					hr = pWMHI->GetAttributeByName(&streamNum, L"Author", &type, nullptr, &length);
+					if (SUCCEEDED(hr) && type == WMT_TYPE_STRING && length > sizeof(wchar_t)) {
+						value.resize(length);
+						hr = pWMHI->GetAttributeByName(&streamNum, L"Author", &type, value.data(), &length);
+						if (SUCCEEDED(hr)) {
+							CStringW str((LPCWSTR)value.data(), length / sizeof(wchar_t));
+							m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_AUTHOR), str);
+							
+						}
+					}
+				}
+			}
+			EndEnumFilters;
+		}
+
 		if (!m_youtubeFields.title.IsEmpty()) {
 			m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_TITLE), m_youtubeFields.title);
+			filled = true;
 		}
-	} else if (GetPlaybackMode() == PM_DVD) {
+
+		if (filled) {
+			RecalcLayout();
+		}
+	}
+	else if (GetPlaybackMode() == PM_DVD) {
 		CString info('-');
 		m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_DOMAIN), info);
 		m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_LOCATION), info);
@@ -18485,7 +18553,7 @@ void CMainFrame::SendNowPlayingToApi()
 
 					// build string
 					// DVD - xxxxx|currenttitle|numberofchapters|currentchapter|titleduration
-					author.Format(L"%d", Location.TitleNum);
+					author.Format(L"%u", Location.TitleNum);
 					description.Format(L"%u", ulNumOfChapters);
 					label.Format(L"%u", Location.ChapterNum);
 				}
@@ -19704,43 +19772,57 @@ HRESULT CMainFrame::SetAudioPicture(BOOL show)
 
 		if (s.nAudioWindowMode == 1) {
 			// load image from DSMResource to show in preview & logo;
-			std::vector<LPCWSTR> mimeStrins = {
-				// available formats
-				L"image/jpeg",
-				L"image/jpg", // non-standard
-				L"image/png",
-				L"image/bmp",
-				// additional WIC components are needed
-				L"image/webp",
-				L"image/jxl",
-				L"image/heic",
-				L"image/avif",
-			};
-
 			BeginEnumFilters(m_pGB, pEF, pBF) {
-				if (CComQIPtr<IDSMResourceBag> pRB = pBF.p)
-					if (pRB && CheckMainFilter(pBF) && pRB->ResGetCount() > 0) {
-						for (DWORD i = 0; i < pRB->ResGetCount() && bLoadRes == false; i++) {
-							CComBSTR name, desc, mime;
-							BYTE* pData = nullptr;
-							DWORD len = 0;
-							if (SUCCEEDED(pRB->ResGet(i, &name, &desc, &mime, &pData, &len, nullptr))) {
-								CString mimeStr(mime);
-								mimeStr.Trim();
+				if (!CheckMainFilter(pBF)) {
+					continue;
+				}
 
-								if (std::find(mimeStrins.cbegin(), mimeStrins.cend(), mimeStr) != mimeStrins.cend()) {
-									hr = WicLoadImage(&m_pMainBitmap, true, pData, len);
-									if (SUCCEEDED(hr)) {
-										bLoadRes = true;
-									}
-									DLogIf(FAILED(hr), L"Loading image '%s' (%s) failed with error %s",
-										name, mime, HR2Str(hr));
+				if (CComQIPtr<IDSMResourceBag> pRB = pBF.p) {
+					for (DWORD i = 0; i < pRB->ResGetCount() && !bLoadRes; i++) {
+						CComBSTR name, desc, mime;
+						BYTE* pData = nullptr;
+						DWORD len = 0;
+						if (SUCCEEDED(pRB->ResGet(i, &name, &desc, &mime, &pData, &len, nullptr))) {
+							CString mimeStr(mime);
+							mimeStr.TrimLeft();
+
+							if (StartsWith(mimeStr, L"image/")) {
+								hr = WicLoadImage(&m_pMainBitmap, true, pData, len);
+								if (SUCCEEDED(hr)) {
+									bLoadRes = true;
 								}
-
-								CoTaskMemFree(pData);
+								DLogIf(FAILED(hr), L"Loading image '%s' (%s) failed with error %s",
+									name, mime, HR2Str(hr));
 							}
+
+							CoTaskMemFree(pData);
 						}
 					}
+				}
+				else if (CComQIPtr<IWMHeaderInfo> pWMHI = pBF.p) {
+					WORD streamNum = 0;
+					WMT_ATTR_DATATYPE type;
+					WORD length;
+
+					hr = pWMHI->GetAttributeByName(&streamNum, L"WM/Picture", &type, nullptr, &length);
+					if (SUCCEEDED(hr) && type == WMT_TYPE_BINARY && length > sizeof(WM_PICTURE)) {
+						std::vector<BYTE> value(length);
+						hr = pWMHI->GetAttributeByName(&streamNum, L"WM/Picture", &type, value.data(), &length);
+						if (SUCCEEDED(hr)) {
+							WM_PICTURE* wmpicture = (WM_PICTURE*)value.data();
+							hr = WicLoadImage(&m_pMainBitmap, true, wmpicture->pbData, wmpicture->dwDataLen);
+							if (SUCCEEDED(hr)) {
+								bLoadRes = true;
+							}
+							DLogIf(FAILED(hr), L"Loading image 'WM/Picture' (%s) failed with error %s",
+								wmpicture->pwszMIMEType, HR2Str(hr));
+						}
+					}
+				}
+
+				if (bLoadRes) {
+					break;
+				}
 			}
 			EndEnumFilters;
 
