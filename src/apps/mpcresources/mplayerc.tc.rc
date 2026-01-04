@@ -219,7 +219,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_MAINFRAME_ICON,5,5,21,20
     LTEXT           "MPC-BE",IDC_STATIC1,30,5,195,8,SS_NOPREFIX
-    CONTROL         "Copyright © 2002-2025 詳見 Authors.txt 檔案",IDC_AUTHORS_LINK,
+    CONTROL         "Copyright © 2002-2026 詳見 Authors.txt 檔案",IDC_AUTHORS_LINK,
                     "SysLink",WS_TABSTOP,30,17,195,8
     LTEXT           "版本：",IDC_VERSION,30,34,90,8
     LTEXT           "MPC-BE 編譯器：",IDC_STATIC,30,66,90,8
@@ -3094,11 +3094,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROPSHEET_NAME      "Name"
-    IDS_PROPSHEET_MIME      "MIME type"
-    IDS_PROPSHEET_DESC      "Description"
-    IDS_PROPSHEET_FILE_IMAGE "%hs image"
-    IDS_PROPSHEET_FILE_FONT "%hs font"
+    IDS_PROPSHEET_NAME      "名稱"
+    IDS_PROPSHEET_MIME      "MIME 類型"
+    IDS_PROPSHEET_DESC      "描述"
+    IDS_PROPSHEET_FILE_IMAGE "%hs 圖片"
+    IDS_PROPSHEET_FILE_FONT "%hs 字型"
     IDS_AUDIOWINDOW_NONE    "不變更視窗大小"
     IDS_AUDIOWINDOW_COVER   "顯示專輯封面圖片"
     IDS_AUDIOWINDOW_HIDE    "隱藏影格部份"
