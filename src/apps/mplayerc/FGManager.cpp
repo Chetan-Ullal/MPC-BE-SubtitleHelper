@@ -543,16 +543,19 @@ HRESULT CFGManager::EnumSourceFilters(LPCWSTR lpcwstrFileName, CFGFilterList& fl
 				if (ERROR_SUCCESS == exts.Open(key, L"Extensions", KEY_READ)) {
 					len = std::size(buff);
 					if (ERROR_SUCCESS == exts.QueryStringValue(ext, buff, &len)) {
-						fl.Insert(LookupFilterRegistry(GUIDFromCString(buff), m_override), 4);
+						GUID clsid = GUIDFromCString(buff);
+						fl.Insert(LookupFilterRegistry(clsid, m_override), 4);
 					}
 				}
 
 				len = std::size(buff);
 				if (ERROR_SUCCESS == key.QueryStringValue(L"Source Filter", buff, &len)) {
-					fl.Insert(LookupFilterRegistry(GUIDFromCString(buff), m_override), 5);
+					GUID clsid = GUIDFromCString(buff);
+					fl.Insert(LookupFilterRegistry(clsid, m_override), 5);
 				}
 			}
 
+			// add 'File Source (URL)' if it hasn't been blocked
 			BOOL bIsBlocked = FALSE;
 			for (const auto& pFGF : m_override) {
 				if (pFGF->GetCLSID() == CLSID_URLReader && pFGF->GetMerit() == MERIT64_DO_NOT_USE) {
@@ -560,11 +563,11 @@ HRESULT CFGManager::EnumSourceFilters(LPCWSTR lpcwstrFileName, CFGFilterList& fl
 					break;
 				}
 			}
-
 			if (!bIsBlocked) {
 				fl.Insert(DNew CFGFilterRegistry(CLSID_URLReader), 6);
 			}
-		} else {
+		}
+		else {
 			// check bytes
 
 			CRegKey key;
@@ -2073,6 +2076,7 @@ CFGManagerCustom::CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, boo
 		pFGF = DNew CFGFilterInternal<CAudioSourceFilter>(AudioSourceName);
 		pFGF->m_chkbytes.emplace_back(L"0,4,,52494646,8,4,,57415645"); // 'RIFF....WAVE'
 		pFGF->m_chkbytes.emplace_back(L"0,16,,726966662E91CF11A5D628DB04C10000,24,16,,77617665F3ACD3118CD100C04F8EDB8A"); // Wave64
+		pFGF->m_chkbytes.emplace_back(L"0,16,,52463634FFFFFFFF5741564564733634"); // RF64
 		m_source.emplace_back(pFGF);
 	}
 
