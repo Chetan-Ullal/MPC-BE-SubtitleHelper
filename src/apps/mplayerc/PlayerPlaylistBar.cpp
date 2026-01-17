@@ -1127,7 +1127,7 @@ BOOL CPlayerPlaylistBar::PreTranslateMessage(MSG* pMsg)
 				case VK_END:
 				case VK_PRIOR:
 				case VK_NEXT:
-					if (GetKeyState(VK_CONTROL) < 0) {
+					if (GetKeyState(VK_CONTROL) < 0 || m_list.GetItemCount() == 1) {
 						m_pMainFrame->PostMessageW(pMsg->message, pMsg->wParam, pMsg->lParam);
 						return TRUE;
 					}
@@ -1448,16 +1448,20 @@ void CPlayerPlaylistBar::ParsePlayList(std::list<CString>& fns, CSubtitleItemLis
 			m_pMainFrame->MakeDVDLabel(fn, empty, &label);
 			curPlayList.GetTail().m_label = label;
 			return;
-		} else if (ct == L"application/x-mpc-playlist") {
+		} else if (ct == Content::kMPCPlaylistType) {
 			if (ParseMPCPlayList(fn)) {
 				return;
 			}
-		} else if (ct == L"audio/x-mpegurl" || ct == L"application/http-live-streaming-m3u") {
+		} else if (ct == Content::kM3UPlaylistType || ct == Content::kM3ULivePlaylistType) {
 			if (ParseM3UPlayList(fn)) {
 				return;
 			}
-		} else if (ct == L"application/x-cue-metadata") {
+		} else if (ct == Content::kCUEPlaylistType) {
 			if (ParseCUEPlayList(fn)) {
+				return;
+			}
+		} else if (ct == Content::kASXPlaylistType) {
+			if (ParseASXPlayList(fn)) {
 				return;
 			}
 		}
@@ -1882,7 +1886,7 @@ bool CPlayerPlaylistBar::ParseM3UPlayList(CString fn)
 			Content::Online::Clear(fn);
 			std::list<CString> redir;
 			const auto ct = Content::GetType(fn, &redir);
-			if (ct == L"audio/x-mpegurl" || ct == L"application/http-live-streaming-m3u") {
+			if (ct == Content::kM3UPlaylistType || ct == Content::kM3ULivePlaylistType) {
 				bNeedParse = ParseM3UPlayList(fn);
 			}
 		}
@@ -1985,6 +1989,86 @@ bool CPlayerPlaylistBar::ParseCUEPlayList(CString fn)
 			pli.m_fi = fi;
 
 			curPlayList.Append(pli, AfxGetAppSettings().bPlaylistDetermineDuration);
+		}
+	}
+
+	return (curPlayList.GetCount() > c);
+}
+
+bool CPlayerPlaylistBar::ParseASXPlayList(CString fn)
+{
+	Content::Online::Disconnect(fn);
+
+	CWebTextFile f(CP_UTF8, CP_ACP, false, 3 * MEGABYTE);
+	if (!f.Open(fn)) {
+		return false;
+	}
+
+	CStringW base;
+	if (f.GetRedirectURL().GetLength()) {
+		base = f.GetRedirectURL();
+	} else {
+		base = fn;
+	}
+
+	if (fn.Find(L"://") > 0) {
+		base.Truncate(base.ReverseFind('/'));
+	} else {
+		RemoveFileSpec(base);
+	}
+
+	INT_PTR c = curPlayList.GetCount();
+
+	CStringW str;
+	CStringW allContents;
+	while (f.ReadString(str)) {
+		FastTrim(str);
+		if (str.IsEmpty() || (allContents.IsEmpty() && !StartsWith(str, L"<ASX"))) {
+			continue;
+		}
+
+		allContents.Append(str);
+	}
+
+	if (!allContents.IsEmpty()) {
+		auto bPlaylistDetermineDuration = AfxGetAppSettings().bPlaylistDetermineDuration;
+
+		const std::wregex entryRegex(L"<Entry>(.+?)</Entry>", std::regex_constants::icase);
+		const std::wregex titleRegex(L"<title>(.+?)</title>", std::regex_constants::icase);
+		const std::wregex refRegex(L"<REF HREF[ \\t]*=[ \\t]*\"([^\"\\n]+)\"", std::regex_constants::icase);
+
+		auto getMatch = [](const wchar_t* str, const std::wregex& regex) -> CStringW {
+			std::wcmatch match;
+			if (std::regex_search(str, match, regex) && match.size() == 2) {
+				CStringW entry(match[1].first, match[1].length());
+				return entry;
+			}
+
+			return {};
+		};
+
+		std::wcmatch match;
+		auto start = allContents.GetString();
+		while (std::regex_search(start, match, entryRegex) && match.size() == 2) {
+			start = match[0].second;
+
+			CStringW entry(match[1].first, match[1].length());
+			if (!entry.IsEmpty()) {
+				auto path = getMatch(entry.GetString(), refRegex);
+				if (!path.IsEmpty()) {
+					path = MakePath(CombinePath(base, path));
+					if (!fn.CompareNoCase(path)) {
+						continue;
+					}
+
+					auto title = getMatch(entry.GetString(), titleRegex);
+
+					CPlaylistItem pli;
+					pli.m_fi = path;
+					pli.m_label = title;
+					curPlayList.Append(pli, bPlaylistDetermineDuration);
+				}
+			}
 		}
 	}
 
