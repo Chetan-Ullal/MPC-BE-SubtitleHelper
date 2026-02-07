@@ -1,5 +1,5 @@
 /*
- * (C) 2014-2025 see Authors.txt
+ * (C) 2014-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,6 +22,7 @@
 
 #include "IMPCVideoDec.h"
 #include <stdint.h>
+#include "../BaseVideoFilter/VideoFormats.h"
 
 const MPCPixelFormat YUV420_8[]  = {PixFmt_NV12, PixFmt_YV12, PixFmt_YUY2, PixFmt_YV16, PixFmt_YV24, PixFmt_AYUV, PixFmt_P010, PixFmt_P016, PixFmt_P210, PixFmt_P216, PixFmt_Y410, PixFmt_YUV444P16, PixFmt_Y416, PixFmt_None};
 const MPCPixelFormat YUV422_8[]  = {PixFmt_YUY2, PixFmt_YV16, PixFmt_YV24, PixFmt_AYUV, PixFmt_NV12, PixFmt_YV12, PixFmt_P210, PixFmt_P216, PixFmt_Y410, PixFmt_P010, PixFmt_P016, PixFmt_YUV444P16, PixFmt_Y416, PixFmt_None};
@@ -39,22 +40,16 @@ const MPCPixelFormat RGB_8[]     = {PixFmt_RGB32, PixFmt_RGB48, PixFmt_None};
 const MPCPixelFormat RGB_16[]    = {PixFmt_RGB48, PixFmt_RGB32, PixFmt_None};
 
 struct SW_OUT_FMT {
-	const LPCWSTR				name;
-	const DWORD					biCompression;
-	const GUID*					subtype;
+	VFormatDesc desc;
 	const int					bpp;
-	const int					codedbytes;
-	const int					planes;
-	const int					planeHeight[4];
 	const int					planeWidth[4];
+	const int					planeHeight[4];
 	const enum AVPixelFormat	av_pix_fmt;
 	const uint8_t				chroma_w;
 	const uint8_t				chroma_h;
-	const int					actual_bpp;
-	const int					luma_bits;
 };
 
-extern SW_OUT_FMT s_sw_formats[];
+extern const SW_OUT_FMT s_sw_formats[];
 
 const SW_OUT_FMT* GetSWOF(int pixfmt);
 LPCWSTR GetChromaSubsamplingStr(enum AVPixelFormat av_pix_fmt);
