@@ -53,21 +53,11 @@ AP4_StszAtom::AP4_StszAtom(AP4_Size size, AP4_ByteStream& stream) :
     stream.ReadUI32(m_SampleCount);
 
     unsigned long sample_count = m_SampleCount;
-    m_SampleCount = 0;
     if (m_SampleSize == 0) { // means that the samples have different sizes
         while (sample_count--) {
             AP4_UI32 entry_size;
             if (stream.ReadUI32(entry_size) == AP4_SUCCESS) {
-                AP4_Offset offset;
-                if (stream.Tell(offset) == AP4_SUCCESS) {
-                    AP4_Size size;
-                    if (stream.GetSize(size) == AP4_SUCCESS) {
-                        if ((offset + entry_size) <= size) {
-                            m_Entries.Append(entry_size);
-                            m_SampleCount++;
-                        }
-                    }
-                }
+                m_Entries.Append(entry_size);
             }
         }
     }

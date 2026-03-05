@@ -347,7 +347,7 @@ END
 BEGIN DIALOGEX IDD_PPAGEMISC LINES 36
 5		"Ugrás távolságok (kicsi, közepes, nagy, tizedmásodpercben)"
 9		"Alapértelmezett"
-10		"Ne használja a 'keresés a mappában' parancsot az 'Ugrás vissza/előre' parancsokra, ha csak egy elem van a lejátszási listában"
+10		"A 'keresés a mappában' letiltása az 'Előző/Következő' gombnál, amikor a lejátszási listában csak egy elem van"
 12		"Megakadályozza a Kis méretet, amikor a Teljes képernyő nem az alap monitoron van"
 14		"A mutató automatikus elrejtése ablakos lejátszás közben"
 16		"Nulla óra megjelenítése az állapotsorban és az OSD-n"
@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Visszaállítás"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Felirat megjelenítő:"
-7		"Útvonalak automatikus betöltése"
-9		"Visszaállítás"
-10		"A külső feliratokat részesítse előnyben a beágyazott feliratok helyett"
-12		"Ne töltsön beágyazott feliratokat"
-13		"A feliratfájlok automatikus újratöltése a módosítás észlelése után"
-15		"A Subresync használata"
-17		"Alapértelmezett kódlap:"
-19		"Kódlap automatikus észlelése"
+7		"Tulajdonságok"
+8		"Útvonalak automatikus betöltése"
+10		"Visszaállítás"
+11		"A külső feliratokat részesítse előnyben a beágyazott feliratok helyett"
+13		"Ne töltsön beágyazott feliratokat"
+14		"A feliratfájlok automatikus újratöltése a módosítás észlelése után"
+16		"A Subresync használata"
+18		"Alapértelmezett kódlap:"
+20		"Kódlap automatikus észlelése"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

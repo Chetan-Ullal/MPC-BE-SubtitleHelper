@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Resetează"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Randorul de subtitrări:"
-7		"Căile pentru încărcarea automată"
-9		"Resetează"
-10		"Preferă subtitrările externe în locul celor integrate"
-12		"Ignoră subtitrările integrate"
-13		"Reîncarcă automat fișierele de subtitrări după ce se detectează modificările"
-15		"Folosește modul de resincronizare a subtitrărilor (Subresync)"
-17		"Pagina de codificare implicită:"
-19		"Detectează în mod automat pagina de codificare"
+7		"Proprietăți"
+8		"Căile pentru încărcarea automată"
+10		"Resetează"
+11		"Preferă subtitrările externe în locul celor integrate"
+13		"Ignoră subtitrările integrate"
+14		"Reîncarcă automat fișierele de subtitrări după ce se detectează modificările"
+16		"Folosește modul de resincronizare a subtitrărilor (Subresync)"
+18		"Pagina de codificare implicită:"
+20		"Detectează în mod automat pagina de codificare"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

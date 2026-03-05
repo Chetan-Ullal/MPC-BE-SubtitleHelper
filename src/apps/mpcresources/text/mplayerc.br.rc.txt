@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Resetar"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Renderizador-legenda:"
-7		"Autocarregar caminhos"
-9		"Resetar"
-10		"Preferir legendas externas em vez de legendas incorporadas"
-12		"Ignorar legendas incorporadas"
-13		"Recarregar automaticamente os arquivos de legenda após detectar a modificação"
-15		"Usar Subresync"
-17		"Default code page:"
-19		"Automatically detect code page"
+7		"Propriedades"
+8		"Autocarregar caminhos"
+10		"Resetar"
+11		"Preferir legendas externas em vez de legendas incorporadas"
+13		"Ignorar legendas incorporadas"
+14		"Recarregar automaticamente os arquivos de legenda após detectar a modificação"
+16		"Usar Subresync"
+18		"Default code page:"
+20		"Automatically detect code page"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

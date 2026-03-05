@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Resetuj"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Renderer napisów:"
-7		"Położenia napisów"
-9		"Domyślne"
-10		"Wczytuj zewnętrzne napisy zamiast zawarte w kontenerze"
-12		"Zaniechaj wczytywanie napisów zawartych w kontenerze"
-13		"Automatycznie przeładuj plik napisów, gdy wykryto zmiany"
-15		"Użyj Subresync"
-17		"Default code page:"
-19		"Automatically detect code page"
+7		"Properties"
+8		"Położenia napisów"
+10		"Domyślne"
+11		"Wczytuj zewnętrzne napisy zamiast zawarte w kontenerze"
+13		"Zaniechaj wczytywanie napisów zawartych w kontenerze"
+14		"Automatycznie przeładuj plik napisów, gdy wykryto zmiany"
+16		"Użyj Subresync"
+18		"Default code page:"
+20		"Automatically detect code page"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

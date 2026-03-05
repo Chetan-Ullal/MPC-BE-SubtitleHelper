@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -878,12 +878,16 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 	if (fmtsize < cbFormat) { // extra and unknown data
 		sl.emplace_back(L"");
 
-		ULONG extrasize = cbFormat - fmtsize;
+		const ULONG extrasize = cbFormat - fmtsize;
 		str.Format(L"Extradata: %u", extrasize);
 		sl.emplace_back(str);
-		for (ULONG i = 0, j = (extrasize + 15) & ~15; i < j; i += 16) {
+
+		const ULONG printextrasize = extrasize <= 4 * KILOBYTE + 16 ? extrasize : 4 * KILOBYTE;
+
+		ULONG i = 0;
+		for (ULONG j = (printextrasize + 15) & ~15; i < j; i += 16) {
 			str.Format(L"%04x:", i);
-			ULONG line_end = std::min(i + 16, extrasize);
+			ULONG line_end = std::min(i + 16, printextrasize);
 
 			for (ULONG k = i; k < line_end; k++) {
 				str.AppendFormat(L" %02x", pbFormat[fmtsize + k]);
@@ -902,6 +906,11 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 			}
 			str += ch;
 
+			sl.emplace_back(str);
+		}
+
+		if (extrasize > printextrasize) {
+			str.Format(L"%04x: ...", i);
 			sl.emplace_back(str);
 		}
 	}

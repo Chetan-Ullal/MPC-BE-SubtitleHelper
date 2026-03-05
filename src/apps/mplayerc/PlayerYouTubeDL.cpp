@@ -155,7 +155,7 @@ namespace YoutubeDL
 
 		if (!exitcode && buf_out.GetLength()) {
 			rapidjson::Document d;
-			const int k = buf_out.Find("\n{\"id\": ", 64); // check presence of second JSON root element and ignore it
+			const int k = buf_out.Find("\n{\"", 64); // check presence of second JSON root element and ignore it
 			if (!d.Parse(buf_out.GetString(), k > 0 ? k : buf_out.GetLength()).HasParseError()) {
 				bool bIsYoutube = Youtube::CheckURL(url);
 				int iTag = 1;
@@ -233,9 +233,11 @@ namespace YoutubeDL
 
 								profile->format = Youtube::yformat::y_mp4_other;
 								if (EndsWith(protocol, "m3u8") || EndsWith(protocol, "m3u8_native")) {
+									/*
 									if (bIsLive && acodec == "none") {
 										continue;
 									}
+									*/
 									profile->format = Youtube::yformat::y_stream;
 								} else if (ext == L"mp4") {
 									if (StartsWith(vcodec, "avc1")) {
@@ -283,6 +285,12 @@ namespace YoutubeDL
 
 								if (acodec == "none") {
 									bVideoOnly = true;
+								}
+							}
+
+							if (y_fields.userAgent.IsEmpty()) {
+								if (auto http_headers = GetJsonObject(format, "http_headers")) {
+									getJsonValue(*http_headers, "User-Agent", y_fields.userAgent);
 								}
 							}
 						}

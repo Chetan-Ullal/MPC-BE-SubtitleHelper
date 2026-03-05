@@ -1,5 +1,5 @@
 /*
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,6 +22,7 @@
 #include <clsids.h>
 #include "MainFrm.h"
 #include "PPageSubtitles.h"
+#include "ComPropertySheet.h"
 
 const static uint16_t codepages[] = {
 	1250,
@@ -173,23 +174,12 @@ void CPPageSubtitles::UpdateSubRenderersList(int select)
 	m_cbSubtitleRenderer.AddString(str); // SUBRNDT_VSFILTER
 
 	str = L"XySubFilter";
-	if (!IsCLSIDRegistered(CLSID_XySubFilter_AutoLoader)) {
+	if (!IsCLSIDRegistered(CLSID_XySubFilter)) {
 		str += L" " + ResStr(IDS_REND_NOT_INSTALLED);
 	} else if (!VRwithSR) {
 		str += L" " + ResStr(IDS_REND_NOT_AVAILABLE);
 	}
 	m_cbSubtitleRenderer.AddString(str); // SUBRNDT_XYSUBFILTER
-
-#if ENABLE_ASSFILTERMOD
-	str = L"AssFilterMod (" + ResStr(IDS_AG_NOTRECOMMENDED) + ")";
-	if (!IsCLSIDRegistered(CLSID_AssFilterMod)) {
-		str += L" " + ResStr(IDS_REND_NOT_INSTALLED);
-	}
-	else if (!VRwithSR) {
-		str += L" " + ResStr(IDS_REND_NOT_AVAILABLE);
-	}
-	m_cbSubtitleRenderer.AddString(str); // SUBRNDT_ASSFILTERMOD
-#endif
 
 	if (m_cbSubtitleRenderer.SetCurSel(select) == CB_ERR) {
 		m_cbSubtitleRenderer.SetCurSel(1);
@@ -200,6 +190,7 @@ void CPPageSubtitles::UpdateSubRenderersList(int select)
 
 BEGIN_MESSAGE_MAP(CPPageSubtitles, CPPageBase)
 	ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, OnSubRendPropClick)
 	ON_CBN_SELCHANGE(IDC_COMBO2, OnSubRendModified)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK2, OnUpdateISRSelect)
 	ON_UPDATE_COMMAND_UI(IDC_CHECK3, OnUpdateISRSelect)
@@ -217,7 +208,43 @@ void CPPageSubtitles::OnBnClickedButton1()
 
 void CPPageSubtitles::OnSubRendModified()
 {
+	GetDlgItem(IDC_BUTTON2)->EnableWindow(FALSE);
+
+	switch (m_cbSubtitleRenderer.GetCurSel()) {
+	case 2:
+		if (IsCLSIDRegistered(CLSID_VSFilter_autoloading)) {
+			GetDlgItem(IDC_BUTTON2)->EnableWindow(TRUE);
+		}
+		break;
+	case 3:
+		if (IsCLSIDRegistered(CLSID_XySubFilter)) {
+			GetDlgItem(IDC_BUTTON2)->EnableWindow(TRUE);
+		}
+		break;
+	}
+
 	SetModified();
+}
+
+void CPPageSubtitles::OnSubRendPropClick()
+{
+	CLSID clsid;
+	switch (m_cbSubtitleRenderer.GetCurSel()) {
+	case 2: clsid = CLSID_VSFilter_autoloading; break;
+	case 3: clsid = CLSID_XySubFilter;          break;
+	default:
+		return;
+	}
+
+	CComPtr<IBaseFilter> pBF;
+	if (SUCCEEDED(pBF.CoCreateInstance(clsid))) {
+		CComQIPtr<ISpecifyPropertyPages> pSPP = pBF;
+		if (pSPP) {
+			CComPropertySheet ps(ResStr(IDS_PROPSHEET_PROPERTIES), this);
+			ps.AddPages(pSPP);
+			ps.DoModal();
+		}
+	}
 }
 
 void CPPageSubtitles::OnUpdateISRSelect(CCmdUI* pCmdUI)

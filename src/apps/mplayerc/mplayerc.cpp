@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -27,7 +27,6 @@
 #include "MainFrm.h"
 #include "Misc.h"
 #include <winternl.h>
-#include <psapi.h>
 #include "Ifo.h"
 #include "MultiMonitor.h"
 #include "DSUtil/SysVersion.h"
@@ -177,6 +176,10 @@ CMPlayerCApp::CMPlayerCApp()
 
 CMPlayerCApp::~CMPlayerCApp()
 {
+	if (m_hNTDLL) {
+		FreeLibrary(m_hNTDLL);
+	}
+
 	// Wait for any pending I/O operations to be canceled
 	while (WAIT_IO_COMPLETION == SleepEx(0, TRUE));
 }
@@ -582,6 +585,93 @@ NTSTATUS WINAPI Mine_NtQueryInformationProcess(HANDLE ProcessHandle, PROCESSINFO
 	return nRet;
 }
 
+struct blocked_module_t {
+	const wchar_t* name;
+	size_t name_len;
+};
+
+// list of modules that can cause crashes or other unwanted behavior
+static const blocked_module_t moduleblocklist[] = {
+#if WIN64
+	{L"\\ff_vfw.dll", 11},   // ffdshow vfw codec
+	{L"\\lvcod64.dll", 12},  // Logitech Video (I420) codec
+#else
+	{L"\\pvljpg20.dll", 13}, // PICVideo Lossles JPEG Codec
+#endif
+};
+
+bool IsBlockedModule(wchar_t* modulename)
+{
+	size_t mod_name_len = wcslen(modulename);
+
+	for (const auto& b : moduleblocklist) {
+		if (mod_name_len > b.name_len) {
+			wchar_t* dll_ptr = modulename + mod_name_len - b.name_len;
+			if (_wcsicmp(dll_ptr, b.name) == 0) {
+				DLog(L"Blocked module load: %s", modulename);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+#define STATUS_UNSUCCESSFUL ((NTSTATUS)0xC0000001L)
+
+typedef enum _SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 } SECTION_INHERIT;
+
+typedef enum _SECTION_INFORMATION_CLASS {
+	SectionBasicInformation = 0,
+	SectionImageInformation
+} SECTION_INFORMATION_CLASS;
+
+typedef struct _SECTION_BASIC_INFORMATION {
+	PVOID BaseAddress;
+	ULONG Attributes;
+	LARGE_INTEGER Size;
+} SECTION_BASIC_INFORMATION;
+
+NTSTATUS(STDMETHODCALLTYPE* Real_NtMapViewOfSection)(HANDLE, HANDLE, PVOID, ULONG_PTR, SIZE_T, PLARGE_INTEGER, PSIZE_T, SECTION_INHERIT, ULONG, ULONG) = nullptr;
+NTSTATUS(STDMETHODCALLTYPE* Real_NtUnmapViewOfSection)(HANDLE, PVOID) = nullptr;
+NTSTATUS(STDMETHODCALLTYPE* Real_NtQuerySection)(HANDLE, SECTION_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T) = nullptr;
+DWORD(STDMETHODCALLTYPE* Real_K32GetMappedFileNameW)(HANDLE, LPVOID, LPWSTR, DWORD) = nullptr;
+
+NTSTATUS STDMETHODCALLTYPE Mine_NtMapViewOfSection(HANDLE SectionHandle, HANDLE ProcessHandle, PVOID* BaseAddress, ULONG_PTR ZeroBits, SIZE_T CommitSize,
+	PLARGE_INTEGER SectionOffset, PSIZE_T ViewSize, SECTION_INHERIT InheritDisposition, ULONG AllocationType, ULONG Win32Protect)
+{
+	NTSTATUS ret = Real_NtMapViewOfSection(SectionHandle, ProcessHandle, BaseAddress, ZeroBits, CommitSize, SectionOffset, ViewSize, InheritDisposition, AllocationType, Win32Protect);
+
+	// Verify map and process
+	if (ret < 0 || ProcessHandle != GetCurrentProcess())
+		return ret;
+
+	// Fetch section information
+	SIZE_T wrote = 0;
+	SECTION_BASIC_INFORMATION section_information;
+	if (Real_NtQuerySection(SectionHandle, SectionBasicInformation, &section_information, sizeof(section_information), &wrote) < 0)
+		return ret;
+
+	// Verify fetch was successful
+	if (wrote != sizeof(section_information))
+		return ret;
+
+	// We're not interested in non-image maps
+	if (!(section_information.Attributes & SEC_IMAGE))
+		return ret;
+
+	// Get the actual filename if possible
+	wchar_t fileName[MAX_PATH];
+	if (Real_K32GetMappedFileNameW(ProcessHandle, *BaseAddress, fileName, std::size(fileName)) == 0)
+		return ret;
+
+	if (IsBlockedModule(fileName)) {
+		Real_NtUnmapViewOfSection(ProcessHandle, BaseAddress);
+		ret = STATUS_UNSUCCESSFUL;
+	}
+
+	return ret;
+}
+
 LONG WINAPI Mine_ChangeDisplaySettingsEx(LONG ret, DWORD dwFlags, LPVOID lParam)
 {
 	if (dwFlags & CDS_VIDEOPARAMETERS) {
@@ -720,6 +810,26 @@ MMRESULT WINAPI Mine_mixerSetControlDetails(HMIXEROBJ hmxobj, LPMIXERCONTROLDETA
 	return Real_mixerSetControlDetails(hmxobj, pmxcd, fdwDetails);
 }
 
+void CMPlayerCApp::HookModuleLoading()
+{
+	if (m_hNTDLL && !Real_NtMapViewOfSection) {
+		Real_NtQueryInformationProcess = (decltype(Real_NtQueryInformationProcess))GetProcAddress(m_hNTDLL, "NtQueryInformationProcess");
+
+		if (Real_NtQueryInformationProcess) {
+			DetourAttach(&(PVOID&)Real_NtQueryInformationProcess, (PVOID)Mine_NtQueryInformationProcess);
+		}
+
+		Real_NtMapViewOfSection = (decltype(Real_NtMapViewOfSection))GetProcAddress(m_hNTDLL, "NtMapViewOfSection");
+		Real_NtUnmapViewOfSection = (decltype(Real_NtUnmapViewOfSection))GetProcAddress(m_hNTDLL, "NtUnmapViewOfSection");
+		Real_NtQuerySection = (decltype(Real_NtQuerySection))GetProcAddress(m_hNTDLL, "NtQuerySection");
+		Real_K32GetMappedFileNameW = (decltype(Real_K32GetMappedFileNameW))GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "K32GetMappedFileNameW");
+
+		if (Real_NtMapViewOfSection && Real_NtUnmapViewOfSection && Real_NtQuerySection && Real_K32GetMappedFileNameW) {
+			DetourAttach(&(PVOID&)Real_NtMapViewOfSection, (PVOID)Mine_NtMapViewOfSection);
+		}
+	}
+}
+
 static BOOL SetHeapOptions()
 {
 	HMODULE hLib = LoadLibraryW(L"kernel32.dll");
@@ -773,12 +883,12 @@ BOOL CMPlayerCApp::InitInstance()
 	DetourAttach(&(PVOID&)Real_mixerSetControlDetails, (PVOID)Mine_mixerSetControlDetails);
 	DetourAttach(&(PVOID&)Real_DeviceIoControl, (PVOID)Mine_DeviceIoControl);
 
-	HMODULE hNTDLL = LoadLibraryW(L"ntdll.dll");
+	m_hNTDLL = LoadLibraryW(L"ntdll.dll");
 
 #if 0
 #ifndef _DEBUG // Disable NtQueryInformationProcess in debug (prevent VS debugger to stop on crash address)
-	if (hNTDLL) {
-		Real_NtQueryInformationProcess = (decltype(Real_NtQueryInformationProcess))GetProcAddress (hNTDLL, "NtQueryInformationProcess");
+	if (m_hNTDLL) {
+		Real_NtQueryInformationProcess = (decltype(Real_NtQueryInformationProcess))GetProcAddress (m_hNTDLL, "NtQueryInformationProcess");
 
 		if (Real_NtQueryInformationProcess) {
 			DetourAttach(&(PVOID&)Real_NtQueryInformationProcess, (PVOID)Mine_NtQueryInformationProcess);
@@ -786,6 +896,7 @@ BOOL CMPlayerCApp::InitInstance()
 	}
 #endif
 #endif
+
 
 	CFilterMapper2::Init();
 
@@ -1086,9 +1197,9 @@ BOOL CMPlayerCApp::InitInstance()
 	pFrame->SetFocus();
 
 	// set HIGH I/O Priority for better playback perfomance
-	if (hNTDLL) {
+	if (m_hNTDLL) {
 		typedef NTSTATUS (WINAPI *FUNC_NTSETINFORMATIONPROCESS)(HANDLE, ULONG, PVOID, ULONG);
-		FUNC_NTSETINFORMATIONPROCESS NtSetInformationProcess = (FUNC_NTSETINFORMATIONPROCESS)GetProcAddress(hNTDLL, "NtSetInformationProcess");
+		FUNC_NTSETINFORMATIONPROCESS NtSetInformationProcess = (FUNC_NTSETINFORMATIONPROCESS)GetProcAddress(m_hNTDLL, "NtSetInformationProcess");
 
 		if (NtSetInformationProcess && SetPrivilege(SE_INC_BASE_PRIORITY_NAME)) {
 			ULONG IoPriority = 3;
@@ -1096,9 +1207,6 @@ BOOL CMPlayerCApp::InitInstance()
 			NTSTATUS NtStatus = NtSetInformationProcess(GetCurrentProcess(), ProcessIoPriority, &IoPriority, sizeof(ULONG));
 			DLog(L"Set I/O Priority - %d", NtStatus);
 		}
-
-		FreeLibrary(hNTDLL);
-		hNTDLL = nullptr;
 	}
 
 	m_mutexOneInstance.Release();

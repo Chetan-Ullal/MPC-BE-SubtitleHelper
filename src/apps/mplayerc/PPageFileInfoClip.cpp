@@ -66,7 +66,6 @@ CPPageFileInfoClip::CPPageFileInfoClip(const CStringW& fn, IFilterGraph* pFG)
 			if (SUCCEEDED(pAMMC->get_Title(&bstr)) && bstr.Length()) {
 				m_clip = bstr.m_str;
 				bstr.Empty();
-				break;
 			}
 			if (SUCCEEDED(pAMMC->get_AuthorName(&bstr)) && bstr.Length()) {
 				m_author = bstr.m_str;

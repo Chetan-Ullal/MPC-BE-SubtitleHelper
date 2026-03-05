@@ -2660,6 +2660,7 @@ CFGManagerCustom::CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, boo
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV12);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV16);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV24);
+	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_AYUV);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_BGR48);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_BGRA64);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_b48r);
@@ -2749,45 +2750,34 @@ CFGManagerCustom::CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, boo
 		case SUBRNDT_ISR:
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_DO_NOT_USE));
+
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
 			break;
 		case SUBRNDT_VSFILTER:
+			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_PREFERRED));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_ABOVE_DSHOW));
+
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
 			break;
 		case SUBRNDT_XYSUBFILTER:
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
+
 			if (VRwithSR) {
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_ABOVE_DSHOW));
+				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_PREFERRED));
+				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_ABOVE_DSHOW));
 			} else {
 				// Prevent XySubFilter from connecting while renderer is not compatible
 				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
 				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
 			}
-#if ENABLE_ASSFILTERMOD
-		case SUBRNDT_ASSFILTERMOD:
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
-			if (VRwithSR) {
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_ABOVE_DSHOW));
-			} else {
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
-			}
-			break;
-#endif
 	}
+
+	// blocking the problematic AssFilterMod
+	m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
+	m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
 
 	// Overrides
 	WORD merit_low = 1;
@@ -2826,15 +2816,20 @@ STDMETHODIMP CFGManagerCustom::AddFilter(IBaseFilter* pBF, LPCWSTR pName)
 {
 	CAutoLock cAutoLock(this);
 
-	HRESULT hr;
+	CLSID clsid = GetCLSID(pBF);
 
-	if (FAILED(hr = __super::AddFilter(pBF, pName))) {
+	if (clsid == CLSID_AVIDec/* || clsid == CLSID_ACMWrapper*/) {
+		AfxGetMyApp()->HookModuleLoading();
+	}
+
+	HRESULT hr = __super::AddFilter(pBF, pName);
+	if (FAILED(hr)) {
 		return hr;
 	}
 
 	CAppSettings& s = AfxGetAppSettings();
 
-	if (GetCLSID(pBF) == CLSID_DMOWrapperFilter) {
+	if (clsid == CLSID_DMOWrapperFilter) {
 		if (CComQIPtr<IPropertyBag> pPB = pBF) {
 			CComVariant var(true);
 			pPB->Write(CComBSTR(L"_HIRESOUTPUT"), &var);

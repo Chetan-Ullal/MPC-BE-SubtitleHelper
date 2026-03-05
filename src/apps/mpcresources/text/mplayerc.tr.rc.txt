@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Sıfırla"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Alt yazı işleyici:"
-7		"Oto yükleme konumları"
-9		"Sıfırla"
-10		"Her zaman harici alt yazıları tercih et"
-12		"Gömülü alt yazıları yükleme"
-13		"Alt yazıda değişiklik algılanırsa oto-yeniden yükle"
-15		"Alt yazı Eşzamanlama kullan"
-17		"Varsayılan kod sayfası:"
-19		"Kod sayfasını otomatik olarak algıla"
+7		"Özellikler"
+8		"Oto yükleme konumları"
+10		"Sıfırla"
+11		"Her zaman harici alt yazıları tercih et"
+13		"Gömülü alt yazıları yükleme"
+14		"Alt yazıda değişiklik algılanırsa oto-yeniden yükle"
+16		"Alt yazı Eşzamanlama kullan"
+18		"Varsayılan kod sayfası:"
+20		"Kod sayfasını otomatik olarak algıla"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

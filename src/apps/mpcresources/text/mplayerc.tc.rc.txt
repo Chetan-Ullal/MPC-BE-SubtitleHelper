@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"重設"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"字幕繪製器："
-7		"自動載入路徑"
-9		"重設"
-10		"存在時預設優先使用外部字幕檔案"
-12		"不載入內嵌字幕"
-13		"偵測到變更後自動重新載入字幕檔案"
-15		"啟用字幕同步編輯器"
-17		"預設字碼頁："
-19		"自動偵測字碼頁"
+7		"內容"
+8		"自動載入路徑"
+10		"重設"
+11		"存在時預設優先使用外部字幕檔案"
+13		"不載入內嵌字幕"
+14		"偵測到變更後自動重新載入字幕檔案"
+16		"啟用字幕同步編輯器"
+18		"預設字碼頁："
+20		"自動偵測字碼頁"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

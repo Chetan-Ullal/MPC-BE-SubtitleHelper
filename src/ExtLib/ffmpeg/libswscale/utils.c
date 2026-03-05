@@ -63,6 +63,10 @@
 #include "swscale_internal.h"
 #include "graph.h"
 
+#if CONFIG_VULKAN
+#include "vulkan/ops.h"
+#endif
+
 /**
  * Allocate and return an SwsContext without performing initialization.
  */
@@ -766,7 +770,7 @@ av_cold int ff_sws_fill_xyztables(SwsInternal *c)
     return 0;
 }
 
-static int handle_jpeg(enum AVPixelFormat *format)
+static int handle_jpeg(/* enum AVPixelFormat */ int *format)
 {
     switch (*format) {
     case AV_PIX_FMT_YUVJ420P:
@@ -804,7 +808,7 @@ static int handle_jpeg(enum AVPixelFormat *format)
     }
 }
 
-static int handle_0alpha(enum AVPixelFormat *format)
+static int handle_0alpha(/* enum AVPixelFormat */ int *format)
 {
     switch (*format) {
     case AV_PIX_FMT_0BGR    : *format = AV_PIX_FMT_ABGR   ; return 1;
@@ -815,7 +819,7 @@ static int handle_0alpha(enum AVPixelFormat *format)
     }
 }
 
-static int handle_xyz(enum AVPixelFormat *format)
+static int handle_xyz(/* enum AVPixelFormat */ int *format)
 {
     switch (*format) {
     case AV_PIX_FMT_XYZ12BE : *format = AV_PIX_FMT_RGB48BE; return 1;
@@ -1027,7 +1031,7 @@ int sws_getColorspaceDetails(SwsContext *sws, int **inv_table,
 
 SwsContext *sws_alloc_context(void)
 {
-    SwsInternal *c = (SwsInternal *) av_mallocz(sizeof(SwsInternal));
+    SwsInternal *c = av_mallocz(sizeof(*c) + SWSINTERNAL_ADDITIONAL_ASM_SIZE);
     if (!c)
         return NULL;
 
@@ -1725,24 +1729,9 @@ av_cold int ff_sws_init_single_context(SwsContext *sws, SwsFilter *srcFilter,
             goto fail;
 
 #if HAVE_ALTIVEC
-        c->vYCoeffsBank = av_malloc_array(sws->dst_h, c->vLumFilterSize * sizeof(*c->vYCoeffsBank));
-        c->vCCoeffsBank = av_malloc_array(c->chrDstH, c->vChrFilterSize * sizeof(*c->vCCoeffsBank));
-        if (c->vYCoeffsBank == NULL || c->vCCoeffsBank == NULL)
-            goto nomem;
-
-        for (i = 0; i < c->vLumFilterSize * sws->dst_h; i++) {
-            int j;
-            short *p = (short *)&c->vYCoeffsBank[i];
-            for (j = 0; j < 8; j++)
-                p[j] = c->vLumFilter[i];
-        }
-
-        for (i = 0; i < c->vChrFilterSize * c->chrDstH; i++) {
-            int j;
-            short *p = (short *)&c->vCCoeffsBank[i];
-            for (j = 0; j < 8; j++)
-                p[j] = c->vChrFilter[i];
-        }
+        ret = ff_sws_init_altivec_bufs(c);
+        if (ret < 0)
+            goto fail;
 #endif
     }
 
@@ -2259,6 +2248,10 @@ void sws_freeContext(SwsContext *sws)
     if (!c)
         return;
 
+#if CONFIG_VULKAN
+    ff_sws_vk_uninit(sws);
+#endif
+
     for (i = 0; i < FF_ARRAY_ELEMS(c->graph); i++)
         ff_sws_graph_free(&c->graph[i]);
 
@@ -2282,8 +2275,7 @@ void sws_freeContext(SwsContext *sws)
     av_freep(&c->hLumFilter);
     av_freep(&c->hChrFilter);
 #if HAVE_ALTIVEC
-    av_freep(&c->vYCoeffsBank);
-    av_freep(&c->vCCoeffsBank);
+    ff_sws_free_altivec_bufs(c);
 #endif
 
     av_freep(&c->vLumFilterPos);

@@ -347,7 +347,7 @@ END
 BEGIN DIALOGEX IDD_PPAGEMISC LINES 36
 5		"Jump distances (small, medium, large in ms)"
 9		"Default"
-10		"Don't use 'search in folder' on commands 'Skip back/forward' when only one item in playlist"
+10		"Disable 'search in folder' on 'Previous/Next' when playlist has only one item"
 12		"Prevent from MINIMIZE when Fullscreen on non default monitor"
 14		"Auto-hide the pointer during playback in windowed mode"
 16		"Show zero hours in status bar and OSD"
@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Reset"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Subtitle renderer:"
-7		"Autoload paths"
-9		"Reset"
-10		"Always default to external subtitles if available"
-12		"Do not load embedded subtitles"
-13		"Auto-reload subtitle files after detecting modification"
-15		"Use Subresync"
-17		"Default code page:"
-19		"Automatically detect code page"
+7		"Properties"
+8		"Autoload paths"
+10		"Reset"
+11		"Always default to external subtitles if available"
+13		"Do not load embedded subtitles"
+14		"Auto-reload subtitle files after detecting modification"
+16		"Use Subresync"
+18		"Default code page:"
+20		"Automatically detect code page"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

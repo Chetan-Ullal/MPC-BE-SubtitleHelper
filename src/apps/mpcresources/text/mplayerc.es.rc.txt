@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Reiniciar"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Renderizador de subtítulos:"
-7		"Rutas de autocargado"
-9		"Reiniciar"
-10		"Siempre predeterminar a subtítulos externos si están disponibles"
-12		"No cargar subtítulos integrados"
-13		"Recarga automática de archivos de subtítulos después de detectar la modificación"
-15		"Usar Subresync"
-17		"Página de códigos predeterminada:"
-19		"Detectar automáticamente la página de códigos"
+7		"Propiedades"
+8		"Rutas de autocargado"
+10		"Reiniciar"
+11		"Siempre predeterminar a subtítulos externos si están disponibles"
+13		"No cargar subtítulos integrados"
+14		"Recarga automática de archivos de subtítulos después de detectar la modificación"
+16		"Usar Subresync"
+18		"Página de códigos predeterminada:"
+20		"Detectar automáticamente la página de códigos"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

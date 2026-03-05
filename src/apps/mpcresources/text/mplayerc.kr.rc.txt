@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"초기화"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"자막 렌더러 :"
-7		"자동 불러오기 경로"
-9		"초기화"
-10		"외부 자막 우선"
-12		"내장 자막 불러오지 않음"
-13		"수정 감지 후 자막 자동 다시 불러오기"
-15		"자막 동기화 사용"
-17		"기본 코드 페이지 :"
-19		"코드 페이지를 자동으로 감지"
+7		"속성"
+8		"자동 불러오기 경로"
+10		"초기화"
+11		"외부 자막 우선"
+13		"내장 자막 불러오지 않음"
+14		"수정 감지 후 자막 자동 다시 불러오기"
+16		"자막 동기화 사용"
+18		"기본 코드 페이지 :"
+20		"코드 페이지를 자동으로 감지"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

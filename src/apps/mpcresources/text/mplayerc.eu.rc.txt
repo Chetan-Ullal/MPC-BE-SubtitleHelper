@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Berrezarri"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Azpidatzi aurkeztzailea:"
-7		"Berez-gertatu helburuak"
-9		"Berrezarri"
-10		"Hobetsi kanpoko azpidatziak barneko azpidatziei"
-12		"Ezikusi barneratutako azpidatziak"
-13		"Berez-birgertatu azpidatzi agiriak aldaketa atzeman ondoren"
-15		"Erabili Azpberraldb"
-17		"Default code page:"
-19		"Automatically detect code page"
+7		"Properties"
+8		"Berez-gertatu helburuak"
+10		"Berrezarri"
+11		"Hobetsi kanpoko azpidatziak barneko azpidatziei"
+13		"Ezikusi barneratutako azpidatziak"
+14		"Berez-birgertatu azpidatzi agiriak aldaketa atzeman ondoren"
+16		"Erabili Azpberraldb"
+18		"Default code page:"
+20		"Automatically detect code page"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26

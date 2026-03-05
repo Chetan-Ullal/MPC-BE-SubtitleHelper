@@ -1,5 +1,5 @@
 /*
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -56,5 +56,6 @@ protected:
 public:
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnSubRendModified();
+	afx_msg void OnSubRendPropClick();
 	afx_msg void OnUpdateISRSelect(CCmdUI* pCmdUI);
 };

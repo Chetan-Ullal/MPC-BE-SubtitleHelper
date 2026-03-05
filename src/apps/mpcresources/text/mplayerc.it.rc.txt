@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Reimposta"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Renderer sottotitoli:"
-7		"Percorsi di caricamento automatico"
-9		"Reimposta"
-10		"Preferisci i sottotitoli esterni rispetto ai sottotitoli incorporati"
-12		"Ignora i sottotitoli incorporati"
-13		"Ricarica automaticamente i file dei sottotitoli dopo aver rilevato la modifica"
-15		"Usa subresync"
-17		"Tabella codici predefinita:"
-19		"Rileva automaticamente la codifica"
+7		"Proprietà"
+8		"Percorsi di caricamento automatico"
+10		"Reimposta"
+11		"Preferisci i sottotitoli esterni rispetto ai sottotitoli incorporati"
+13		"Ignora i sottotitoli incorporati"
+14		"Ricarica automaticamente i file dei sottotitoli dopo aver rilevato la modifica"
+16		"Usa subresync"
+18		"Tabella codici predefinita:"
+20		"Rileva automaticamente la codifica"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26
