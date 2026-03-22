@@ -281,14 +281,8 @@ CString CMediaTypeEx::ToString(IPin* pPin)
 	if (majortype == MEDIATYPE_Video || subtype == MEDIASUBTYPE_MPEG2_VIDEO) {
 		type = L"Video";
 
-		BITMAPINFOHEADER bih;
-		bool fBIH = ExtractBIH(this, &bih);
-
-		int w, h, arx, ary;
-		bool fDim = ExtractDim(this, w, h, arx, ary);
-
-		if (fBIH) {
-			codec = GetVideoCodecName(subtype, bih.biCompression);
+		if (auto pBIH = GetBitmapInfoHeader(this)) {
+			codec = GetVideoCodecName(subtype, pBIH->biCompression);
 		}
 
 		if (codec.IsEmpty()) {
@@ -301,7 +295,8 @@ CString CMediaTypeEx::ToString(IPin* pPin)
 			}
 		}
 
-		if (fDim) {
+		int w, h, arx, ary;
+		if (ExtractDim(this, w, h, arx, ary)) {
 			dim.Format(L"%dx%d", w, h);
 			if (w*ary != h*arx) {
 				dim.AppendFormat(L" (%d:%d)", arx, ary);
@@ -642,7 +637,7 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 
 		sl.emplace_back(L"");
 
-		if (formattype == FORMAT_VideoInfo2 || formattype == FORMAT_MPEG2_VIDEO) {
+		if (formattype == FORMAT_VideoInfo2 || formattype == FORMAT_MPEG2_VIDEO || formattype == FORMAT_DiracVideoInfo) {
 			VIDEOINFOHEADER2& vih2 = *(VIDEOINFOHEADER2*)pbFormat;
 			bih = &vih2.bmiHeader;
 
