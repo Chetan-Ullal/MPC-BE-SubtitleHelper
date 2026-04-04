@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Resetten"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Ondertitelingsrenderer:"
-7		"Automatisch geladen locaties"
-9		"Resetten"
-10		"Prefereer externe ondertiteling boven interne ondertiteling"
-12		"Geïntegreerde ondertiteling niet laden"
-13		"Herlaad ondertitel-bestanden automatisch als er wijzigingen worden gedetecteerd"
-15		"Activeer ondertitelings-resync"
-17		"Standaardcodepagina:"
-19		"Codepagina automatisch detecteren"
+7		"Eigenschappen"
+8		"Automatisch geladen locaties"
+10		"Resetten"
+11		"Prefereer externe ondertiteling boven interne ondertiteling"
+13		"Geïntegreerde ondertiteling niet laden"
+14		"Herlaad ondertitel-bestanden automatisch als er wijzigingen worden gedetecteerd"
+16		"Activeer ondertitelings-resync"
+18		"Standaardcodepagina:"
+20		"Codepagina automatisch detecteren"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26
@@ -602,22 +603,19 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Aan de bureaubladrand vastmaken"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
-5		"YouTube"
-6		"Ingebouwde webpaginaparser gebruiken"
-7		"Voorkeursvideoformaat:"
-10		"60 fps"
-11		"HDR"
-12		"Voorkeursaudioformaat:"
-14		"Voorkeurstaal audiospoor:"
-16		"Afspeellijst laden"
-18		"youtube-dl, yt-dlp"
-19		"Executable:"
-21		"Maximale videohoogte:"
-23		"Maximale fps of bitrate selecteren"
-24		"Adres AceStream:"
-26		"Adres MatriX (TorrServer):"
-29		"Useragent:"
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 27
+5		"Voorkeursvideoformaat:"
+8		"50/60 fps"
+9		"HDR"
+10		"Voorkeursaudioformaat:"
+12		"Voorkeurstaal audiospoor:"
+14		"Afspeellijst laden"
+16		"youtube-dl, yt-dlp"
+17		"Executable:"
+19		"Select max bitrate"
+20		"Adres AceStream:"
+22		"Adres MatriX (TorrServer):"
+25		"Useragent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9

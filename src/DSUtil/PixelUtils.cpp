@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2024 see Authors.txt
+ * (C) 2020-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -25,23 +25,53 @@
 
 #include "pixconv/yuv420_nv12_unscaled.h"
 
-void CopyPlane(const UINT h, BYTE* dst, UINT dst_pitch, const BYTE* src, UINT src_pitch)
+void CopyPlane(const UINT lines, BYTE* dst, UINT dst_pitch, const BYTE* src, int src_pitch)
 {
 	if (dst_pitch == src_pitch) {
-		memcpy(dst, src, dst_pitch * h);
+		memcpy(dst, src, dst_pitch * lines);
 		return;
 	}
 
-	const UINT linesize = std::min(src_pitch, dst_pitch);
+	const UINT linesize = std::min<UINT>(abs(src_pitch), dst_pitch);
 
-	for (UINT y = 0; y < h; ++y) {
+	for (UINT y = 0; y < lines; ++y) {
 		memcpy(dst, src, linesize);
 		src += src_pitch;
 		dst += dst_pitch;
 	}
 }
 
-void CopyI420toNV12(UINT w, UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
+void CopyYUV420P(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
+{
+	CopyPlane(h, dst, dst_pitch, src[0], src_pitch); // Y
+	dst += dst_pitch * h;
+
+	h /= 2;
+	src_pitch /= 2;
+	dst_pitch /= 2;
+
+	CopyPlane(h, dst, dst_pitch, src[1], src_pitch);
+	dst += dst_pitch * h;
+
+	CopyPlane(h, dst, dst_pitch, src[2], src_pitch);
+}
+
+void CopyYUV420PSwapUV(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
+{
+	CopyPlane(h, dst, dst_pitch, src[0], src_pitch); // Y
+	dst += dst_pitch * h;
+
+	h /= 2;
+	src_pitch /= 2;
+	dst_pitch /= 2;
+
+	CopyPlane(h, dst, dst_pitch, src[2], src_pitch);
+	dst += dst_pitch * h;
+
+	CopyPlane(h, dst, dst_pitch, src[1], src_pitch);
+}
+
+void CopyYUV420PtoNV12(UINT w, UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
 {
 	if (!(dst_pitch % 32) && !(src_pitch % 16)) {
 		const ptrdiff_t srcStride[3] = { src_pitch, src_pitch / 2, src_pitch / 2 };
@@ -74,21 +104,7 @@ void CopyI420toNV12(UINT w, UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const
 	}
 }
 
-void CopyI420toYV12(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
-{
-	CopyPlane(h, dst, dst_pitch, src[0], src_pitch); // Y
-
-	dst += dst_pitch * h;
-	h /= 2;
-	src_pitch /= 2;
-	dst_pitch /= 2;
-	CopyPlane(h, dst, dst_pitch, src[2], src_pitch); // V
-
-	dst += dst_pitch * h;
-	CopyPlane(h, dst, dst_pitch, src[1], src_pitch); // U
-}
-
-void ConvertI420toYUY2(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch, const bool bInterlaced)
+void ConvertYUV420PtoYUY2(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch, const bool bInterlaced)
 {
 	const int src_pitch_uv = src_pitch / 2;
 

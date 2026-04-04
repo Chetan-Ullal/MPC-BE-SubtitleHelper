@@ -1,5 +1,5 @@
 /*
- * (C) 2014-2023 see Authors.txt
+ * (C) 2014-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -293,16 +293,7 @@ HRESULT CWAVFile::Open(CBaseSplitterFile* pFile)
 			break;
 		}
 
-		if (Chunk.id == FCC('data')) {
-			// HACK: fix end of data chunk size for find correct offset of the next chunk.
-			// need the official information about this
-			if ((pos + Chunk.size) & 1) {
-				// next chunk will start with an even offset
-				Chunk.size++;
-			}
-		}
-
-		m_pFile->Seek(pos + Chunk.size);
+		m_pFile->Seek(pos + ((Chunk.size + 1) & ~1));
 	}
 	stop:
 
@@ -400,7 +391,7 @@ HRESULT CWAVFile::ReadRIFFINFO(const DWORD chunk_size)
 			m_info[Chunk.id] = value;
 		}
 
-		m_pFile->Seek(pos + Chunk.size);
+		m_pFile->Seek(pos + ((Chunk.size + 1) & ~1));
 	}
 
 	return S_OK;
@@ -438,7 +429,7 @@ HRESULT CWAVFile::ReadADTLTag(const DWORD chunk_size)
 			}
 		}
 
-		m_pFile->Seek(pos + Chunk.size);
+		m_pFile->Seek(pos + ((Chunk.size + 1) & ~1));
 	}
 
 	return S_OK;

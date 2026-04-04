@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Zurücksetzen"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Untertitelrenderer:"
-7		"Pfade für externe Untertitel"
-9		"Zurücksetzen"
-10		"Externe Untertitel bevorzugen"
-12		"Eingebettete Untertitel nicht verwenden"
-13		"Untertitel bei erkannten Veränderungen neu laden"
-15		"Subresync verwenden"
-17		"Standard-Codepage:"
-19		"Codepage automatisch erkennen"
+7		"Eigenschaften"
+8		"Pfade für externe Untertitel"
+10		"Zurücksetzen"
+11		"Externe Untertitel bevorzugen"
+13		"Eingebettete Untertitel nicht verwenden"
+14		"Untertitel bei erkannten Veränderungen neu laden"
+16		"Subresync verwenden"
+18		"Standard-Codepage:"
+20		"Codepage automatisch erkennen"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26
@@ -602,22 +603,19 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"An Desktoprand andocken"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
-5		"YouTube"
-6		"Integrierten Webseiten-Parser verwenden"
-7		"Bevorzugtes Videoformat:"
-10		"HFR"
-11		"HDR"
-12		"Bevorzugtes Audioformat:"
-14		"Bevorzugte Sprache der Audiospur:"
-16		"Wiedergabeliste laden"
-18		"youtube-dl, yt-dlp"
-19		"Ausführungsdatei:"
-21		"Maximale Videohöhe:"
-23		"Maximale Bildrate oder Bitrate wählen"
-24		"AceStream Adresse:"
-26		"MatriX (TorrServer) Adresse:"
-29		"User Agent:"
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 27
+5		"Bevorzugtes Videoformat:"
+8		"50/60 fps"
+9		"HDR"
+10		"Bevorzugtes Audioformat:"
+12		"Bevorzugte Sprache der Audiospur:"
+14		"Wiedergabeliste laden"
+16		"youtube-dl, yt-dlp"
+17		"Ausführungsdatei:"
+19		"Select max bitrate"
+20		"AceStream Adresse:"
+22		"MatriX (TorrServer) Adresse:"
+25		"User Agent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -26,6 +26,8 @@
 #include "BaseVideoFilter.h"
 #include "DSUtil/DSUtil.h"
 #include <moreuuids.h>
+
+#include "VideoFormats.h"
 
 //
 // CBaseVideoFilter
@@ -229,9 +231,8 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int width, int height, bool bForce/* =
 					if (SUCCEEDED(hr = m_pOutput->GetDeliveryBuffer(&pOut, nullptr, nullptr, 0))) {
 						AM_MEDIA_TYPE* pmt;
 						if (SUCCEEDED(pOut->GetMediaType(&pmt)) && pmt) {
-							BITMAPINFOHEADER bihOut;
-							if (ExtractBIH(pmt, &bihOut)) {
-								DLog(L"CBaseVideoFilter::ReconnectOutput() : new MediaType from IMediaSample negotiated, actual width: %d, requested: %ld", width, bihOut.biWidth);
+							if (auto pBIH = GetBitmapInfoHeader(pmt)) {
+								DLog(L"CBaseVideoFilter::ReconnectOutput() : new MediaType from IMediaSample negotiated, actual width: %d, requested: %ld", width, pBIH->biWidth);
 							}
 
 							CMediaType mt2 = *pmt;
@@ -305,11 +306,13 @@ HRESULT CBaseVideoFilter::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_
 		return E_UNEXPECTED;
 	}
 
-	BITMAPINFOHEADER bih;
-	ExtractBIH(&m_pOutput->CurrentMediaType(), &bih);
+	auto pBIH = GetBitmapInfoHeader(&m_pOutput->CurrentMediaType());
+	if (!pBIH) {
+		return E_UNEXPECTED;
+	}
 
 	pProperties->cBuffers	= m_cBuffers;
-	pProperties->cbBuffer	= bih.biSizeImage;
+	pProperties->cbBuffer	= pBIH->biSizeImage;
 	pProperties->cbAlign	= 1;
 	pProperties->cbPrefix	= 0;
 
@@ -326,14 +329,14 @@ HRESULT CBaseVideoFilter::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_
 
 HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 {
-	VIDEO_OUTPUT_FORMATS* fmts;
-	int                   nFormatCount;
+	VFormatDesc* vfmts;
+	int                  nFormatCount;
 
 	if (m_pInput->IsConnected() == FALSE) {
 		return E_UNEXPECTED;
 	}
 
-	GetOutputFormats(nFormatCount, &fmts);
+	GetOutputFormats(nFormatCount, &vfmts);
 	if (iPosition < 0) {
 		return E_INVALIDARG;
 	}
@@ -341,8 +344,10 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 		return VFW_S_NO_MORE_ITEMS;
 	}
 
+	const auto& vfmt = vfmts[iPosition];
+
 	pmt->majortype = MEDIATYPE_Video;
-	pmt->subtype   = *fmts[iPosition].subtype;
+	pmt->subtype   = *vfmt.subtype;
 
 	int w = m_win;
 	int h = m_hin;
@@ -369,10 +374,10 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	BITMAPINFOHEADER bihOut = { 0 };
 	bihOut.biSize        = sizeof(bihOut);
 	bihOut.biWidth       = w;
-	bihOut.biHeight      = h;
+	bihOut.biHeight      = vfmt.fourcc == BI_RGB ? -h : h; // top-down bitmap
 	bihOut.biPlanes      = 1; // this value must be set to 1
-	bihOut.biBitCount    = fmts[iPosition].biBitCount;
-	bihOut.biCompression = fmts[iPosition].biCompression;
+	bihOut.biBitCount    = vfmt.GetBihBitCount();
+	bihOut.biCompression = vfmt.fourcc;
 	bihOut.biSizeImage   = DIBSIZE(bihOut);
 
 	pmt->formattype = FORMAT_VideoInfo2;
@@ -385,7 +390,7 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 		vih2->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave;
 	}
 
-	if (m_dxvaExtFormat.value && pmt->subtype != MEDIASUBTYPE_RGB32 && pmt->subtype != MEDIASUBTYPE_RGB48) {
+	if (m_dxvaExtFormat.value && vih2->bmiHeader.biCompression != BI_RGB && pmt->subtype != MEDIASUBTYPE_RGB48) {
 		vih2->dwControlFlags = m_dxvaExtFormat.value;
 	}
 

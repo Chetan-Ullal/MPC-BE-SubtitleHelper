@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -23,6 +23,7 @@
 #include <moreuuids.h>
 #include "DSUtil/PixelUtils.h"
 #include "RoQSplitter.h"
+#include <dxva2api.h>
 
 #if (0)  // Set to 1 to activate RoQ packet traces
 	#define TRACE_ROQ DLog
@@ -569,7 +570,9 @@ HRESULT CRoQVideoDecoder::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	}
 
 	BYTE* pDataIn = nullptr;
-	if(FAILED(hr = pIn->GetPointer(&pDataIn))) return hr;
+	if (FAILED(hr = pIn->GetPointer(&pDataIn))) {
+		return hr;
+	}
 
 	long len = pIn->GetActualDataLength();
 	if (len <= 0) {
@@ -584,18 +587,16 @@ HRESULT CRoQVideoDecoder::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	}
 
 	BYTE* pDataOut = nullptr;
-	if(FAILED(hr = pOut->GetPointer(&pDataOut)))
+	if (FAILED(hr = pOut->GetPointer(&pDataOut))) {
 		return hr;
+	}
 
-	BITMAPINFOHEADER bih;
-	ExtractBIH(&m_pInput->CurrentMediaType(), &bih);
+	auto pBihIn = GetBitmapInfoHeader(&m_pInput->CurrentMediaType());
 
-	int w = bih.biWidth, h = bih.biHeight;
-
-	// TODO: decode picture into m_pI420
+	const int w = pBihIn->biWidth;
+	const int h = pBihIn->biHeight;
 
 	roq_chunk* rc = (roq_chunk*)pDataIn;
-
 	pDataIn += sizeof(roq_chunk);
 
 	if(rc->id == RoQ_QUAD_CODEBOOK)
@@ -719,17 +720,18 @@ HRESULT CRoQVideoDecoder::Transform(IMediaSample* pIn, IMediaSample* pOut)
 
 	const BYTE* const src[3] = { m_y[1], m_u[1], m_v[1] };
 
-	BITMAPINFOHEADER bihOut;
-	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
+	auto pBihOut =GetBitmapInfoHeader(&m_pOutput->CurrentMediaType());
 
-	if (bihOut.biCompression == FCC('NV12')) {
-		CopyI420toNV12(w, h, pDataOut, bihOut.biWidth, src, w);
-	}
-	else if (bihOut.biCompression == FCC('YV12')) {
-		CopyI420toYV12(h, pDataOut, bihOut.biWidth, src, w);
-	}
-	else if (bihOut.biCompression == FCC('YUY2')) {
-		ConvertI420toYUY2(h, pDataOut, bihOut.biWidth * 2, src, w, false);
+	switch(pBihOut->biCompression) {
+	case FCC('NV12'):
+		CopyYUV420PtoNV12(w, h, pDataOut, pBihOut->biWidth, src, w);
+		break;
+	case FCC('YV12'):
+		CopyYUV420PSwapUV(h, pDataOut, pBihOut->biWidth, src, w);
+		break;
+	case FCC('YUY2'):
+		ConvertYUV420PtoYUY2(h, pDataOut, pBihOut->biWidth * 2, src, w, false);
+		break;
 	}
 
 	pOut->SetTime(&rtStart, &rtStop);
@@ -765,7 +767,9 @@ HRESULT CRoQVideoDecoder::CheckTransform(const CMediaType* mtIn, const CMediaTyp
 
 HRESULT CRoQVideoDecoder::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties)
 {
-	if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
+	if (m_pInput->IsConnected() == FALSE) {
+		return E_UNEXPECTED;
+	}
 
 	BITMAPINFOHEADER bih;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bih);
@@ -788,7 +792,9 @@ HRESULT CRoQVideoDecoder::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_
 
 HRESULT CRoQVideoDecoder::GetMediaType(int iPosition, CMediaType* pmt)
 {
-	if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
+	if (m_pInput->IsConnected() == FALSE) {
+		return E_UNEXPECTED;
+	}
 
 	struct {
 		const GUID* subtype;
@@ -796,8 +802,8 @@ HRESULT CRoQVideoDecoder::GetMediaType(int iPosition, CMediaType* pmt)
 		WORD biBitCount;
 		DWORD biCompression;
 	} fmts[] = {
-		//{&MEDIASUBTYPE_NV12, 3, 12, FCC('NV12')},
-		//{&MEDIASUBTYPE_YV12, 3, 12, FCC('YV12')},
+		{&MEDIASUBTYPE_NV12, 3, 12, FCC('NV12')},
+		{&MEDIASUBTYPE_YV12, 3, 12, FCC('YV12')},
 		{&MEDIASUBTYPE_YUY2, 1, 16, FCC('YUY2')},
 	};
 
@@ -811,23 +817,30 @@ HRESULT CRoQVideoDecoder::GetMediaType(int iPosition, CMediaType* pmt)
 	BITMAPINFOHEADER bih;
 	ExtractBIH(&m_pInput->CurrentMediaType(), &bih);
 
-	pmt->majortype = MEDIATYPE_Video;
-	pmt->subtype = *fmts[iPosition].subtype;
-	pmt->formattype = FORMAT_VideoInfo;
+	pmt->majortype  = MEDIATYPE_Video;
+	pmt->subtype    = *fmts[iPosition].subtype;
+	pmt->formattype = FORMAT_VideoInfo2;
 
 	BITMAPINFOHEADER bihOut;
 	memset(&bihOut, 0, sizeof(bihOut));
-	bihOut.biSize = sizeof(bihOut);
-	bihOut.biWidth = bih.biWidth;
-	bihOut.biHeight = bih.biHeight;
-	bihOut.biPlanes = fmts[iPosition].biPlanes;
-	bihOut.biBitCount = fmts[iPosition].biBitCount;
+	bihOut.biSize        = sizeof(bihOut);
+	bihOut.biWidth       = bih.biWidth;
+	bihOut.biHeight      = bih.biHeight;
+	bihOut.biPlanes      = fmts[iPosition].biPlanes;
+	bihOut.biBitCount    = fmts[iPosition].biBitCount;
 	bihOut.biCompression = fmts[iPosition].biCompression;
-	bihOut.biSizeImage = bih.biWidth*bih.biHeight*bihOut.biBitCount>>3;
+	bihOut.biSizeImage   = bih.biWidth*bih.biHeight*bihOut.biBitCount>>3;
 
-	VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->AllocFormatBuffer(sizeof(VIDEOINFOHEADER));
-	memset(vih, 0, sizeof(VIDEOINFOHEADER));
-	vih->bmiHeader = bihOut;
+	DXVA2_ExtendedFormat exfmt;
+	exfmt.value = AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT;
+	exfmt.NominalRange = DXVA2_NominalRange_0_255;
+	exfmt.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601;
+
+	VIDEOINFOHEADER2* pVIH2 = (VIDEOINFOHEADER2*)pmt->AllocFormatBuffer(sizeof(VIDEOINFOHEADER2));
+	memset(pVIH2, 0, sizeof(VIDEOINFOHEADER2));
+
+	pVIH2->bmiHeader = bihOut;
+	pVIH2->dwControlFlags = exfmt.value;
 
 	return S_OK;
 }
@@ -978,11 +991,15 @@ HRESULT CRoQAudioDecoder::CheckTransform(const CMediaType* mtIn, const CMediaTyp
 
 HRESULT CRoQAudioDecoder::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties)
 {
-	if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
+	if (m_pInput->IsConnected() == FALSE) {
+		return E_UNEXPECTED;
+	}
 
 	CComPtr<IMemAllocator> pAllocatorIn;
 	m_pInput->GetAllocator(&pAllocatorIn);
-	if(!pAllocatorIn) return E_UNEXPECTED;
+	if (!pAllocatorIn) {
+		return E_UNEXPECTED;
+	}
 
 	WAVEFORMATEX* wfe = (WAVEFORMATEX*)m_pOutput->CurrentMediaType().Format();
 
@@ -1005,10 +1022,16 @@ HRESULT CRoQAudioDecoder::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_
 
 HRESULT CRoQAudioDecoder::GetMediaType(int iPosition, CMediaType* pmt)
 {
-	if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
+	if (m_pInput->IsConnected() == FALSE) {
+		return E_UNEXPECTED;
+	}
 
-	if(iPosition < 0) return E_INVALIDARG;
-	if(iPosition > 0) return VFW_S_NO_MORE_ITEMS;
+	if (iPosition < 0) {
+		return E_INVALIDARG;
+	}
+	if (iPosition > 0) {
+		return VFW_S_NO_MORE_ITEMS;
+	}
 
 	*pmt = m_pInput->CurrentMediaType();
 	pmt->subtype = MEDIASUBTYPE_PCM;

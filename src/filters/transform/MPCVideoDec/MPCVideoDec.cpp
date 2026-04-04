@@ -1,5 +1,5 @@
 /*
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -579,6 +579,7 @@ FFMPEG_CODECS ffCodecs[] = {
 	{ &MEDIASUBTYPE_YV12, AV_CODEC_ID_RAWVIDEO, VDEC_UNCOMPRESSED, HWCodec_None },
 	{ &MEDIASUBTYPE_YV16, AV_CODEC_ID_RAWVIDEO, VDEC_UNCOMPRESSED, HWCodec_None },
 	{ &MEDIASUBTYPE_YV24, AV_CODEC_ID_RAWVIDEO, VDEC_UNCOMPRESSED, HWCodec_None },
+	{ &MEDIASUBTYPE_AYUV, AV_CODEC_ID_RAWVIDEO, VDEC_UNCOMPRESSED, HWCodec_None },
 
 	{ &MEDIASUBTYPE_BGR48,  AV_CODEC_ID_RAWVIDEO, VDEC_UNCOMPRESSED, HWCodec_None },
 	{ &MEDIASUBTYPE_BGRA64, AV_CODEC_ID_RAWVIDEO, VDEC_UNCOMPRESSED, HWCodec_None },
@@ -967,6 +968,7 @@ const AMOVIESETUP_MEDIATYPE sudPinTypesInUncompressed[] = {
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_YV12 },
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_YV16 },
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_YV24 },
+	{ &MEDIATYPE_Video, &MEDIASUBTYPE_AYUV },
 
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_BGR48 },
 	{ &MEDIATYPE_Video, &MEDIASUBTYPE_BGRA64 },
@@ -1153,7 +1155,7 @@ CMPCVideoDecFilter::CMPCVideoDecFilter(LPUNKNOWN lpunk, HRESULT* phr)
 
 		for (int i = 0; i < PixFmt_count; i++) {
 			CString optname = OPT_SW_prefix;
-			optname += GetSWOF(i)->name;
+			optname += GetSWOF(i)->desc.name;
 			if (ERROR_SUCCESS == key.QueryDWORDValue(optname, dw)) {
 				m_fPixFmts[i] = !!dw;
 			}
@@ -1203,7 +1205,7 @@ CMPCVideoDecFilter::CMPCVideoDecFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	profile.ReadInt(OPT_SECTION_VideoDec, OPT_SwRGBLevels, m_nSwRGBLevels);
 	for (int i = 0; i < PixFmt_count; i++) {
 		CString optname = OPT_SW_prefix;
-		optname += GetSWOF(i)->name;
+		optname += GetSWOF(i)->desc.name;
 		profile.ReadBool(OPT_SECTION_VideoDec, optname, m_fPixFmts[i]);
 	}
 #endif
@@ -1489,6 +1491,117 @@ bool CMPCVideoDecFilter::AddFrameSideData(IMediaSample* pSample, AVFrame* pFrame
 #undef RPU_COLOR
 
 			hr = pMediaSideData->SetSideData(IID_MediaSideDataDOVIMetadata,
+											 reinterpret_cast<const BYTE*>(&hdr),
+											 offsetof(MediaSideDataDOVIMetadata, Extensions));
+
+			int LAVExtIdx = 0;
+			for (int i = 0; i < metadata->num_ext_blocks; i++)
+			{
+				AVDOVIDmData* ext = av_dovi_get_ext(metadata, i);
+				auto lavext = &hdr.Extensions[LAVExtIdx];
+
+				lavext->level = ext->level;
+				switch (ext->level)
+				{
+					case 1:
+						lavext->Level1.min_pq = ext->l1.min_pq;
+						lavext->Level1.max_pq = ext->l1.max_pq;
+						lavext->Level1.avg_pq = ext->l1.avg_pq;
+						break;
+					case 2:
+						lavext->Level2.target_max_pq = ext->l2.target_max_pq;
+						lavext->Level2.trim_slope = ext->l2.trim_slope;
+						lavext->Level2.trim_offset = ext->l2.trim_offset;
+						lavext->Level2.trim_power = ext->l2.trim_power;
+						lavext->Level2.trim_chroma_weight = ext->l2.trim_chroma_weight;
+						lavext->Level2.trim_saturation_gain = ext->l2.trim_saturation_gain;
+						lavext->Level2.ms_weight = ext->l2.ms_weight;
+						break;
+					case 3:
+						lavext->Level3.min_pq_offset = ext->l3.min_pq_offset;
+						lavext->Level3.max_pq_offset = ext->l3.max_pq_offset;
+						lavext->Level3.avg_pq_offset = ext->l3.avg_pq_offset;
+						break;
+					case 4:
+						lavext->Level4.anchor_pq = ext->l4.anchor_pq;
+						lavext->Level4.anchor_power = ext->l4.anchor_power;
+						break;
+					case 5:
+						lavext->Level5.left_offset = ext->l5.left_offset;
+						lavext->Level5.right_offset = ext->l5.right_offset;
+						lavext->Level5.top_offset = ext->l5.top_offset;
+						lavext->Level5.bottom_offset = ext->l5.bottom_offset;
+						break;
+					case 6:
+						lavext->Level6.max_luminance = ext->l6.max_luminance;
+						lavext->Level6.min_luminance = ext->l6.min_luminance;
+						lavext->Level6.max_cll = ext->l6.max_cll;
+						lavext->Level6.max_fall = ext->l6.max_fall;
+						break;
+					case 8:
+						lavext->Level8.target_display_index = ext->l8.target_display_index;
+						lavext->Level8.trim_slope = ext->l8.trim_slope;
+						lavext->Level8.trim_offset = ext->l8.trim_offset;
+						lavext->Level8.trim_power = ext->l8.trim_power;
+						lavext->Level8.trim_chroma_weight = ext->l8.trim_chroma_weight;
+						lavext->Level8.trim_saturation_gain = ext->l8.trim_saturation_gain;
+						lavext->Level8.ms_weight = ext->l8.ms_weight;
+						lavext->Level8.target_mid_contrast = ext->l8.target_mid_contrast;
+						lavext->Level8.clip_trim = ext->l8.clip_trim;
+						for (int j = 0; j < 6; j++) {
+							lavext->Level8.saturation_vector_field[j] = ext->l8.saturation_vector_field[j];
+							lavext->Level8.hue_vector_field[j] = ext->l8.hue_vector_field[j];
+						}
+						break;
+					case 9:
+						lavext->Level9.source_primary_index = ext->l9.source_primary_index;
+						lavext->Level9.white_point_x = av_q2d(ext->l9.source_display_primaries.wp.x);
+						lavext->Level9.white_point_y = av_q2d(ext->l9.source_display_primaries.wp.y);
+						lavext->Level9.display_primaries_x[0] = av_q2d(ext->l9.source_display_primaries.prim.r.x);
+						lavext->Level9.display_primaries_x[1] = av_q2d(ext->l9.source_display_primaries.prim.g.x);
+						lavext->Level9.display_primaries_x[2] = av_q2d(ext->l9.source_display_primaries.prim.b.x);
+						lavext->Level9.display_primaries_y[0] = av_q2d(ext->l9.source_display_primaries.prim.r.y);
+						lavext->Level9.display_primaries_y[1] = av_q2d(ext->l9.source_display_primaries.prim.g.y);
+						lavext->Level9.display_primaries_y[2] = av_q2d(ext->l9.source_display_primaries.prim.b.y);
+						break;
+					case 10:
+						lavext->Level10.target_display_index = ext->l10.target_display_index;
+						lavext->Level10.target_max_pq = ext->l10.target_max_pq;
+						lavext->Level10.target_min_pq = ext->l10.target_min_pq;
+						lavext->Level10.target_primary_index = ext->l10.target_primary_index;
+						lavext->Level10.white_point_x = av_q2d(ext->l10.target_display_primaries.wp.x);
+						lavext->Level10.white_point_y = av_q2d(ext->l10.target_display_primaries.wp.y);
+						lavext->Level10.display_primaries_x[0] = av_q2d(ext->l10.target_display_primaries.prim.r.x);
+						lavext->Level10.display_primaries_x[1] = av_q2d(ext->l10.target_display_primaries.prim.g.x);
+						lavext->Level10.display_primaries_x[2] = av_q2d(ext->l10.target_display_primaries.prim.b.x);
+						lavext->Level10.display_primaries_y[0] = av_q2d(ext->l10.target_display_primaries.prim.r.y);
+						lavext->Level10.display_primaries_y[1] = av_q2d(ext->l10.target_display_primaries.prim.g.y);
+						lavext->Level10.display_primaries_y[2] = av_q2d(ext->l10.target_display_primaries.prim.b.y);
+						break;
+					case 11:
+						lavext->Level11.content_type = ext->l11.content_type;
+						lavext->Level11.whitepoint = ext->l11.whitepoint;
+						lavext->Level11.reference_mode_flag = ext->l11.reference_mode_flag;
+						break;
+					case 254:
+						lavext->Level254.dm_mode = ext->l254.dm_mode;
+						lavext->Level254.dm_version_index = ext->l254.dm_version_index;
+						break;
+					default:
+						lavext->level = 0; /* reset level, unknown/not implemented extension */
+						break;
+				}
+
+				/* if the block is valid/recognized, go to the next one */
+				if (lavext->level > 0)
+					LAVExtIdx++;
+
+				/* only 32 blocks are allowed, sanity check here */
+				if (LAVExtIdx >= LAV_DOVI_MAX_EXTENSIONS)
+					break;
+			}
+
+			hr = pMediaSideData->SetSideData(IID_MediaSideDataDOVIMetadataV2,
 											 reinterpret_cast<const BYTE*>(&hdr),
 											 sizeof(hdr));
 		}
@@ -2223,25 +2336,15 @@ HRESULT CMPCVideoDecFilter::InitDecoder(const CMediaType* pmt)
 		BITMAPINFOHEADER* pBMI = nullptr;
 		bool bInterlacedFieldPerSample = false;
 		m_inputDxvaExtFormat.value = 0;
-		if (pmt->formattype == FORMAT_VideoInfo) {
+		if (pmt->formattype == FORMAT_VideoInfo || pmt->formattype == FORMAT_MPEGVideo) {
 			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
 			pBMI = &vih->bmiHeader;
-		} else if (pmt->formattype == FORMAT_VideoInfo2) {
+		} else if (pmt->formattype == FORMAT_VideoInfo2 || pmt->formattype == FORMAT_MPEG2Video || pmt->formattype == FORMAT_DiracVideoInfo) {
 			VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->pbFormat;
 			pBMI = &vih2->bmiHeader;
 			bInterlacedFieldPerSample = vih2->dwInterlaceFlags & AMINTERLACE_IsInterlaced && vih2->dwInterlaceFlags & AMINTERLACE_1FieldPerSample;
 			if (vih2->dwControlFlags & (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT)) {
 				m_inputDxvaExtFormat.value = vih2->dwControlFlags & 0xFFFFFF00;
-			}
-		} else if (pmt->formattype == FORMAT_MPEGVideo) {
-			MPEG1VIDEOINFO* mpgv = (MPEG1VIDEOINFO*)pmt->pbFormat;
-			pBMI = &mpgv->hdr.bmiHeader;
-		} else if (pmt->formattype == FORMAT_MPEG2Video) {
-			VIDEOINFOHEADER2& vih2 = ((MPEG2VIDEOINFO*)pmt->pbFormat)->hdr;
-			pBMI = &vih2.bmiHeader;
-			bInterlacedFieldPerSample = vih2.dwInterlaceFlags & AMINTERLACE_IsInterlaced && vih2.dwInterlaceFlags & AMINTERLACE_1FieldPerSample;
-			if (vih2.dwControlFlags & (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT)) {
-				m_inputDxvaExtFormat.value = vih2.dwControlFlags & 0xFFFFFF00;
 			}
 		} else {
 			return VFW_E_INVALIDMEDIATYPE;
@@ -2538,20 +2641,18 @@ HRESULT CMPCVideoDecFilter::InitDecoder(const CMediaType* pmt)
 
 	return S_OK;
 }
-
-static const VIDEO_OUTPUT_FORMATS DXVA_NV12 = { &MEDIASUBTYPE_NV12, FCC('dxva'), 12, 1 };
-static const VIDEO_OUTPUT_FORMATS DXVA_P010 = { &MEDIASUBTYPE_P010, FCC('dxva'), 24, 2 };
-
-// 420 12 bit
-static const VIDEO_OUTPUT_FORMATS DXVA_P016 = { &MEDIASUBTYPE_P016, FCC('dxva'), 24, 2 };
+// 420 8/10/12 bit
+static constexpr VFormatDesc DXVA_NV12 = GetVFormatDXVA(VFormat_NV12);
+static constexpr VFormatDesc DXVA_P010 = GetVFormatDXVA(VFormat_P010);
+static constexpr VFormatDesc DXVA_P016 = GetVFormatDXVA(VFormat_P016);
 // 422 8/10/12 bit
-static const VIDEO_OUTPUT_FORMATS DXVA_YUY2 = { &MEDIASUBTYPE_YUY2, FCC('dxva'), 16, 2 };
-static const VIDEO_OUTPUT_FORMATS DXVA_Y210 = { &MEDIASUBTYPE_Y210, FCC('dxva'), 32, 2 };
-static const VIDEO_OUTPUT_FORMATS DXVA_Y216 = { &MEDIASUBTYPE_Y216, FCC('dxva'), 32, 2 };
+static constexpr VFormatDesc DXVA_YUY2 = GetVFormatDXVA(VFormat_YUY2);
+static constexpr VFormatDesc DXVA_Y210 = GetVFormatDXVA(VFormat_Y210);
+static constexpr VFormatDesc DXVA_Y216 = GetVFormatDXVA(VFormat_Y216);
 // 444 8/10/12 bit
-static const VIDEO_OUTPUT_FORMATS DXVA_AYUV = { &MEDIASUBTYPE_AYUV, FCC('dxva'), 32, 4 };
-static const VIDEO_OUTPUT_FORMATS DXVA_Y410 = { &MEDIASUBTYPE_Y410, FCC('dxva'), 32, 4 };
-static const VIDEO_OUTPUT_FORMATS DXVA_Y416 = { &MEDIASUBTYPE_Y416, FCC('dxva'), 64, 8 };
+static constexpr VFormatDesc DXVA_AYUV = GetVFormatDXVA(VFormat_AYUV);
+static constexpr VFormatDesc DXVA_Y410 = GetVFormatDXVA(VFormat_Y410);
+static constexpr VFormatDesc DXVA_Y416 = GetVFormatDXVA(VFormat_Y416);
 
 void CMPCVideoDecFilter::BuildOutputFormat()
 {
@@ -2680,15 +2781,13 @@ void CMPCVideoDecFilter::BuildOutputFormat()
 	if (m_bUseFFmpeg) {
 		for (int i = 0; i < nSwCount; i++) {
 			const SW_OUT_FMT* swof = GetSWOF(nSwIndex[i]);
-			m_VideoOutputFormats.emplace_back(
-				VIDEO_OUTPUT_FORMATS{ swof->subtype, swof->biCompression, (UINT)swof->bpp, (UINT)swof->codedbytes }
-			);
+			m_VideoOutputFormats.emplace_back(swof->desc);
 		}
 	}
 	ASSERT(OutputCount == m_VideoOutputFormats.size());
 }
 
-void CMPCVideoDecFilter::GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats)
+void CMPCVideoDecFilter::GetOutputFormats(int& nNumber, VFormatDesc** ppFormats)
 {
 	nNumber    = m_VideoOutputFormats.size();
 	*ppFormats = m_VideoOutputFormats.size() ? m_VideoOutputFormats.data() : nullptr;
@@ -4025,7 +4124,7 @@ HRESULT CMPCVideoDecFilter::ChangeOutputMediaFormat(int nType)
 			}
 		} else {
 			int nNumber;
-			VIDEO_OUTPUT_FORMATS* pFormats;
+			VFormatDesc* pFormats;
 			GetOutputFormats(nNumber, &pFormats);
 			for (int i = 0; i < nNumber * 2; i++) {
 				CMediaType mt;
@@ -4610,7 +4709,7 @@ STDMETHODIMP CMPCVideoDecFilter::SaveSettings()
 
 		for (int i = 0; i < PixFmt_count; i++) {
 			CString optname = OPT_SW_prefix;
-			optname += GetSWOF(i)->name;
+			optname += GetSWOF(i)->desc.name;
 			key.SetDWORDValue(optname, m_fPixFmts[i]);
 		}
 		key.SetDWORDValue(OPT_SwConvertToRGB, m_bSwConvertToRGB);
@@ -4641,7 +4740,7 @@ STDMETHODIMP CMPCVideoDecFilter::SaveSettings()
 	profile.WriteInt(OPT_SECTION_VideoDec, OPT_SwRGBLevels, m_nSwRGBLevels);
 	for (int i = 0; i < PixFmt_count; i++) {
 		CString optname = OPT_SW_prefix;
-		optname += GetSWOF(i)->name;
+		optname += GetSWOF(i)->desc.name;
 		profile.WriteBool(OPT_SECTION_VideoDec, optname, m_fPixFmts[i]);
 	}
 #endif
@@ -4969,7 +5068,7 @@ STDMETHODIMP_(CString) CMPCVideoDecFilter::GetInformation(MPCInfo index)
 				case HwType::NVDEC:         infostr = L"NVDEC: ";           break;
 			}
 			if (const SW_OUT_FMT* swof = GetSWOF(m_FormatConverter.GetOutPixFormat())) {
-				infostr.AppendFormat(L"%s (%d-bit %s)", swof->name, swof->luma_bits, GetChromaSubsamplingStr(swof->av_pix_fmt));
+				infostr.AppendFormat(L"%s (%d-bit %s)", swof->desc.name, swof->desc.cdepth, GetChromaSubsamplingStr(swof->av_pix_fmt));
 			}
 			break;
 		case INFO_GraphicsAdapter:

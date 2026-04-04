@@ -1,6 +1,6 @@
 /*****************************************************************
 |
-|    AP4 - stsz Atoms 
+|    AP4 - stsz Atoms
 |
 |    Copyright 2002 Gilles Boccon-Gibod
 |
@@ -103,7 +103,7 @@ AP4_StszAtom::GetSampleCount()
 |       AP4_StszAtom::GetSampleSize
 +---------------------------------------------------------------------*/
 AP4_Result
-AP4_StszAtom::GetSampleSize(AP4_Ordinal sample_start, 
+AP4_StszAtom::GetSampleSize(AP4_Ordinal sample_start,
                             AP4_Ordinal sample_end,
                             AP4_Size&   sample_size)
 {
@@ -123,7 +123,7 @@ AP4_StszAtom::GetSampleSize(AP4_Ordinal sample_start,
         // compute the additional offset inside the chunk
         for (unsigned int i = sample_start; i < sample_end; i++) {
             AP4_Size size;
-            AP4_Result result = GetSampleSize(i, size); 
+            AP4_Result result = GetSampleSize(i, size);
             if (AP4_FAILED(result)) return result;
             sample_size += size;
         }
@@ -171,7 +171,7 @@ AP4_StszAtom::SetSampleSize(AP4_Ordinal sample, AP4_Size sample_size)
 /*----------------------------------------------------------------------
 |       AP4_StszAtom::AddEntry
 +---------------------------------------------------------------------*/
-AP4_Result 
+AP4_Result
 AP4_StszAtom::AddEntry(AP4_UI32 size)
 {
     m_Entries.Append(size);

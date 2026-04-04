@@ -27,15 +27,16 @@
 
 #define bufsize (2ul * KILOBYTE)
 
-namespace YoutubeDL
+namespace YT_DLP
 {
 	std::vector<std::unique_ptr<Youtube::YoutubeProfile>> YoutubeProfiles;
 
 	bool Parse_URL(
-		const CStringW& url,        // input parameter
 		const CStringW& ydlExePath, // input parameter
-		const int maxHeightOptions, // input parameter
-		const bool bMaximumQuality, // input parameter
+		const CStringW& url,        // input parameter
+		const int  iMaxHeight,      // input parameter
+		const bool bHighFps,        // input parameter
+		const bool bHighBitrate,    // input parameter
 		CStringA lang,              // input parameter
 		Youtube::YoutubeFields& y_fields,
 		Youtube::YoutubeUrllist& youtubeUrllist,
@@ -155,7 +156,7 @@ namespace YoutubeDL
 
 		if (!exitcode && buf_out.GetLength()) {
 			rapidjson::Document d;
-			const int k = buf_out.Find("\n{\"id\": ", 64); // check presence of second JSON root element and ignore it
+			const int k = buf_out.Find("\n{\"", 64); // check presence of second JSON root element and ignore it
 			if (!d.Parse(buf_out.GetString(), k > 0 ? k : buf_out.GetLength()).HasParseError()) {
 				bool bIsYoutube = Youtube::CheckURL(url);
 				int iTag = 1;
@@ -233,9 +234,11 @@ namespace YoutubeDL
 
 								profile->format = Youtube::yformat::y_mp4_other;
 								if (EndsWith(protocol, "m3u8") || EndsWith(protocol, "m3u8_native")) {
+									/*
 									if (bIsLive && acodec == "none") {
 										continue;
 									}
+									*/
 									profile->format = Youtube::yformat::y_stream;
 								} else if (ext == L"mp4") {
 									if (StartsWith(vcodec, "avc1")) {
@@ -272,7 +275,7 @@ namespace YoutubeDL
 
 							youtubeUrllist.emplace_back(item);
 
-							if (height > maxHeightOptions) {
+							if (height > iMaxHeight) {
 								continue;
 							}
 							if ((height > vid_height)
@@ -283,6 +286,12 @@ namespace YoutubeDL
 
 								if (acodec == "none") {
 									bVideoOnly = true;
+								}
+							}
+
+							if (y_fields.userAgent.IsEmpty()) {
+								if (auto http_headers = GetJsonObject(format, "http_headers")) {
+									getJsonValue(*http_headers, "User-Agent", y_fields.userAgent);
 								}
 							}
 						}
@@ -493,9 +502,10 @@ namespace YoutubeDL
 							if (bVideoOnly && !bestAudioUrl.IsEmpty()) {
 								pOFD->auds.emplace_back(CStringW(bestAudioUrl));
 							}
-						} else if (bMaximumQuality) {
-							float maxVideotbr = 0.0f;
-							int maxVideofps = 0;
+						} else if (bHighFps || bHighBitrate) {
+							int   normalVideoFps = 0;
+							int   hightVideoFps = 0;
+							float maxVideoTbr = 0.0f;
 
 							for (const auto& format : formats->GetArray()) {
 								CStringA protocol;
@@ -510,22 +520,33 @@ namespace YoutubeDL
 
 								int height = 0;
 								if (getJsonValue(format, "height", height) && height == vid_height) {
-									float tbr = .0f;
-									getJsonValue(format, "tbr", tbr);
-
 									int fps = 0;
 									getJsonValue(format, "fps", fps);
-
-									bool bMaxQuality = false;
-									if (fps > maxVideofps
-											|| (fps == maxVideofps && tbr > maxVideotbr)) {
-										bMaxQuality = true;
+									if (fps > 30) {
+										if (fps > hightVideoFps) {
+											hightVideoFps = fps;
+										}
+										if (!bHighFps) {
+											continue;
+										}
+									}
+									else if (fps > normalVideoFps) {
+										normalVideoFps = fps;
 									}
 
-									maxVideotbr = std::max(maxVideotbr, tbr);
-									maxVideofps = std::max(maxVideofps, fps);
+									bool bMaxTbr = false;
+									if (bHighBitrate) {
+										float tbr = .0f;
+										getJsonValue(format, "tbr", tbr);
+										if (tbr > maxVideoTbr) {
+											maxVideoTbr = tbr;
+										}
+										bMaxTbr = (tbr > 0 && tbr == maxVideoTbr);
+									}
 
-									if (bMaxQuality) {
+									bool ok = bHighFps && hightVideoFps;
+
+									if (bMaxTbr) {
 										CStringA acodec;
 										getJsonValue(format, "acodec", acodec);
 

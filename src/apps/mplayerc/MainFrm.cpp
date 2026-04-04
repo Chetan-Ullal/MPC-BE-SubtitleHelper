@@ -12089,7 +12089,7 @@ CString CMainFrame::OpenCreateGraphObject(OpenMediaData* pOMD)
 			m_pGB = pFGManager;
 
 			if (m_pGB) {
-				pFGManager->SetUserAgent(s.strUserAgent);
+				pFGManager->SetUserAgent(http::userAgent);
 
 				if (bUseSmartSeek) {
 					// build graph for preview
@@ -12097,7 +12097,7 @@ CString CMainFrame::OpenCreateGraphObject(OpenMediaData* pOMD)
 					m_pGB_preview = pFGManager_preview;
 
 					if (m_pGB_preview) {
-						pFGManager_preview->SetUserAgent(s.strUserAgent);
+						pFGManager_preview->SetUserAgent(http::userAgent);
 					}
 				}
 			}
@@ -12301,8 +12301,13 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 	CString youtubeUrl;
 	CString youtubeErrorMessage;
 
+	http::userAgent = s.strUserAgent;
+
 	if (!m_youtubeUrllist.empty()) {
 		youtubeUrl = pOFD->fi.GetPath();
+		if (!m_youtubeFields.userAgent.IsEmpty()) {
+			http::userAgent = m_youtubeFields.userAgent;
+		}
 		Content::Online::Disconnect(youtubeUrl);
 
 		pOFD->fi.Clear();
@@ -12333,6 +12338,7 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 		m_PlaybackInfo.RenderedPath = pOFD->fi.GetPath();
 		m_wndPlaylistBar.SetCurLabel(m_youtubeFields.title);
 	}
+	/*
 	else if (s.bYoutubePageParser && pOFD->auds.empty()) {
 		auto url = pOFD->fi.GetPath();
 		bool ok = Youtube::CheckURL(url);
@@ -12361,8 +12367,9 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 			}
 		}
 	}
+	*/
 
-	if (s.bYDLEnable
+	if (s.bYdlEnable
 			&& m_pGB->ShouldOperationContinue() == S_OK
 			&& youtubeUrl.IsEmpty()
 			&& pOFD->auds.empty()
@@ -12400,15 +12407,16 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 				if (bIsHtml) {
 					m_bYoutubeOpening = true;
 					CString ytdl_mesage;
-					ytdl_mesage.Format(ResStr(IDS_CALLING_YOUTUBEDL), GetFileName(s.strYDLExePath));
+					ytdl_mesage.Format(ResStr(IDS_CALLING_YOUTUBEDL), GetFileName(s.strYdlExePath));
 					SetStatusMessage(ytdl_mesage);
 
 					OpenFileData OFD;
-					ok = YoutubeDL::Parse_URL(
+					ok = YT_DLP::Parse_URL(
+						s.strYdlExePath,
 						url,
-						s.strYDLExePath,
-						s.iYDLMaxHeight,
-						s.bYDLMaximumQuality,
+						s.iYdlMaxHeight,
+						s.bYdlHighFps,
+						s.bYdlHighBitrate,
 						CStringA(s.strYoutubeAudioLang),
 						m_youtubeFields,
 						m_youtubeUrllist,
@@ -12417,6 +12425,9 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 					);
 					if (ok && m_pGB->ShouldOperationContinue() == S_OK) {
 						youtubeUrl = url;
+						if (!m_youtubeFields.userAgent.IsEmpty()) {
+							http::userAgent = m_youtubeFields.userAgent;
+						}
 						Content::Online::Disconnect(url);
 
 						*pOFD = OFD;
@@ -13474,7 +13485,7 @@ void CMainFrame::OpenSetupInfoBar()
 						if (SUCCEEDED(hr)) {
 							CStringW str((LPCWSTR)value.data(), length / sizeof(wchar_t));
 							m_wndInfoBar.SetLine(ResStr(IDS_INFOBAR_AUTHOR), str);
-							
+
 						}
 					}
 				}
@@ -14626,7 +14637,7 @@ void CMainFrame::CloseMediaPrivate()
 		m_youtubeAudioUrllist.clear();
 		s.iYoutubeTagSelected = 0;
 
-		YoutubeDL::Clear();
+		YT_DLP::Clear();
 	}
 	m_youtubeThumbnailData.clear();
 	m_bYoutubeOpened = false;
@@ -14637,6 +14648,7 @@ void CMainFrame::CloseMediaPrivate()
 	m_pparray.clear();
 	m_ssarray.clear();
 
+	http::userAgent = s.strUserAgent;
 	Content::Online::Clear();
 
 	if (m_pMC) {
@@ -16358,9 +16370,6 @@ void CMainFrame::AddTextPassThruFilter()
 				if (clsid != __uuidof(CNullTextRenderer)
 						&& clsid != GUIDFromCString(L"{04FE9017-F873-410E-871E-AB91661A4EF7}") // ffdshow video decoder
 						&& clsid != GUIDFromCString(L"{DBF9000E-F08C-4858-B769-C914A0FBB1D7}") // ffdshow subtitles filter
-#if ENABLE_ASSFILTERMOD
-						&& clsid != CLSID_AssFilterMod
-#endif
 				) {
 					continue;
 				}

@@ -1,5 +1,5 @@
 /*
- * (C) 2012-2025 see Authors.txt
+ * (C) 2012-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -29,19 +29,17 @@ class CPPageYoutube : public CPPageBase
 	DECLARE_DYNAMIC(CPPageYoutube)
 
 private:
-	CButton m_chkPageParser;
-	CComboBox m_cbVideoFormat;
-	CComboBox m_cbResolution;
-	CButton m_chk60fps;
-	CButton m_chkHdr;
-	CComboBox m_cbAudioFormat;
-	CComboBox m_cbAudioLang;
-	CButton m_chkLoadPlaylist;
-
 	CButton   m_chkYDLEnable;
 	CComboBox m_cbYDLExePath;
-	CComboBox m_cbYDLMaxHeight;
-	CButton   m_chkYDLMaximumQuality;
+
+	CComboBox m_cbVideoCodec;
+	CComboBox m_cbMaxHeight;
+	CButton   m_chkHighFps;
+	CButton   m_chkHdr;
+	CComboBox m_cbAudioCodec;
+	CComboBox m_cbAudioLang;
+	CButton   m_chkLoadPlaylist;
+	CButton   m_chkHighBitrate;
 
 	CEdit m_edAceStreamAddress;
 	CEdit m_edTorrServerAddress;
@@ -84,7 +82,6 @@ public:
 
 	enum { IDD = IDD_PPAGEYOUTUBE };
 
-	afx_msg void OnCheckPageParser();
 	afx_msg void OnCheck60fps();
 	afx_msg void OnCheckYDLEnable();
 

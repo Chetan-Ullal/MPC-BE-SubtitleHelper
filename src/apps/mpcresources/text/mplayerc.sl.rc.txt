@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Ponastavi"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Izrisovalnik podnapisov:"
-7		"Poti za samodejno nalaganje"
-9		"Ponastavi"
-10		"Uporabi zunanje podnapise pred vgrajenimi podnapisi"
-12		"Prezri vgrajene podnapise"
-13		"Samodejno naloži datoteke s podnapisi ob zaznavi sprememb."
-15		"Uporabi Subresync"
-17		"Default code page:"
-19		"Automatically detect code page"
+7		"Lastnosti"
+8		"Poti za samodejno nalaganje"
+10		"Ponastavi"
+11		"Uporabi zunanje podnapise pred vgrajenimi podnapisi"
+13		"Prezri vgrajene podnapise"
+14		"Samodejno naloži datoteke s podnapisi ob zaznavi sprememb."
+16		"Uporabi Subresync"
+18		"Default code page:"
+20		"Automatically detect code page"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26
@@ -602,22 +603,19 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Pripni na robove namizja"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
-5		"YouTube"
-6		"Uporabi vgrajeni razčlenjevalnik spletnih strani"
-7		"Preferred video format:"
-10		"60 fps"
-11		"HDR"
-12		"Preferred audio format:"
-14		"Prednostni jezik zvočnega zapisa:"
-16		"Naloži seznam predvajanja"
-18		"youtube-dl, yt-dlp"
-19		"Izvršljiva datoteka:"
-21		"Največja video višina:"
-23		"Izberi največji fps ali bitno hitrost"
-24		"AceStream naslov:"
-26		"MatriX (TorrServer) naslov:"
-29		"User agent:"
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 27
+5		"Preferred video format:"
+8		"50/60 fps"
+9		"HDR"
+10		"Preferred audio format:"
+12		"Prednostni jezik zvočnega zapisa:"
+14		"Naloži seznam predvajanja"
+16		"youtube-dl, yt-dlp"
+17		"Izvršljiva datoteka:"
+19		"Select max bitrate"
+20		"AceStream naslov:"
+22		"MatriX (TorrServer) naslov:"
+25		"User agent:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9

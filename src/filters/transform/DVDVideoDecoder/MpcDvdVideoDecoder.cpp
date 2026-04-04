@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -460,13 +460,13 @@ HRESULT CMpeg2DecFilter::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop,
 	return __super::NewSegment(tStart, tStop, dRate);
 }
 
-static VIDEO_OUTPUT_FORMATS DefaultFormats[] = {
-	{&MEDIASUBTYPE_NV12, FCC('NV12'), 12, 1},
-	{&MEDIASUBTYPE_YV12, FCC('YV12'), 12, 1},
-	{&MEDIASUBTYPE_YUY2, FCC('YUY2'), 16, 2},
+static VFormatDesc DefaultFormats[] = {
+	VFormat_NV12,
+	VFormat_YV12,
+	VFormat_YUY2,
 };
 
-void CMpeg2DecFilter::GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats)
+void CMpeg2DecFilter::GetOutputFormats(int& nNumber, VFormatDesc** ppFormats)
 {
 	nNumber    = std::size(DefaultFormats);
 	*ppFormats = DefaultFormats;
@@ -796,27 +796,28 @@ HRESULT CMpeg2DecFilter::DeliverToRenderer()
 	BYTE** buf = &m_fb.buf[0];
 
 	if (m_pSubpicInput->HasAnythingToRender(m_fb.rtStart)) {
-		CopyPlane(m_fb.h,   m_fb.buf[3], m_fb.pitch,   m_fb.buf[0], m_fb.pitch);
-		CopyPlane(m_fb.h/2, m_fb.buf[4], m_fb.pitch/2, m_fb.buf[1], m_fb.pitch/2);
-		CopyPlane(m_fb.h/2, m_fb.buf[5], m_fb.pitch/2, m_fb.buf[2], m_fb.pitch/2);
+		CopyPlane(m_fb.h,   m_fb.buf2[0], m_fb.pitch,   m_fb.buf[0], m_fb.pitch);
+		CopyPlane(m_fb.h/2, m_fb.buf2[1], m_fb.pitch/2, m_fb.buf[1], m_fb.pitch/2);
+		CopyPlane(m_fb.h/2, m_fb.buf2[2], m_fb.pitch/2, m_fb.buf[2], m_fb.pitch/2);
 
-		buf = &m_fb.buf[3];
+		buf = &m_fb.buf2[0];
 
 		m_pSubpicInput->RenderSubpics(m_fb.rtStart, buf, m_fb.pitch, m_fb.h);
 	}
 
-	BITMAPINFOHEADER bihOut;
-	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
+	auto pBihOut = GetBitmapInfoHeader(&m_pOutput->CurrentMediaType());
 
-	if (bihOut.biCompression == FCC('NV12')) {
-		CopyI420toNV12(m_fb.w, m_fb.h, pDataOut, bihOut.biWidth, buf, m_fb.pitch);
-	}
-	else if (bihOut.biCompression == FCC('YV12')) {
-		CopyI420toYV12(m_fb.h, pDataOut, bihOut.biWidth, buf, m_fb.pitch);
-	}
-	else if(bihOut.biCompression == FCC('YUY2')) {
-		bool interlaced = !(m_fb.flags & PIC_FLAG_PROGRESSIVE_FRAME);
-		ConvertI420toYUY2(m_fb.h, pDataOut, bihOut.biWidth, buf, m_fb.pitch, interlaced);
+	switch (pBihOut->biCompression) {
+	case FCC('NV12'):
+		CopyYUV420PtoNV12(m_fb.w, m_fb.h, pDataOut, pBihOut->biWidth, buf, m_fb.pitch);
+		break;
+	case FCC('YV12'):
+		CopyYUV420PSwapUV(m_fb.h, pDataOut, pBihOut->biWidth, buf, m_fb.pitch);
+		break;
+	case FCC('YUY2'):
+		const bool interlaced = !(m_fb.flags & PIC_FLAG_PROGRESSIVE_FRAME);
+		ConvertYUV420PtoYUY2(m_fb.h, pDataOut, pBihOut->biWidth * 2, buf, m_fb.pitch, interlaced);
+		break;
 	}
 
 	if (CMpeg2DecInputPin* pPin = dynamic_cast<CMpeg2DecInputPin*>(m_pInput)) {

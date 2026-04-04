@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -281,14 +281,8 @@ CString CMediaTypeEx::ToString(IPin* pPin)
 	if (majortype == MEDIATYPE_Video || subtype == MEDIASUBTYPE_MPEG2_VIDEO) {
 		type = L"Video";
 
-		BITMAPINFOHEADER bih;
-		bool fBIH = ExtractBIH(this, &bih);
-
-		int w, h, arx, ary;
-		bool fDim = ExtractDim(this, w, h, arx, ary);
-
-		if (fBIH) {
-			codec = GetVideoCodecName(subtype, bih.biCompression);
+		if (auto pBIH = GetBitmapInfoHeader(this)) {
+			codec = GetVideoCodecName(subtype, pBIH->biCompression);
 		}
 
 		if (codec.IsEmpty()) {
@@ -301,7 +295,8 @@ CString CMediaTypeEx::ToString(IPin* pPin)
 			}
 		}
 
-		if (fDim) {
+		int w, h, arx, ary;
+		if (ExtractDim(this, w, h, arx, ary)) {
 			dim.Format(L"%dx%d", w, h);
 			if (w*ary != h*arx) {
 				dim.AppendFormat(L" (%d:%d)", arx, ary);
@@ -642,7 +637,7 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 
 		sl.emplace_back(L"");
 
-		if (formattype == FORMAT_VideoInfo2 || formattype == FORMAT_MPEG2_VIDEO) {
+		if (formattype == FORMAT_VideoInfo2 || formattype == FORMAT_MPEG2_VIDEO || formattype == FORMAT_DiracVideoInfo) {
 			VIDEOINFOHEADER2& vih2 = *(VIDEOINFOHEADER2*)pbFormat;
 			bih = &vih2.bmiHeader;
 
@@ -878,12 +873,16 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 	if (fmtsize < cbFormat) { // extra and unknown data
 		sl.emplace_back(L"");
 
-		ULONG extrasize = cbFormat - fmtsize;
+		const ULONG extrasize = cbFormat - fmtsize;
 		str.Format(L"Extradata: %u", extrasize);
 		sl.emplace_back(str);
-		for (ULONG i = 0, j = (extrasize + 15) & ~15; i < j; i += 16) {
+
+		const ULONG printextrasize = extrasize <= 4 * KILOBYTE + 16 ? extrasize : 4 * KILOBYTE;
+
+		ULONG i = 0;
+		for (ULONG j = (printextrasize + 15) & ~15; i < j; i += 16) {
 			str.Format(L"%04x:", i);
-			ULONG line_end = std::min(i + 16, extrasize);
+			ULONG line_end = std::min(i + 16, printextrasize);
 
 			for (ULONG k = i; k < line_end; k++) {
 				str.AppendFormat(L" %02x", pbFormat[fmtsize + k]);
@@ -902,6 +901,11 @@ void CMediaTypeEx::Dump(std::list<CString>& sl)
 			}
 			str += ch;
 
+			sl.emplace_back(str);
+		}
+
+		if (extrasize > printextrasize) {
+			str.Format(L"%04x: ...", i);
 			sl.emplace_back(str);
 		}
 	}

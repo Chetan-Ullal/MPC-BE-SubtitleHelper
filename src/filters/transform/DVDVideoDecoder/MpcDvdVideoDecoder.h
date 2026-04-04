@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -51,7 +51,8 @@ class __declspec(uuid("39F81046-93AC-486D-882F-4ADD1CB068C6"))
 		int h = 0;
 		int pitch = 0;
 		BYTE* buf_base = nullptr;;
-		BYTE* buf[6] = {};
+		BYTE* buf[3] = {};
+		BYTE* buf2[3] = {};
 		REFERENCE_TIME rtStart = 0;
 		REFERENCE_TIME rtStop = 0;
 		uint32_t flags = 0;
@@ -69,15 +70,16 @@ class __declspec(uuid("39F81046-93AC-486D-882F-4ADD1CB068C6"))
 			BYTE* p = buf_base;
 			buf[0] = p;
 			p += (size + 31) & ~31;
-			buf[3] = p;
-			p += (size + 31) & ~31;
 			buf[1] = p;
-			p += (size/4 + 31) & ~31;
-			buf[4] = p;
 			p += (size/4 + 31) & ~31;
 			buf[2] = p;
 			p += (size/4 + 31) & ~31;
-			buf[5] = p;
+
+			buf2[0] = p;
+			p += (size + 31) & ~31;
+			buf2[1] = p;
+			p += (size/4 + 31) & ~31;
+			buf2[2] = p;
 			p += (size/4 + 31) & ~31;
 		}
 		void Free() {
@@ -102,7 +104,7 @@ protected:
 	virtual void GetOutputSize(int& w, int& h, int& arx, int& ary) override;
 	virtual HRESULT Transform(IMediaSample* pIn) override;
 	virtual bool IsVideoInterlaced() override { return IsInterlacedEnabled(); }
-	virtual void GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats) override;
+	virtual void GetOutputFormats(int& nNumber, VFormatDesc** ppFormats) override;
 
 public:
 	CMpeg2DecFilter(LPUNKNOWN lpunk, HRESULT* phr);

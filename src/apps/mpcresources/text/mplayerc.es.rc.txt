@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Reiniciar"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Renderizador de subtítulos:"
-7		"Rutas de autocargado"
-9		"Reiniciar"
-10		"Siempre predeterminar a subtítulos externos si están disponibles"
-12		"No cargar subtítulos integrados"
-13		"Recarga automática de archivos de subtítulos después de detectar la modificación"
-15		"Usar Subresync"
-17		"Página de códigos predeterminada:"
-19		"Detectar automáticamente la página de códigos"
+7		"Propiedades"
+8		"Rutas de autocargado"
+10		"Reiniciar"
+11		"Siempre predeterminar a subtítulos externos si están disponibles"
+13		"No cargar subtítulos integrados"
+14		"Recarga automática de archivos de subtítulos después de detectar la modificación"
+16		"Usar Subresync"
+18		"Página de códigos predeterminada:"
+20		"Detectar automáticamente la página de códigos"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26
@@ -602,22 +603,19 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Ajustar a los bordes del escritorio"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
-5		"YouTube"
-6		"Usar el analizador de páginas web incorporado"
-7		"Formato de video preferido:"
-10		"60 fps"
-11		"HDR"
-12		"Formato de audio preferido:"
-14		"Idioma preferido de pista de audio:"
-16		"Cargar Lista de Reproducción"
-18		"youtube-dl, yt-dlp"
-19		"Archivo ejecutable:"
-21		"Altura máxima de video:"
-23		"Seleccionar fps o tasa de bits máxima"
-24		"Dirección AceStream:"
-26		"Dirección MatriX (TorrServer):"
-29		"Agente de usuario:"
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 27
+5		"Formato de video preferido:"
+8		"50/60 fps"
+9		"HDR"
+10		"Formato de audio preferido:"
+12		"Idioma preferido de pista de audio:"
+14		"Cargar Lista de Reproducción"
+16		"youtube-dl, yt-dlp"
+17		"Archivo ejecutable:"
+19		"Select max bitrate"
+20		"Dirección AceStream:"
+22		"Dirección MatriX (TorrServer):"
+25		"Agente de usuario:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9

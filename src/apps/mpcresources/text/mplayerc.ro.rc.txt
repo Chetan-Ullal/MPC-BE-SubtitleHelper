@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"Resetează"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"Randorul de subtitrări:"
-7		"Căile pentru încărcarea automată"
-9		"Resetează"
-10		"Preferă subtitrările externe în locul celor integrate"
-12		"Ignoră subtitrările integrate"
-13		"Reîncarcă automat fișierele de subtitrări după ce se detectează modificările"
-15		"Folosește modul de resincronizare a subtitrărilor (Subresync)"
-17		"Pagina de codificare implicită:"
-19		"Detectează în mod automat pagina de codificare"
+7		"Proprietăți"
+8		"Căile pentru încărcarea automată"
+10		"Resetează"
+11		"Preferă subtitrările externe în locul celor integrate"
+13		"Ignoră subtitrările integrate"
+14		"Reîncarcă automat fișierele de subtitrări după ce se detectează modificările"
+16		"Folosește modul de resincronizare a subtitrărilor (Subresync)"
+18		"Pagina de codificare implicită:"
+20		"Detectează în mod automat pagina de codificare"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26
@@ -602,22 +603,19 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"Fixează la marginile desktop-ului (biroului)"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
-5		"YouTube"
-6		"Folosește analizatorul de pagini web încorporat"
-7		"Formatul video preferat:"
-10		"60 de fps"
-11		"HDR"
-12		"Formatul audio preferat:"
-14		"Limba preferată pentru pistă:"
-16		"Încarcă lista de redare (playlist-ul)"
-18		"youtube-dl, yt-dlp"
-19		"Fișierul executabil:"
-21		"Înălțimea maximă a videoclipului:"
-23		"Selectează numărul maxim de cadre pe secundă (fps-uri) sau rata de biți"
-24		"Adresa AceStream:"
-26		"Adresa MatriX (TorrServer):"
-29		"Agentul de utilizator:"
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 27
+5		"Formatul video preferat:"
+8		"50/60 fps"
+9		"HDR"
+10		"Formatul audio preferat:"
+12		"Limba preferată pentru pistă:"
+14		"Încarcă lista de redare (playlist-ul)"
+16		"youtube-dl, yt-dlp"
+17		"Fișierul executabil:"
+19		"Select max bitrate"
+20		"Adresa AceStream:"
+22		"Adresa MatriX (TorrServer):"
+25		"Agentul de utilizator:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9
@@ -1078,7 +1076,7 @@ STRING IDD_PPAGEFORMATS		"Player::Formate"
 STRING IDD_PPAGEFULLSCREEN		"Video::Ecran complet (Pe tot ecranul)"
 STRING IDD_PPAGEINTERFACE		"Player::Interfață"
 STRING IDD_PPAGEINTERNALFILTERS		"Filtre interne"
-STRING IDD_PPAGELOGO		"Player::Logo"
+STRING IDD_PPAGELOGO		"Player::Siglă (Logo)"
 STRING IDD_PPAGEMISC		"Diverse"
 STRING IDD_PPAGEMOUSE		"Player::Mouse"
 STRING IDD_PPAGEOSD		"Player::OSD (On Screen Diplay / Afișare pe ecran)"
@@ -1549,7 +1547,7 @@ STRING IDS_INFOBAR_VIDEO		"Video"
 STRING IDS_INTERLACED		"împletit"
 STRING IDS_INVALID_PARAMS_ERROR		"Nu se poate deschide, parametrii de intrare sunt nevalizi"
 STRING IDS_LAST_IN_FOLDER		"Acum este încărcat ultimul fișier din dosar (din folder)."
-STRING IDS_LOGO_AUTHOR		"Autor necunoscut. Dacă ai făcut acest logo, contactează-ne!"
+STRING IDS_LOGO_AUTHOR		"Autor necunoscut. Dacă ai făcut acest logo (această siglă), contactează-ne!"
 STRING IDS_LOW_FREQUENCY		"Frecvență joasă"
 STRING IDS_MAINFRM_10		"Unghiul: %02d/%02d, %dx%d %dHz %d:%d"
 STRING IDS_MAINFRM_100		"Atenție: Nu există nicio interfață IAMStreamConfig pentru captura vidcap"

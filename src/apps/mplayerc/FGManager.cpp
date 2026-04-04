@@ -1080,7 +1080,36 @@ HRESULT CFGManager::ConnectInternal(IPin* pPinOut, IPin* pPinIn, bool bContinueR
 
 			CComPtr<IBaseFilter> pBF;
 			std::list<CComQIPtr<IUnknown, &IID_IUnknown>> pUnks;
-			if (FAILED(pFGF->Create(&pBF, pUnks))) {
+			hr = pFGF->Create(&pBF, pUnks);
+			if (FAILED(hr)) {
+				// Check if selected video renderer fails to load
+				CLSID filter = pFGF->GetCLSID();
+				if (IsVideoRenderer(filter)) {
+					if (filter == CLSID_EVRAllocatorPresenter) {
+						if (IDYES == AfxMessageBox(
+								L"The Enhanced Video Renderer (custom presenter) has failed to load.\n\n"
+								"This problem is often caused by a bug in the graphics driver. "
+								"Or you may be using a generic driver which has limited capabilities.\n\n"
+								"Do you want to change settings to use Enhanced Video Renderer?\n"
+								"(player restart required)", MB_ICONEXCLAMATION | MB_YESNO, 0)) {
+							GetRenderersSettings().iVideoRenderer = VIDRNDT_EVR;
+						}
+					}
+					else if (filter != CLSID_EnhancedVideoRenderer) {
+						CString msg;
+						msg.Format(
+							L"The selected '%s' has failed to load.\n\n"
+							"Do you want to change settings to use\n"
+							"Enhanced Video Renderer (custom presenter) ?\n"
+							"(player restart required)",
+							pFGF->GetName()
+						);
+						if (IDYES == AfxMessageBox(msg, MB_ICONEXCLAMATION | MB_YESNO, 0)) {
+							GetRenderersSettings().iVideoRenderer = VIDRNDT_EVR_CP;
+						}
+					}
+					return E_ABORT;
+				}
 				continue;
 			}
 
@@ -2631,6 +2660,7 @@ CFGManagerCustom::CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, boo
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV12);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV16);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV24);
+	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_AYUV);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_BGR48);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_BGRA64);
 	pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_b48r);
@@ -2697,6 +2727,11 @@ CFGManagerCustom::CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, boo
 	// mainconcept color space converter
 	m_transform.emplace_back(DNew CFGFilterRegistry(GUIDFromCString(L"{272D77A0-A852-4851-ADA4-9091FEAD4C86}"), MERIT64_DO_NOT_USE));
 
+#ifndef _WIN64
+	// PICVideo Lossless JPEG Decompressor (pvljpg20.dll) since causes a crash
+	m_transform.emplace_back(DNew CFGFilterRegistry(GUIDFromCString(L"{BA310CC1-470D-11D3-962F-00500471FDDC}"), MERIT64_DO_NOT_USE));
+#endif
+
 	// Accusoft PICVideo M-JPEG Codec 2.1 since causes a DEP crash
 	m_transform.emplace_back(DNew CFGFilterRegistry(GUIDFromCString(L"{4C4CD9E1-F876-11D2-962F-00500471FDDC}"), MERIT64_DO_NOT_USE));
 
@@ -2706,6 +2741,16 @@ CFGManagerCustom::CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, boo
 	// block default video renderer renderer
 	m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VideoRendererDefault, MERIT64_DO_NOT_USE));
 	m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VideoRenderer, MERIT64_DO_NOT_USE));
+
+	// We are blocking the AVI Decompressor filter because some VFW codecs cause modern applications to crash.
+	// Problematic 64-bit VFW codecs:
+	// - ffdshow vfw codec (ff_vfw.dll)
+	// - Logitech Video (I420) codec (lvcod64.dll)
+	// - MLC lossless codec (mlc.dl)
+	// - Proxy Codec64 (pxc0.dll)
+	// Problematic 32-bit VFW codecs:
+	// - PICVideo Lossles JPEG Codec (pvljpg20.dll)
+	m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AVIDec, MERIT64_DO_NOT_USE));
 
 	// Subtitle renderers
 
@@ -2720,45 +2765,34 @@ CFGManagerCustom::CFGManagerCustom(LPCWSTR pName, LPUNKNOWN pUnk, HWND hWnd, boo
 		case SUBRNDT_ISR:
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_DO_NOT_USE));
+
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
 			break;
 		case SUBRNDT_VSFILTER:
+			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_PREFERRED));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_ABOVE_DSHOW));
+
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
 			break;
 		case SUBRNDT_XYSUBFILTER:
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_DO_NOT_USE));
 			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
+
 			if (VRwithSR) {
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_ABOVE_DSHOW));
+				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_PREFERRED));
+				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_ABOVE_DSHOW));
 			} else {
 				// Prevent XySubFilter from connecting while renderer is not compatible
 				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
 				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
 			}
-#if ENABLE_ASSFILTERMOD
-		case SUBRNDT_ASSFILTERMOD:
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_VSFilter_autoloading, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter, MERIT64_DO_NOT_USE));
-			m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_XySubFilter_AutoLoader, MERIT64_DO_NOT_USE));
-			if (VRwithSR) {
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_ABOVE_DSHOW));
-			} else {
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
-				m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
-			}
-			break;
-#endif
 	}
+
+	// blocking the problematic AssFilterMod
+	m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterMod, MERIT64_DO_NOT_USE));
+	m_transform.emplace_back(DNew CFGFilterRegistry(CLSID_AssFilterModAutoLoad, MERIT64_DO_NOT_USE));
 
 	// Overrides
 	WORD merit_low = 1;
@@ -2797,15 +2831,15 @@ STDMETHODIMP CFGManagerCustom::AddFilter(IBaseFilter* pBF, LPCWSTR pName)
 {
 	CAutoLock cAutoLock(this);
 
-	HRESULT hr;
-
-	if (FAILED(hr = __super::AddFilter(pBF, pName))) {
+	HRESULT hr = __super::AddFilter(pBF, pName);
+	if (FAILED(hr)) {
 		return hr;
 	}
 
 	CAppSettings& s = AfxGetAppSettings();
+	CLSID clsid = GetCLSID(pBF);
 
-	if (GetCLSID(pBF) == CLSID_DMOWrapperFilter) {
+	if (clsid == CLSID_DMOWrapperFilter) {
 		if (CComQIPtr<IPropertyBag> pPB = pBF) {
 			CComVariant var(true);
 			pPB->Write(CComBSTR(L"_HIRESOUTPUT"), &var);

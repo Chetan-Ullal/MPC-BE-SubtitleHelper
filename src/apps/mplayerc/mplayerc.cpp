@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -27,7 +27,6 @@
 #include "MainFrm.h"
 #include "Misc.h"
 #include <winternl.h>
-#include <psapi.h>
 #include "Ifo.h"
 #include "MultiMonitor.h"
 #include "DSUtil/SysVersion.h"
@@ -177,6 +176,10 @@ CMPlayerCApp::CMPlayerCApp()
 
 CMPlayerCApp::~CMPlayerCApp()
 {
+	if (m_hNTDLL) {
+		FreeLibrary(m_hNTDLL);
+	}
+
 	// Wait for any pending I/O operations to be canceled
 	while (WAIT_IO_COMPLETION == SleepEx(0, TRUE));
 }
@@ -773,12 +776,12 @@ BOOL CMPlayerCApp::InitInstance()
 	DetourAttach(&(PVOID&)Real_mixerSetControlDetails, (PVOID)Mine_mixerSetControlDetails);
 	DetourAttach(&(PVOID&)Real_DeviceIoControl, (PVOID)Mine_DeviceIoControl);
 
-	HMODULE hNTDLL = LoadLibraryW(L"ntdll.dll");
+	m_hNTDLL = LoadLibraryW(L"ntdll.dll");
 
 #if 0
 #ifndef _DEBUG // Disable NtQueryInformationProcess in debug (prevent VS debugger to stop on crash address)
-	if (hNTDLL) {
-		Real_NtQueryInformationProcess = (decltype(Real_NtQueryInformationProcess))GetProcAddress (hNTDLL, "NtQueryInformationProcess");
+	if (m_hNTDLL) {
+		Real_NtQueryInformationProcess = (decltype(Real_NtQueryInformationProcess))GetProcAddress (m_hNTDLL, "NtQueryInformationProcess");
 
 		if (Real_NtQueryInformationProcess) {
 			DetourAttach(&(PVOID&)Real_NtQueryInformationProcess, (PVOID)Mine_NtQueryInformationProcess);
@@ -1086,9 +1089,9 @@ BOOL CMPlayerCApp::InitInstance()
 	pFrame->SetFocus();
 
 	// set HIGH I/O Priority for better playback perfomance
-	if (hNTDLL) {
+	if (m_hNTDLL) {
 		typedef NTSTATUS (WINAPI *FUNC_NTSETINFORMATIONPROCESS)(HANDLE, ULONG, PVOID, ULONG);
-		FUNC_NTSETINFORMATIONPROCESS NtSetInformationProcess = (FUNC_NTSETINFORMATIONPROCESS)GetProcAddress(hNTDLL, "NtSetInformationProcess");
+		FUNC_NTSETINFORMATIONPROCESS NtSetInformationProcess = (FUNC_NTSETINFORMATIONPROCESS)GetProcAddress(m_hNTDLL, "NtSetInformationProcess");
 
 		if (NtSetInformationProcess && SetPrivilege(SE_INC_BASE_PRIORITY_NAME)) {
 			ULONG IoPriority = 3;
@@ -1096,9 +1099,6 @@ BOOL CMPlayerCApp::InitInstance()
 			NTSTATUS NtStatus = NtSetInformationProcess(GetCurrentProcess(), ProcessIoPriority, &IoPriority, sizeof(ULONG));
 			DLog(L"Set I/O Priority - %d", NtStatus);
 		}
-
-		FreeLibrary(hNTDLL);
-		hNTDLL = nullptr;
 	}
 
 	m_mutexOneInstance.Release();

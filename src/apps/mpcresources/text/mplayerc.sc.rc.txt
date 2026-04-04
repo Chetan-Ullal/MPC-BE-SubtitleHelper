@@ -514,16 +514,17 @@ BEGIN DIALOGEX IDD_PPAGESUBSTYLE LINES 66
 65		"重置"
 END
 
-BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 20
+BEGIN DIALOGEX IDD_PPAGESUBTITLES LINES 21
 5		"字幕渲染器:"
-7		"自动载入路径"
-9		"重置"
-10		"当外部字幕存在时优先使用外部字幕"
-12		"不载入内嵌字幕"
-13		"发现字幕改动后自动重加载文件"
-15		"启用字幕同步编辑器"
-17		"默认代码页:"
-19		"自动检测代码页"
+7		"属性"
+8		"自动载入路径"
+10		"重置"
+11		"当外部字幕存在时优先使用外部字幕"
+13		"不载入内嵌字幕"
+14		"发现字幕改动后自动重加载文件"
+16		"启用字幕同步编辑器"
+18		"默认代码页:"
+20		"自动检测代码页"
 END
 
 BEGIN DIALOGEX IDD_PPAGESYNC LINES 26
@@ -602,22 +603,19 @@ BEGIN DIALOGEX IDD_PPAGEWINDOWSIZE LINES 28
 27		"吸附对齐至桌面边缘"
 END
 
-BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 31
-5		"YouTube"
-6		"使用内置网页分析器"
-7		"首选视频格式:"
-10		"60 fps"
-11		"HDR"
-12		"首选音频格式:"
-14		"首选音轨语言:"
-16		"加载播放列表"
-18		"youtube-dl, yt-dlp"
-19		"可执行的文件:"
-21		"最大视频高度:"
-23		"选择最大帧率或比特率"
-24		"AceStream 链接:"
-26		"MatriX (TorrServer) 链接:"
-29		"用户代理:"
+BEGIN DIALOGEX IDD_PPAGEYOUTUBE LINES 27
+5		"首选视频格式:"
+8		"50/60 fps"
+9		"HDR"
+10		"首选音频格式:"
+12		"首选音轨语言:"
+14		"加载播放列表"
+16		"youtube-dl, yt-dlp"
+17		"可执行的文件:"
+19		"Select max bitrate"
+20		"AceStream 链接:"
+22		"MatriX (TorrServer) 链接:"
+25		"用户代理:"
 END
 
 BEGIN DIALOGEX IDD_SAVEIMAGEDIALOGTEMPL LINES 9

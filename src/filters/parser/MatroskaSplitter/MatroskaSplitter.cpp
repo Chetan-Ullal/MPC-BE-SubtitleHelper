@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -397,6 +397,9 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 						mt.subtype = MEDIASUBTYPE_PNG;
 						mt.SetTemporalCompression(FALSE);
 						break;
+					case FCC('y408'):
+						mt.subtype = MEDIASUBTYPE_LAV_RAWVIDEO;
+						break;
 					default:
 						mt.subtype = FOURCCMap(pvih->bmiHeader.biCompression);
 					}
@@ -615,6 +618,7 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 				else {
 					DWORD fourcc = 0;
 					WORD bitdepth = 0;
+
 					if (CodecID == "V_MJPEG") {
 						fourcc = FCC('MJPG');
 						mt.bTemporalCompression = FALSE; // Motion JPEG has only I frames
@@ -681,9 +685,8 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 							bitdepth = 24;
 							break;
 						default:
-							fourcc = 0; // unknown FourCC
+							mt.subtype = MEDIASUBTYPE_LAV_RAWVIDEO;
 							break;
-							// TODO: bitdepth = 8 * framesize / (width * height)
 						}
 
 						mt.SetSampleSize(pTE->v.PixelWidth * (LONG)pTE->v.PixelHeight * bitdepth / 8); // fixed frame size
@@ -692,7 +695,7 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 
 					if (fourcc) {
 						mt.formattype = FORMAT_VideoInfo;
-						if (mt.subtype != MEDIASUBTYPE_icpf) {
+						if (mt.subtype != MEDIASUBTYPE_icpf && mt.subtype != MEDIASUBTYPE_LAV_RAWVIDEO) {
 							mt.subtype = FOURCCMap(fourcc);
 						}
 						VIDEOINFOHEADER* pvih = (VIDEOINFOHEADER*)mt.AllocFormatBuffer(sizeof(VIDEOINFOHEADER) + pTE->CodecPrivate.size());

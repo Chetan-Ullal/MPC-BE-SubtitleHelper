@@ -98,6 +98,7 @@ static void vp9_tile_data_free(VP9TileData *td)
 static void vp9_frame_unref(VP9Frame *f)
 {
     ff_progress_frame_unref(&f->tf);
+    av_refstruct_unref(&f->header_ref);
     av_refstruct_unref(&f->extradata);
     av_refstruct_unref(&f->hwaccel_picture_private);
     f->segmentation_map = NULL;
@@ -146,6 +147,9 @@ fail:
 
 static void vp9_frame_replace(VP9Frame *dst, const VP9Frame *src)
 {
+    av_refstruct_replace(&dst->header_ref, src->header_ref);
+    dst->frame_header = src->frame_header;
+
     ff_progress_frame_replace(&dst->tf, &src->tf);
 
     av_refstruct_replace(&dst->extradata, src->extradata);
@@ -173,10 +177,12 @@ static int update_size(AVCodecContext *avctx, int w, int h)
     uint8_t *p;
     int bytesperpixel = s->bytesperpixel, ret, cols, rows;
     int lflvl_len, i;
+    int changed = 0;
 
     av_assert0(w > 0 && h > 0);
 
     if (!(s->pix_fmt == s->gf_fmt && w == s->w && h == s->h)) {
+        changed = 1;
         if ((ret = ff_set_dimensions(avctx, w, h)) < 0)
             return ret;
 
@@ -262,7 +268,7 @@ static int update_size(AVCodecContext *avctx, int w, int h)
     rows = (h + 7) >> 3;
 
     if (s->intra_pred_data[0] && cols == s->cols && rows == s->rows && s->pix_fmt == s->last_fmt)
-        return 0;
+        return changed;
 
     s->last_fmt  = s->pix_fmt;
     s->sb_cols   = (w + 63) >> 6;
@@ -307,9 +313,10 @@ static int update_size(AVCodecContext *avctx, int w, int h)
         ff_vp9dsp_init(&s->dsp, s->s.h.bpp, avctx->flags & AV_CODEC_FLAG_BITEXACT);
         ff_videodsp_init(&s->vdsp, s->s.h.bpp);
         s->last_bpp = s->s.h.bpp;
+        changed = 1;
     }
 
-    return 0;
+    return changed;
 }
 
 static int update_block_buffers(AVCodecContext *avctx)
@@ -516,6 +523,7 @@ static int decode_frame_header(AVCodecContext *avctx,
     int c, i, j, k, l, m, n, w, h, max, size2, ret, sharp;
     int last_invisible;
     const uint8_t *data2;
+    int changed;
 
     /* general header */
     if ((ret = init_get_bits8(&s->gb, data, size)) < 0) {
@@ -785,10 +793,10 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
 
     /* tiling info */
-    if ((ret = update_size(avctx, w, h)) < 0) {
+    if ((changed = update_size(avctx, w, h)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "Failed to initialize decoder for %dx%d @ %d\n",
                w, h, s->pix_fmt);
-        return ret;
+        return changed;
     }
     for (s->s.h.tiling.log2_tile_cols = 0;
          s->sb_cols > (64 << s->s.h.tiling.log2_tile_cols);
@@ -803,7 +811,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
     s->s.h.tiling.log2_tile_rows = decode012(&s->gb);
     s->s.h.tiling.tile_rows = 1 << s->s.h.tiling.log2_tile_rows;
-    if (s->s.h.tiling.tile_cols != (1 << s->s.h.tiling.log2_tile_cols)) {
+    if (s->s.h.tiling.tile_cols != (1 << s->s.h.tiling.log2_tile_cols) || changed) {
         int n_range_coders;
         VPXRangeCoder *rc;
 
@@ -1262,6 +1270,7 @@ static av_cold int vp9_decode_free(AVCodecContext *avctx)
     for (i = 0; i < 8; i++) {
         ff_progress_frame_unref(&s->s.refs[i]);
         ff_progress_frame_unref(&s->next_refs[i]);
+        vp9_frame_unref(&s->s.ref_frames[i]);
     }
 
     free_buffers(s);
@@ -1269,6 +1278,11 @@ static av_cold int vp9_decode_free(AVCodecContext *avctx)
     av_freep(&s->entries);
     ff_pthread_free(s, vp9_context_offsets);
 #endif
+
+    av_refstruct_unref(&s->header_ref);
+    ff_cbs_fragment_free(&s->current_frag);
+    ff_cbs_close(&s->cbc);
+
     av_freep(&s->td);
     return 0;
 }
@@ -1571,22 +1585,41 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     int size = pkt->size;
     VP9Context *s = avctx->priv_data;
     int ret, i, j, ref;
+    CodedBitstreamUnit *unit;
+    VP9RawFrame *rf;
+
     int retain_segmap_ref = s->s.frames[REF_FRAME_SEGMAP].segmentation_map &&
                             (!s->s.h.segmentation.enabled || !s->s.h.segmentation.update_map);
     const VP9Frame *src;
     AVFrame *f;
 
+    ret = ff_cbs_read_packet(s->cbc, &s->current_frag, pkt);
+    if (ret < 0) {
+        ff_cbs_fragment_reset(&s->current_frag);
+        av_log(avctx, AV_LOG_ERROR, "Failed to read frame header.\n");
+        return ret;
+    }
+
+    unit = &s->current_frag.units[0];
+    rf = unit->content;
+
+    av_refstruct_replace(&s->header_ref, unit->content_ref);
+    s->frame_header = &rf->header;
+
     if ((ret = decode_frame_header(avctx, data, size, &ref)) < 0) {
+        ff_cbs_fragment_reset(&s->current_frag);
         return ret;
     } else if (ret == 0) {
         if (!s->s.refs[ref].f) {
             av_log(avctx, AV_LOG_ERROR, "Requested reference %d not available\n", ref);
+            ff_cbs_fragment_reset(&s->current_frag);
             return AVERROR_INVALIDDATA;
         }
         for (int i = 0; i < 8; i++)
             ff_progress_frame_replace(&s->next_refs[i], &s->s.refs[i]);
         ff_thread_finish_setup(avctx);
         ff_progress_frame_await(&s->s.refs[ref], INT_MAX);
+        ff_cbs_fragment_reset(&s->current_frag);
 
         if ((ret = av_frame_ref(frame, s->s.refs[ref].f)) < 0)
             return ret;
@@ -1604,8 +1637,14 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
         vp9_frame_replace(&s->s.frames[REF_FRAME_SEGMAP], src);
     vp9_frame_replace(&s->s.frames[REF_FRAME_MVPAIR], src);
     vp9_frame_unref(&s->s.frames[CUR_FRAME]);
-    if ((ret = vp9_frame_alloc(avctx, &s->s.frames[CUR_FRAME])) < 0)
+    if ((ret = vp9_frame_alloc(avctx, &s->s.frames[CUR_FRAME])) < 0) {
+        ff_cbs_fragment_reset(&s->current_frag);
         return ret;
+    }
+
+    s->s.frames[CUR_FRAME].header_ref = av_refstruct_ref(s->header_ref);
+    s->s.frames[CUR_FRAME].frame_header = s->frame_header;
+
     f = s->s.frames[CUR_FRAME].tf.f;
     if (s->s.h.keyframe)
         f->flags |= AV_FRAME_FLAG_KEY;
@@ -1642,6 +1681,13 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
         ret = hwaccel->end_frame(avctx);
         if (ret < 0)
             return ret;
+
+        for (i = 0; i < 8; i++) {
+            vp9_frame_replace(&s->s.ref_frames[i],
+                              s->s.h.refreshrefmask & (1 << i) ?
+                                  &s->s.frames[CUR_FRAME] : &s->s.ref_frames[i]);
+        }
+
         goto finish;
     }
 
@@ -1766,6 +1812,8 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     }
 
 finish:
+    ff_cbs_fragment_reset(&s->current_frag);
+
     ff_progress_frame_report(&s->s.frames[CUR_FRAME].tf, INT_MAX);
     // ref frame setup
     for (int i = 0; i < 8; i++)
@@ -1779,6 +1827,7 @@ finish:
 
     return pkt->size;
 fail:
+    ff_cbs_fragment_reset(&s->current_frag);
     ff_progress_frame_report(&s->s.frames[CUR_FRAME].tf, INT_MAX);
     return ret;
 }
@@ -1796,7 +1845,11 @@ static av_cold void vp9_decode_flush(AVCodecContext *avctx)
         // ==> Start patch MPC
         ff_progress_frame_unref(&s->next_refs[i]);
         // ==> End patch MPC
+        vp9_frame_unref(&s->s.ref_frames[i]);
     }
+
+    ff_cbs_fragment_reset(&s->current_frag);
+    ff_cbs_flush(s->cbc);
 
     if (FF_HW_HAS_CB(avctx, flush))
         FF_HW_SIMPLE_CALL(avctx, flush);
@@ -1809,6 +1862,10 @@ static av_cold int vp9_decode_init(AVCodecContext *avctx)
 
     s->last_bpp = 0;
     s->s.h.filter.sharpness = -1;
+
+    ret = ff_cbs_init(&s->cbc, AV_CODEC_ID_VP9, avctx);
+    if (ret < 0)
+        return ret;
 
 #if HAVE_THREADS
     if (avctx->active_thread_type & FF_THREAD_SLICE) {
@@ -1832,6 +1889,13 @@ static int vp9_decode_update_thread_context(AVCodecContext *dst, const AVCodecCo
         ff_progress_frame_replace(&s->s.refs[i], &ssrc->next_refs[i]);
     av_refstruct_replace(&s->frame_extradata_pool, ssrc->frame_extradata_pool);
     s->frame_extradata_pool_size = ssrc->frame_extradata_pool_size;
+
+    av_refstruct_replace(&s->header_ref, ssrc->header_ref);
+    for (int i = 0; i < 8; i++)
+        vp9_frame_replace(&s->s.ref_frames[i], &ssrc->s.ref_frames[i]);
+
+    s->frame_header = ssrc->frame_header;
+    memcpy(s->cbc->priv_data, ssrc->cbc->priv_data, sizeof(CodedBitstreamVP9Context));
 
     s->s.h.invisible = ssrc->s.h.invisible;
     s->s.h.keyframe = ssrc->s.h.keyframe;
