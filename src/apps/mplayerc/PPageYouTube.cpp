@@ -69,6 +69,7 @@ BOOL CPPageYoutube::OnInitDialog()
 	__super::OnInitDialog();
 
 	SetCursor(m_hWnd, IDC_COMBO1, IDC_HAND);
+	m_chkYDLEnable.SetWindowTextW(L"yt-dlp. IN DEVELOPMENT, use MPC-BE 1.8.9.136 or older"); // TODO
 	CorrectCWndWidth(&m_chkYDLEnable);
 
 	const CAppSettings& s = AfxGetAppSettings();
@@ -112,14 +113,14 @@ BOOL CPPageYoutube::OnInitDialog()
 
 	bool was_added = false;
 	m_cbAudioLang.AddString(ResStr(IDS_YOUTUBE_DEFAULT_AUDIO_LANG));
-	if (s.strYoutubeAudioLang.CompareNoCase(L"default") == 0) {
+	if (s.strYdlAudioLang.CompareNoCase(L"default") == 0) {
 		was_added = true;
 		m_cbAudioLang.SetCurSel(0);
 	}
 
 	for (size_t i = 0; i < std::size(m_langcodes); i++) {
 		m_cbAudioLang.AddString(langNames[i].GetString());
-		if (!was_added && s.strYoutubeAudioLang.CompareNoCase(m_langcodes[i]) == 0) {
+		if (!was_added && s.strYdlAudioLang.CompareNoCase(m_langcodes[i]) == 0) {
 			was_added = true;
 			m_cbAudioLang.SetCurSel(i + 1);
 		}
@@ -140,7 +141,6 @@ BOOL CPPageYoutube::OnInitDialog()
 	LPCWSTR ydl_filenames[] = {
 			L"yt-dlp.exe",
 			L"yt-dlp_min.exe",
-			L"youtube-dl.exe"
 	};
 	for (auto& ydl_filename : ydl_filenames) {
 		m_cbYDLExePath.AddString(ydl_filename);
@@ -160,6 +160,11 @@ BOOL CPPageYoutube::OnInitDialog()
 	m_edUserAgent.SetWindowTextW(s.strUserAgent);
 
 	OnCheckYDLEnable();
+
+	// TODO
+	m_cbVideoCodec.EnableWindow(FALSE);
+	m_chkHighFps.EnableWindow(FALSE);
+	m_cbAudioCodec.EnableWindow(FALSE);
 
 	UpdateData(FALSE);
 
@@ -181,9 +186,9 @@ BOOL CPPageYoutube::OnApply()
 	s.bYdlHDR               = !!m_chkHdr.GetCheck();
 	s.iYdlAcodec            = m_cbAudioCodec.GetCurSel();
 	if (m_cbAudioLang.GetCurSel() >= 0) {
-		s.strYoutubeAudioLang = m_cbAudioLang.GetCurSel() == 0 ? L"default" : m_langcodes[m_cbAudioLang.GetCurSel() - 1];
+		s.strYdlAudioLang = m_cbAudioLang.GetCurSel() == 0 ? L"default" : m_langcodes[m_cbAudioLang.GetCurSel() - 1];
 	} else {
-		s.strYoutubeAudioLang.Empty();
+		s.strYdlAudioLang.Empty();
 	}
 	s.bYdlHighBitrate = !!m_chkHighBitrate.GetCheck();
 

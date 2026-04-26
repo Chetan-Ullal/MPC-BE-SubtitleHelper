@@ -52,16 +52,20 @@ Various interface fixes.
 Installer
 Updated MPC Video Renderer 0.10.1.
 Updated MPC Script Source 0.2.17.
+Added MPC Image Source 0.3.4.
 
 Updated Japanese translation (by tsubasanouta).
 Updated Chinese (Traditional) and Dutch translation (by beter).
 Updated Romanian translation (by Andrei Miloiu).
 Updated Hungarian translation (by mickey).
 Updated Turkish translation (by cmhrky).
+Updated German translation (by Klaus1189).
+Updated Chinese (Simplified) translation (by wushantao).
+Updated Italian translation (by mapi68).
 
 Updated libraries:
 	dav1d 1.5.3-6-g04b69f9;
-	ffmpeg n8.2-dev-555-g2dff0156ba;
+	ffmpeg n8.2-dev-823-gfc4960b155;
 	libpng git-v1.6.55-9-g7d52a8087;
 	Little-CMS git-lcms2.18-26-gf739cda;
 	MediaInfo git-v26.01-2-gd94a5679a;

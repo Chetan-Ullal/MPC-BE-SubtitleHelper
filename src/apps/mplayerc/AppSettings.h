@@ -837,18 +837,8 @@ public:
 	CString			strLastOpenFilterDir;
 
 	// youtube
-	bool			bYoutubePageParser;
-	struct {
-		int		vfmt;
-		int		res;
-		bool	fps60;
-		bool	hdr;
-		int		afmt;
-	} YoutubeFormat;
-	CStringW		strYoutubeAudioLang;
 	bool			bYoutubeLoadPlaylist;
 	int				iYoutubeTagSelected = 0; // not saved
-	std::map<CString, CString> youtubeSignatureCache;
 
 	bool			bYdlEnable;
 	CStringW		strYdlExePath;
@@ -858,6 +848,7 @@ public:
 	bool			bYdlHighFps;
 	bool			bYdlHDR;
 	bool			bYdlHighBitrate;
+	CStringW		strYdlAudioLang;
 
 	CStringW		strAceStreamAddress;
 	CStringW		strTorrServerAddress;

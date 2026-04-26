@@ -1,5 +1,5 @@
 /*
- * (C) 2012-2025 see Authors.txt
+ * (C) 2012-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -448,7 +448,7 @@ namespace Youtube
 #if !USE_GOOGLE_API
 			bool bParse = false;
 			urlData data;
-			if (URLPostData(videoId.GetString(), data)) {
+			if (URLPostDataForLive(videoId.GetString(), data)) {
 				rapidjson::Document player_response_jsonDocument;
 				player_response_jsonDocument.Parse(data.data());
 
@@ -539,10 +539,20 @@ namespace Youtube
 		funcLAST
 	};
 
+	static struct {
+		int  vfmt  = y_webm_vp9;
+		int  res   = 720;
+		bool fps60 = false;
+		bool hdr   = false;
+		int  afmt  = y_webm_opus;
+	} YoutubeFormat;
+
+	static CStringW strYoutubeAudioLang = L"en";
+
+	static std::map<CString, CString> youtubeSignatureCache;
 
 	const YoutubeUrllistItem* SelectVideoStream(YoutubeUrllist& youtubeUrllist)
 	{
-		const CAppSettings& s = AfxGetAppSettings();
 		const YoutubeUrllistItem* final_item = nullptr;
 
 		for (;;) {
@@ -569,13 +579,13 @@ namespace Youtube
 			}
 
 			size_t k = 0;
-			if (s.YoutubeFormat.vfmt == y_mp4_avc) {
+			if (YoutubeFormat.vfmt == y_mp4_avc) {
 				k = (k_mp4 >= 0) ? k_mp4 : (k_webm >= 0) ? k_webm : 0;
 			}
-			else if (s.YoutubeFormat.vfmt == y_webm_vp9) {
+			else if (YoutubeFormat.vfmt == y_webm_vp9) {
 				k = (k_webm >= 0) ? k_webm : (k_mp4 >= 0) ? k_mp4 : 0;
 			}
-			else if (s.YoutubeFormat.vfmt == y_mp4_av1) {
+			else if (YoutubeFormat.vfmt == y_mp4_av1) {
 				k = (k_av1 >= 0) ? k_av1 : (k_webm >= 0) ? k_webm : 0;
 			}
 			final_item = &youtubeUrllist[k];
@@ -585,17 +595,17 @@ namespace Youtube
 
 				if (final_item->profile->format == profile->format) {
 					if (profile->quality == final_item->profile->quality) {
-						if (profile->fps60 != s.YoutubeFormat.fps60) {
+						if (profile->fps60 != YoutubeFormat.fps60) {
 							// same resolution as that of the previous, but not suitable fps
 							continue;
 						}
-						if (profile->hdr != s.YoutubeFormat.hdr) {
+						if (profile->hdr != YoutubeFormat.hdr) {
 							// same resolution as that of the previous, but not suitable HDR
 							continue;
 						}
 					}
 
-					if (profile->quality < final_item->profile->quality && final_item->profile->quality <= s.YoutubeFormat.res) {
+					if (profile->quality < final_item->profile->quality && final_item->profile->quality <= YoutubeFormat.res) {
 						break;
 					}
 
@@ -624,7 +634,6 @@ namespace Youtube
 
 	const YoutubeUrllistItem* SelectAudioStream(YoutubeUrllist& youtubeAudioUrllist)
 	{
-		const CAppSettings& s = AfxGetAppSettings();
 		const YoutubeUrllistItem* final_item = nullptr;
 
 		for (;;) {
@@ -647,10 +656,10 @@ namespace Youtube
 			}
 
 			size_t k = 0;
-			if (s.YoutubeFormat.afmt == y_mp4_aac) {
+			if (YoutubeFormat.afmt == y_mp4_aac) {
 				k = (k_aac >= 0) ? k_aac : (k_opus >= 0) ? k_opus : 0;
 			}
-			else if (s.YoutubeFormat.afmt == y_webm_opus) {
+			else if (YoutubeFormat.afmt == y_webm_opus) {
 				k = (k_opus >= 0) ? k_opus : (k_aac >= 0) ? k_aac : 0;
 			}
 			final_item = &youtubeAudioUrllist[k];
@@ -726,8 +735,6 @@ namespace Youtube
 				}
 			}
 		}
-
-		const auto& s = AfxGetAppSettings();
 
 		urlData data;
 		if (!URLReadData(url.GetString(), data)) {
@@ -876,8 +883,8 @@ namespace Youtube
 
 				auto it = defaultAudioLang.GetLength() ? audioLangs.find(defaultAudioLang) : audioLangs.begin();
 
-				if (s.strYoutubeAudioLang.GetLength() && s.strYoutubeAudioLang != kDefaultAudioLanguage) {
-					CStringA lang = WStrToUTF8(s.strYoutubeAudioLang.GetString());
+				if (strYoutubeAudioLang.GetLength() && strYoutubeAudioLang != kDefaultAudioLanguage) {
+					CStringA lang = WStrToUTF8(strYoutubeAudioLang.GetString());
 					auto it2 = audioLangs.find(lang);
 					if (it2 == audioLangs.end() && lang.GetLength() == 2) {
 						// check en-US, de-DE, fr-FR, es-US, es-419, zh-Hans and other
@@ -987,7 +994,6 @@ namespace Youtube
 
 						const auto JSPlayerId = RegExpParse(JSUrl.GetString(), LR"(/s/player/([a-zA-Z0-9_-]{8,})/player)");
 
-						auto& youtubeSignatureCache = AfxGetAppSettings().youtubeSignatureCache;
 						const auto& it = youtubeSignatureCache.find(JSPlayerId);
 						if (it != youtubeSignatureCache.cend() && !it->second.IsEmpty()) {
 							rapidjson::GenericDocument<rapidjson::UTF16<>> d;
@@ -1402,7 +1408,7 @@ namespace Youtube
 		CStringW final_audio_url;
 		auto final_audio_url_format = y_mp4_aac;
 
-		if (s.YoutubeFormat.res == 0) { // audio only
+		if (YoutubeFormat.res == 0) { // audio only
 			final_item = SelectAudioStream(youtubeAudioUrllist);
 			if (final_item) {
 				DLog(L"Youtube::Parse_URL() : output audio format - %s, \"%s\"", final_item->title, final_item->url);
@@ -1937,13 +1943,12 @@ namespace Youtube
 
 	const YoutubeUrllistItem* GetAudioUrl(const YoutubeProfile* vprofile, const YoutubeUrllist& youtubeAudioUrllist)
 	{
-		const CAppSettings& s = AfxGetAppSettings();
 		const YoutubeUrllistItem* audio_item = nullptr;
 
 		if (youtubeAudioUrllist.size()) {
 			for (const auto& item : youtubeAudioUrllist) {
-				if (s.YoutubeFormat.afmt == y_mp4_aac && item.profile->format == y_mp4_aac
-						|| s.YoutubeFormat.afmt == y_webm_opus && item.profile->format == y_webm_opus) {
+				if (YoutubeFormat.afmt == y_mp4_aac && item.profile->format == y_mp4_aac
+						|| YoutubeFormat.afmt == y_webm_opus && item.profile->format == y_webm_opus) {
 					audio_item = &item;
 					if (vprofile->type != y_video || vprofile->quality > 360) {
 						break;

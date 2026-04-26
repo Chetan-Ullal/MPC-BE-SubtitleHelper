@@ -796,13 +796,6 @@ void CAppSettings::ResetSettings()
 
 	strLastOpenFilterDir.Empty();
 
-	bYoutubePageParser   = false;
-	YoutubeFormat.vfmt   = Youtube::y_webm_vp9;
-	YoutubeFormat.res    = 720;
-	YoutubeFormat.fps60  = false;
-	YoutubeFormat.hdr    = false;
-	YoutubeFormat.afmt   = Youtube::y_webm_opus;
-	strYoutubeAudioLang  = CPPageYoutube::GetDefaultLanguageCode();
 	bYoutubeLoadPlaylist = false;
 
 	bYdlEnable      = false;
@@ -813,6 +806,7 @@ void CAppSettings::ResetSettings()
 	bYdlHighFps     = false;
 	bYdlHDR         = false;
 	bYdlHighBitrate = false;
+	strYdlAudioLang = CPPageYoutube::GetDefaultLanguageCode();
 
 	strAceStreamAddress = L"http://127.0.0.1:6878/ace/getstream?id=%s";
 	strTorrServerAddress = L"http://127.0.0.1:8090/stream/fname?link=%s&index=1&m3u";
@@ -827,8 +821,6 @@ void CAppSettings::ResetSettings()
 	tUpdaterLastCheck = 0;
 
 	bPasteClipboardURL = false;
-
-	youtubeSignatureCache.clear();
 
 	ZeroMemory(HistoryColWidths, sizeof(HistoryColWidths));
 
@@ -1489,30 +1481,6 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	profile.ReadString(IDS_R_SETTINGS, IDS_RS_LAST_OPEN_FILTER_DIR, strLastOpenFilterDir);
 
 	// OnlineServices
-	//profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_PAGEPARSER, bYoutubePageParser);
-	str.Empty();
-	if (profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_VIDEOFORMAT, str)) {
-		YoutubeFormat.vfmt =
-			(str == L"H264") ? Youtube::y_mp4_avc
-			: (str == L"AV1") ? Youtube::y_mp4_av1
-			: Youtube::y_webm_vp9;
-	}
-	profile.ReadInt(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_RESOLUTION, YoutubeFormat.res);
-	YoutubeFormat.res = discard(YoutubeFormat.res, 720, s_CommonVideoHeights);
-	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_60FPS, YoutubeFormat.fps60);
-	if (YoutubeFormat.fps60) {
-		profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_HDR, YoutubeFormat.hdr);
-	} else {
-		YoutubeFormat.hdr = false;
-	}
-	str.Empty();
-	if (profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_AUDIOFORMAT, str)) {
-		YoutubeFormat.afmt =
-			(str == L"AAC") ? Youtube::y_mp4_aac
-			: Youtube::y_webm_opus;
-	}
-	profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_AUDIOLANGUAGE, strYoutubeAudioLang);
-	strYoutubeAudioLang.Trim();
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_LOAD_PLAYLIST, bYoutubeLoadPlaylist);
 
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YDL_ENABLE, bYdlEnable);
@@ -1534,6 +1502,8 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YDL_HIGHFPS, bYdlHighFps);
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YDL_HDR, bYdlHDR);
 	profile.ReadBool(IDS_R_ONLINESERVICES, IDS_RS_YDL_HIGHBITRATE, bYdlHighBitrate);
+	profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_YDL_AUDIOLANGUAGE, strYdlAudioLang);
+	strYdlAudioLang.Trim();
 
 	profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_ACESTREAM_ADDRESS, strAceStreamAddress);
 	profile.ReadString(IDS_R_ONLINESERVICES, IDS_RS_TORRSERVER_ADDRESS, strTorrServerAddress);
@@ -1548,14 +1518,6 @@ void CAppSettings::LoadSettings(bool bForce/* = false*/)
 	profile.ReadInt64(IDS_R_UPDATER, IDS_RS_UPDATER_LAST_CHECK, tUpdaterLastCheck);
 
 	profile.ReadBool(IDS_R_SETTINGS, IDS_RS_PASTECLIPBOARDURL, bPasteClipboardURL);
-
-	std::vector<CStringW> valuenames;
-	profile.EnumValueNames(IDS_R_YOUTUBECACHE, valuenames);
-	for (const auto& name : valuenames) {
-		CString value;
-		profile.ReadString(IDS_R_YOUTUBECACHE, name, value);
-		youtubeSignatureCache[name] = value;
-	}
 
 	// Dialogs
 
@@ -2022,18 +1984,6 @@ void CAppSettings::SaveSettings()
 	profile.WriteString(IDS_R_SETTINGS, IDS_RS_LAST_OPEN_FILTER_DIR, strLastOpenFilterDir);
 
 	// OnlineServices
-	//profile.WriteBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_PAGEPARSER, bYoutubePageParser);
-	profile.WriteString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_VIDEOFORMAT,
-		(YoutubeFormat.vfmt == Youtube::y_webm_vp9) ? L"VP9"
-		: (YoutubeFormat.vfmt == Youtube::y_mp4_av1) ? L"AV1"
-		: L"H264");
-	profile.WriteInt(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_RESOLUTION, YoutubeFormat.res);
-	profile.WriteBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_60FPS, YoutubeFormat.fps60);
-	profile.WriteBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_HDR, YoutubeFormat.hdr);
-	profile.WriteString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_AUDIOFORMAT,
-		(YoutubeFormat.afmt == Youtube::y_webm_opus) ? L"OPUS"
-		: L"AAC");
-	profile.WriteString(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_AUDIOLANGUAGE, strYoutubeAudioLang);
 	profile.WriteBool(IDS_R_ONLINESERVICES, IDS_RS_YOUTUBE_LOAD_PLAYLIST, bYoutubeLoadPlaylist);
 
 	profile.WriteBool  (IDS_R_ONLINESERVICES, IDS_RS_YDL_ENABLE,      bYdlEnable);
@@ -2049,6 +1999,7 @@ void CAppSettings::SaveSettings()
 	profile.WriteBool  (IDS_R_ONLINESERVICES, IDS_RS_YDL_HIGHFPS,     bYdlHighFps);
 	profile.WriteBool  (IDS_R_ONLINESERVICES, IDS_RS_YDL_HDR,         bYdlHDR);
 	profile.WriteBool  (IDS_R_ONLINESERVICES, IDS_RS_YDL_HIGHBITRATE, bYdlHighBitrate);
+	profile.WriteString(IDS_R_ONLINESERVICES, IDS_RS_YDL_AUDIOLANGUAGE, strYdlAudioLang);
 
 	profile.WriteString(IDS_R_ONLINESERVICES, IDS_RS_ACESTREAM_ADDRESS, strAceStreamAddress);
 	profile.WriteString(IDS_R_ONLINESERVICES, IDS_RS_TORRSERVER_ADDRESS, strTorrServerAddress);
@@ -2066,10 +2017,6 @@ void CAppSettings::SaveSettings()
 	profile.WriteInt64(IDS_R_UPDATER, IDS_RS_UPDATER_LAST_CHECK, tUpdaterLastCheck);
 
 	profile.WriteBool(IDS_R_SETTINGS, IDS_RS_PASTECLIPBOARDURL, bPasteClipboardURL);
-
-	for (const auto& [name, value] : youtubeSignatureCache) {
-		profile.WriteString(IDS_R_YOUTUBECACHE, name, value);
-	}
 
 	// Dialogs
 

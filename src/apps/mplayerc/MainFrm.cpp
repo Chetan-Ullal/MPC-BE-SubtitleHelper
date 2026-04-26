@@ -3946,12 +3946,16 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 		m_wndView.MapWindowPoints(this, &vid_rect);
 
 		CPoint vp = point - vid_rect.TopLeft();
-		ULONG pulButtonIndex;
+		ULONG ulButtonIndex;
+
+		HRESULT hr = m_pDVDI->GetButtonAtPosition(vp, &ulButtonIndex);
+		if (SUCCEEDED(hr)) {
+			m_pDVDC->SelectButton(ulButtonIndex);
+		}
 
 		if (!m_bHideCursor) {
-			SetCursor(LoadCursorW(nullptr, SUCCEEDED(m_pDVDI->GetButtonAtPosition(vp, &pulButtonIndex)) ? IDC_HAND : IDC_ARROW));
+			SetCursor(LoadCursorW(nullptr, SUCCEEDED(hr) ? IDC_HAND : IDC_ARROW));
 		}
-		m_pDVDC->SelectAtPosition(vp);
 	}
 
 	if (m_lastMouseMove != point) {
@@ -6145,7 +6149,7 @@ void CMainFrame::OnFileSaveAs()
 
 	if (SUCCEEDED(hr)) {
 		save_dlg.SetFFmpegPath(ffmpegpath);
-		save_dlg.SetLangDefault(CStringA(s.strYoutubeAudioLang));
+		save_dlg.SetLangDefault(CStringA(s.strYdlAudioLang));
 		save_dlg.DoModal();
 	}
 
@@ -12412,12 +12416,7 @@ CString CMainFrame::OpenFile(OpenFileData* pOFD)
 
 					OpenFileData OFD;
 					ok = YT_DLP::Parse_URL(
-						s.strYdlExePath,
 						url,
-						s.iYdlMaxHeight,
-						s.bYdlHighFps,
-						s.bYdlHighBitrate,
-						CStringA(s.strYoutubeAudioLang),
 						m_youtubeFields,
 						m_youtubeUrllist,
 						m_youtubeAudioUrllist,
@@ -18480,16 +18479,23 @@ void CMainFrame::SendAPICommand(MPCAPI_COMMAND nCommand, LPCWSTR fmt, ...)
 	const CAppSettings& s = AfxGetAppSettings();
 
 	if (s.hMasterWnd) {
-		WCHAR buff[800] = {};
-
 		va_list args;
 		va_start(args, fmt);
-		vswprintf_s(buff, std::size(buff), fmt, args);
+
+		auto bufferSize = _vscwprintf(fmt, args);
+		if (bufferSize < 0) {
+			return;
+		}
+
+		bufferSize++;
+		auto buff = std::make_unique<wchar_t[]>(bufferSize);
+
+		vswprintf_s(buff.get(), bufferSize, fmt, args);
 
 		COPYDATASTRUCT CDS;
-		CDS.cbData = (wcslen (buff) + 1) * sizeof(WCHAR);
+		CDS.cbData = (wcslen(buff.get()) + 1) * sizeof(wchar_t);
 		CDS.dwData = nCommand;
-		CDS.lpData = (LPVOID)buff;
+		CDS.lpData = reinterpret_cast<LPVOID>(buff.get());
 
 		::SendMessageW(s.hMasterWnd, WM_COPYDATA, (WPARAM)GetSafeHwnd(), (LPARAM)&CDS);
 
