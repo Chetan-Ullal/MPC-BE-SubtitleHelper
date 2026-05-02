@@ -985,7 +985,7 @@ bool CMpeg2DecFilter::IsNeedDeliverToRenderer() const
 bool CMpeg2DecFilter::IsInterlaced() const
 {
 	if (m_dec && m_fInterlaced
-			&& !(m_dec->m_info.m_sequence->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE || m_fFilm)) {
+			&& !((m_dec->m_info.m_sequence && m_dec->m_info.m_sequence->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE) || m_fFilm)) {
 		return true;
 	}
 
@@ -1399,8 +1399,8 @@ bool CSubpicInputPin::HasAnythingToRender(REFERENCE_TIME rt)
 
 	CAutoLock cAutoLock(&m_csReceive);
 
-	for (const auto& sp : m_sps) {
-		if (sp->m_rtStart <= rt && rt < sp->m_rtStop && (/*sp->m_psphli ||*/ sp->m_fForced || m_spon)) {
+	for (const auto& sp : m_dvdspus) {
+		if (sp->m_rtStart <= rt && rt < sp->m_rtStop && (sp->m_fForced || m_spon)) {
 			return true;
 		}
 	}
@@ -1413,18 +1413,21 @@ void CSubpicInputPin::RenderSubpics(REFERENCE_TIME rt, BYTE** yuv, int w, int h)
 	CAutoLock cAutoLock(&m_csReceive);
 
 	// remove no longer needed things first
-	for (auto it = m_sps.begin(); it != m_sps.end();) {
+	for (auto it = m_dvdspus.begin(); it != m_dvdspus.end();) {
 		if ((*it)->m_rtStop <= rt) {
-			it = m_sps.erase(it);
+			it = m_dvdspus.erase(it);
 		} else {
 			++it;
 		}
 	}
 
-	for (const auto& sp : m_sps) {
+	for (const auto& sp : m_dvdspus) {
 		if (sp->m_rtStart <= rt && rt < sp->m_rtStop
-				&& (m_spon || (sp->m_fForced && ((static_cast<CMpeg2DecFilter*>(m_pFilter))->IsForcedSubtitlesEnabled()) || sp->m_psphli))) {
-			sp->Render(rt, yuv, w, h, m_sppal, m_fsppal);
+				&& (m_spon || (sp->m_fForced && (static_cast<CMpeg2DecFilter*>(m_pFilter))->IsForcedSubtitlesEnabled()))) {
+
+			const AM_PROPERTY_SPHLI* psphli = (m_sphli && sp->m_rtStart <= PTS2RT(m_sphli->StartPTM) && PTS2RT(m_sphli->StartPTM) < sp->m_rtStop) ? m_sphli.get() : nullptr;
+
+			sp->Render(rt, yuv, w, h, m_sppal, m_fsppal, psphli);
 		}
 	}
 }
@@ -1453,23 +1456,18 @@ HRESULT CSubpicInputPin::Transform(IMediaSample* pSample)
 		return S_FALSE;
 	}
 
-	if (len <= 0) {
-		return S_FALSE;
-	}
-
 	CAutoLock cAutoLock(&m_csReceive);
 
 	REFERENCE_TIME rtStart = 0, rtStop = 0;
 	hr = pSample->GetTime(&rtStart, &rtStop);
 
 	if (FAILED(hr)) {
-		if (m_sps.size()) {
-			auto& sp = m_sps.back();
-			sp->resize(sp->size() + len);
-			memcpy(sp->data() + sp->size() - len, pDataIn, len);
+		if (m_dvdspus.size()) {
+			auto& sp = m_dvdspus.back();
+			sp->m_data.insert(sp->m_data.end(), pDataIn, pDataIn + len);
 		}
 	} else {
-		for (auto it = m_sps.rbegin(); it != m_sps.rend(); ++it) {
+		for (auto it = m_dvdspus.rbegin(); it != m_dvdspus.rend(); ++it) {
 			auto& sp = *it;
 			if (sp->m_rtStop == _I64_MAX) {
 				sp->m_rtStop = rtStart;
@@ -1477,29 +1475,18 @@ HRESULT CSubpicInputPin::Transform(IMediaSample* pSample)
 			}
 		}
 
-		std::unique_ptr<spu> p;
-
-		if (m_mt.subtype == MEDIASUBTYPE_DVD_SUBPICTURE) {
-			p.reset(DNew dvdspu());
-		} else {
-			return E_FAIL;
-		}
+		auto p = std::make_unique<dvdspu>();
 
 		p->m_rtStart = rtStart;
 		p->m_rtStop = _I64_MAX;
 
-		p->resize(len);
-		memcpy(p->data(), pDataIn, len);
+		p->m_data.assign(pDataIn, pDataIn + len);
 
-		if (m_sphli && p->m_rtStart == PTS2RT(m_sphli->StartPTM)) {
-			p->m_psphli = std::move(m_sphli);
-		}
-
-		m_sps.emplace_back(std::move(p));
+		m_dvdspus.emplace_back(std::move(p));
 	}
 
-	if (m_sps.size()) {
-		m_sps.back()->Parse();
+	if (m_dvdspus.size()) {
+		m_dvdspus.back()->Parse();
 	}
 
 	return S_FALSE;
@@ -1508,7 +1495,7 @@ HRESULT CSubpicInputPin::Transform(IMediaSample* pSample)
 STDMETHODIMP CSubpicInputPin::EndFlush()
 {
 	CAutoLock cAutoLock(&m_csReceive);
-	m_sps.clear();
+	m_dvdspus.clear();
 	return S_OK;
 }
 
@@ -1549,29 +1536,16 @@ STDMETHODIMP CSubpicInputPin::Set(REFGUID PropSet, ULONG Id, LPVOID pInstanceDat
 			AM_PROPERTY_SPHLI* pSPHLI = (AM_PROPERTY_SPHLI*)pPropertyData;
 
 			if (pSPHLI->HLISS) {
-				for (const auto& sp : m_sps) {
-					if (sp->m_rtStart <= PTS2RT(pSPHLI->StartPTM) && PTS2RT(pSPHLI->StartPTM) < sp->m_rtStop
-							&& !IsSPHLIEqual(pSPHLI, sp->m_psphli.get())) {
-						bRefresh = true;
-						sp->m_psphli.reset(DNew AM_PROPERTY_SPHLI(*pSPHLI));
-					}
-				}
-
-				if (!bRefresh && !IsSPHLIEqual(pSPHLI, m_sphli.get())) {
-					// save it for later, a subpic might be late for this hli
+				if (!m_sphli || !IsSPHLIEqual(pSPHLI, m_sphli.get())) {
+					bRefresh = true;
 					m_sphli.reset(DNew AM_PROPERTY_SPHLI(*pSPHLI));
-				}
 
-				if (bRefresh) {
 					DLog(L"DVD HLI Event: %20I64d -> %20I64d, (%u,%u) - (%u,%u)",
-							PTS2RT(pSPHLI->StartPTM), PTS2RT(pSPHLI->EndPTM),
-							pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY);
+						 PTS2RT(pSPHLI->StartPTM), PTS2RT(pSPHLI->EndPTM),
+						 pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY);
 				}
 			} else {
 				m_sphli.reset();
-				for (const auto& sp : m_sps) {
-					sp->m_psphli.reset();
-				}
 			}
 		}
 		break;
@@ -1580,6 +1554,8 @@ STDMETHODIMP CSubpicInputPin::Set(REFGUID PropSet, ULONG Id, LPVOID pInstanceDat
 
 			AM_PROPERTY_COMPOSIT_ON* pCompositOn = (AM_PROPERTY_COMPOSIT_ON*)pPropertyData;
 			m_spon = *pCompositOn;
+
+			DLog(L"DVD Composit Event");
 		}
 		break;
 		default:
@@ -1612,105 +1588,18 @@ STDMETHODIMP CSubpicInputPin::QuerySupported(REFGUID PropSet, ULONG Id, ULONG* p
 	return S_OK;
 }
 
-// CSubpicInputPin::spu
-
-static __inline BYTE GetNibble(const BYTE* p, uint32_t* offset, const int& nField, int& fAligned)
-{
-	BYTE ret = (p[offset[nField]] >> (fAligned << 2)) & 0x0f;
-	offset[nField] += 1 - fAligned;
-	fAligned = !fAligned;
-	return ret;
-}
-
-static __inline BYTE GetHalfNibble(const BYTE* p, uint32_t* offset, const int& nField, int& n)
-{
-	BYTE ret = (p[offset[nField]] >> (n << 1)) & 0x03;
-	if (!n) {
-		offset[nField]++;
-	}
-	n = (n - 1 + 4) & 3;
-	return ret;
-}
-
-static __inline void DrawPixel(BYTE** yuv, CPoint pt, int pitch, const AM_DVD_YUV& c)
-{
-	if (c.Reserved == 0) {
-		return;
-	}
-	int contrast = c.Reserved;
-
-	BYTE* p = &yuv[0][pt.y * pitch + pt.x];
-	//*p = (*p*(15-contrast) + c.Y*contrast)>>4;
-	*p -= (*p - c.Y) * contrast >> 4;
-
-	if (pt.y&1) {
-		return;    // since U/V is half res there is no need to overwrite the same line again
-	}
-
-	pt.x = (pt.x + 1) / 2;
-	pt.y = (pt.y /*+ 1*/) / 2; // only paint the upper field always, don't round it
-	pitch /= 2;
-
-	// U/V is exchanged? wierd but looks true when comparing the outputted colors from other decoders
-
-	p = &yuv[1][pt.y * pitch + pt.x];
-	//*p = (BYTE)(((((int)*p-0x80)*(15-contrast) + ((int)c.V-0x80)*contrast) >> 4) + 0x80);
-	*p -= (*p - c.V) * contrast >> 4;
-
-	p = &yuv[2][pt.y * pitch + pt.x];
-	//*p = (BYTE)(((((int)*p-0x80)*(15-contrast) + ((int)c.U-0x80)*contrast) >> 4) + 0x80);
-	*p -= (*p - c.U) * contrast >> 4;
-
-	// Neighter of the blending formulas are accurate (">>4" should be "/15").
-	// Even though the second one is a bit worse, since we are scaling the difference only,
-	// the error is still not noticable.
-}
-
-static __inline void DrawPixels(BYTE** yuv, int pitch, CPoint pt, int len, const AM_DVD_YUV& c, const CRect& rc)
-{
-	if (pt.y < rc.top || pt.y >= rc.bottom) {
-		return;
-	}
-	if (pt.x < rc.left) {
-		len -= rc.left - pt.x;
-		pt.x = rc.left;
-	}
-	if (pt.x + len > rc.right) {
-		len = rc.right - pt.x;
-	}
-	if (len <= 0 || pt.x >= rc.right) {
-		return;
-	}
-
-	if (c.Reserved == 0) {
-		if (rc.IsRectEmpty()) {
-			return;
-		}
-
-		if (pt.y < rc.top || pt.y >= rc.bottom
-				|| pt.x + len < rc.left || pt.x >= rc.right) {
-			return;
-		}
-	}
-
-	while (len-- > 0) {
-		DrawPixel(yuv, pt, pitch, c);
-		pt.x++;
-	}
-}
-
 // CSubpicInputPin::dvdspu
 
 bool CSubpicInputPin::dvdspu::Parse()
 {
 	m_offsets.clear();
 
-	BYTE* p = data();
+	auto p = m_data.data();
 
 	WORD packetsize = (p[0] << 8) | p[1];
 	WORD datasize = (p[2] << 8) | p[3];
 
-	if (packetsize > size() || datasize > packetsize) {
+	if (packetsize > m_data.size() || datasize > packetsize) {
 		return false;
 	}
 
@@ -1826,29 +1715,94 @@ bool CSubpicInputPin::dvdspu::Parse()
 	return true;
 }
 
-void CSubpicInputPin::dvdspu::Render(REFERENCE_TIME rt, BYTE** yuv, int w, int h, AM_DVD_YUV* sppal, bool fsppal)
+static BYTE GetNibble(const BYTE* p, uint32_t* offset, const int& nField, int& fAligned)
 {
-	BYTE* p = data();
+	BYTE ret = (p[offset[nField]] >> (fAligned << 2)) & 0x0f;
+	offset[nField] += 1 - fAligned;
+	fAligned = !fAligned;
+	return ret;
+}
+
+static void DrawPixel(BYTE** yuv, CPoint pt, int pitch, AM_DVD_YUV c)
+{
+	if (c.Reserved == 0) {
+		return;
+	}
+	int contrast = c.Reserved;
+
+	BYTE* p = &yuv[0][pt.y * pitch + pt.x];
+	//*p = (*p*(15-contrast) + c.Y*contrast)>>4;
+	*p -= (*p - c.Y) * contrast >> 4;
+
+	if (pt.y & 1) {
+		return;    // since U/V is half res there is no need to overwrite the same line again
+	}
+
+	pt.x = (pt.x + 1) / 2;
+	pt.y = (pt.y /*+ 1*/) / 2; // only paint the upper field always, don't round it
+	pitch /= 2;
+
+	// U/V is exchanged? wierd but looks true when comparing the outputted colors from other decoders
+
+	p = &yuv[1][pt.y * pitch + pt.x];
+	//*p = (BYTE)(((((int)*p-0x80)*(15-contrast) + ((int)c.V-0x80)*contrast) >> 4) + 0x80);
+	*p -= (*p - c.V) * contrast >> 4;
+
+	p = &yuv[2][pt.y * pitch + pt.x];
+	//*p = (BYTE)(((((int)*p-0x80)*(15-contrast) + ((int)c.U-0x80)*contrast) >> 4) + 0x80);
+	*p -= (*p - c.U) * contrast >> 4;
+
+	// Neighter of the blending formulas are accurate (">>4" should be "/15").
+	// Even though the second one is a bit worse, since we are scaling the difference only,
+	// the error is still not noticable.
+}
+
+template<typename Func>
+static void DrawPixels(BYTE** yuv, int pitch, CPoint pt, int len, const CRect& rc, uint32_t code, const Func& ColorFunc)
+{
+	if (pt.y < rc.top || pt.y >= rc.bottom) {
+		return;
+	}
+	if (pt.x < rc.left) {
+		len -= rc.left - pt.x;
+		pt.x = rc.left;
+	}
+	if (pt.x + len > rc.right) {
+		len = rc.right - pt.x;
+	}
+	if (len <= 0 || pt.x >= rc.right) {
+		return;
+	}
+
+	while (len-- > 0) {
+		DrawPixel(yuv, pt, pitch, ColorFunc(pt, code));
+		pt.x++;
+	}
+}
+
+void CSubpicInputPin::dvdspu::Render(REFERENCE_TIME rt, BYTE** yuv, int w, int h, AM_DVD_YUV* sppal, bool fsppal, const AM_PROPERTY_SPHLI* psphli)
+{
+	auto getSphli = [&]() -> const AM_PROPERTY_SPHLI& {
+		if (m_offsets.size() > 1) {
+			for (const auto& o : m_offsets) {
+				if (rt >= o.rt) {
+					return o.sphli;
+				}
+			}
+		}
+
+		return m_sphli;
+	};
+
+	auto p = m_data.data();
 	uint32_t offset[2] = {m_offset[0], m_offset[1]};
 
-	AM_PROPERTY_SPHLI sphli = m_sphli;
+	auto& sphli = getSphli();
 	CPoint pt(sphli.StartX, sphli.StartY);
 	CRect rc(pt, CPoint(sphli.StopX, sphli.StopY));
 
 	CRect rcclip(0, 0, w, h);
 	rcclip &= rc;
-
-	if (m_psphli) {
-		rcclip &= CRect(m_psphli->StartX, m_psphli->StartY, m_psphli->StopX, m_psphli->StopY);
-		sphli = *m_psphli;
-	} else if (m_offsets.size() > 1) {
-		for (const auto& o : m_offsets) {
-			if (rt >= o.rt) {
-				sphli = o.sphli;
-				break;
-			}
-		}
-	}
 
 	AM_DVD_YUV pal[4];
 	pal[0] = sppal[fsppal ? sphli.ColCon.backcol : 0];
@@ -1860,6 +1814,22 @@ void CSubpicInputPin::dvdspu::Render(REFERENCE_TIME rt, BYTE** yuv, int w, int h
 	pal[3] = sppal[fsppal ? sphli.ColCon.emph2col : 3];
 	pal[3].Reserved = sphli.ColCon.emph2con;
 
+	CRect rcSphli;
+	AM_DVD_YUV palSphli[4]{};
+	if (psphli) {
+		rcSphli = rcclip;
+		rcSphli &= CRect(psphli->StartX, psphli->StartY, psphli->StopX, psphli->StopY);
+
+		palSphli[0] = sppal[fsppal ? psphli->ColCon.backcol : 0];
+		palSphli[0].Reserved = psphli->ColCon.backcon;
+		palSphli[1] = sppal[fsppal ? psphli->ColCon.patcol : 1];
+		palSphli[1].Reserved = psphli->ColCon.patcon;
+		palSphli[2] = sppal[fsppal ? psphli->ColCon.emph1col : 2];
+		palSphli[2].Reserved = psphli->ColCon.emph1con;
+		palSphli[3] = sppal[fsppal ? psphli->ColCon.emph2col : 3];
+		palSphli[3].Reserved = psphli->ColCon.emph2con;
+	}
+
 	int nField = 0;
 	int fAligned = 1;
 
@@ -1869,6 +1839,13 @@ void CSubpicInputPin::dvdspu::Render(REFERENCE_TIME rt, BYTE** yuv, int w, int h
 		end[1] = offset[0];
 	}
 
+	auto ColorFunc = [&](CPoint pt, uint32_t code) {
+		if (psphli && rcSphli.PtInRect(pt)) {
+			return palSphli[code];
+		}
+		return pal[code];
+	};
+
 	while ((nField == 0 && offset[0] < end[0]) || (nField == 1 && offset[1] < end[1])) {
 		uint32_t code;
 
@@ -1876,13 +1853,14 @@ void CSubpicInputPin::dvdspu::Render(REFERENCE_TIME rt, BYTE** yuv, int w, int h
 				|| (code = (code << 4) | GetNibble(p, offset, nField, fAligned)) >= 0x10
 				|| (code = (code << 4) | GetNibble(p, offset, nField, fAligned)) >= 0x40
 				|| (code = (code << 4) | GetNibble(p, offset, nField, fAligned)) >= 0x100) {
-			DrawPixels(yuv, w, pt, code >> 2, pal[code&3], rcclip);
-			if ((pt.x += code >> 2) < rc.right) {
+			auto len = code >> 2;
+			DrawPixels(yuv, w, pt, len, rcclip, code & 3, ColorFunc);
+			if ((pt.x += len) < rc.right) {
 				continue;
 			}
 		}
 
-		DrawPixels(yuv, w, pt, rc.right - pt.x, pal[code&3], rcclip);
+		DrawPixels(yuv, w, pt, rc.right - pt.x, rcclip, code & 3, ColorFunc);
 
 		if (!fAligned) {
 			GetNibble(p, offset, nField, fAligned);    // align to byte
