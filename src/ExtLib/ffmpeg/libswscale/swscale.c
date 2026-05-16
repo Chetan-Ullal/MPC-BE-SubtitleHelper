@@ -1036,6 +1036,8 @@ static int scale_internal(SwsContext *sws,
     if ((srcSliceY  & (macro_height_src - 1)) ||
         ((srcSliceH & (macro_height_src - 1)) && srcSliceY + srcSliceH != sws->src_h) ||
         srcSliceY + srcSliceH > sws->src_h ||
+        srcSliceY < 0 ||
+        srcSliceH < 0 ||
         (isBayer(sws->src_format) && srcSliceH <= 1)) {
         av_log(c, AV_LOG_ERROR, "Slice parameters %d, %d are invalid\n", srcSliceY, srcSliceH);
         return AVERROR(EINVAL);
@@ -1502,7 +1504,16 @@ int sws_frame_setup(SwsContext *ctx, const AVFrame *dst, const AVFrame *src)
             goto fail;
         }
 
-        ret = ff_sws_graph_reinit(ctx, &dst_fmt, &src_fmt, field, &s->graph[field]);
+        if (!s->graph[field]) {
+            s->graph[field] = ff_sws_graph_alloc();
+            if (!s->graph[field]) {
+                err_msg = "Failed allocating scaling graph";
+                ret = AVERROR(ENOMEM);
+                goto fail;
+            }
+        }
+
+        ret = ff_sws_graph_reinit(s->graph[field], ctx, &dst_fmt, &src_fmt, field);
         if (ret < 0) {
             err_msg = "Failed initializing scaling graph";
             goto fail;

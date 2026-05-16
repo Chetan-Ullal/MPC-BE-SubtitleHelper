@@ -127,9 +127,13 @@ void ff_copyPlane(const uint8_t *src, int srcStride,
                   int srcSliceY, int srcSliceH, int width,
                   uint8_t *dst, int dstStride)
 {
+    if (!srcSliceH)
+        return;
+    av_assert0(srcSliceH > 0);
+
     dst += dstStride * srcSliceY;
     if (dstStride == srcStride && srcStride > 0) {
-        memcpy(dst, src, srcSliceH * dstStride);
+        memcpy(dst, src, (srcSliceH - 1) * dstStride + width);
     } else {
         int i;
         for (i = 0; i < srcSliceH; i++) {
@@ -1843,9 +1847,8 @@ static rgbConvFn findRgbConvFn(SwsInternal *c)
     const int dstId = c->dstFormatBpp;
     rgbConvFn conv = NULL;
 
-#define IS_NOT_NE(bpp, desc) \
-    (((bpp + 7) >> 3) == 2 && \
-     (!(desc->flags & AV_PIX_FMT_FLAG_BE) != !HAVE_BIGENDIAN))
+#define IS_NOT_NE(Bpp, desc) \
+    (Bpp == 2 && (!(desc->flags & AV_PIX_FMT_FLAG_BE) != !HAVE_BIGENDIAN))
 
 #define CONV_IS(src, dst) (srcFormat == AV_PIX_FMT_##src && dstFormat == AV_PIX_FMT_##dst)
 
