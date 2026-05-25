@@ -970,8 +970,12 @@ HRESULT CMatroskaSplitterFilter::CreateOutputs(IAsyncReader* pAsyncReader)
 					}
 
 					if (pTE->v.Projection.ProjectionPoseRoll.IsValid()) {
+						double rotation = 360.0 - (double)pTE->v.Projection.ProjectionPoseRoll;
+						if (rotation >= 360.0) {
+							rotation -= 360;
+						}
 						CStringW strRotation;
-						strRotation.Format(L"%.0f", (double)pTE->v.Projection.ProjectionPoseRoll);
+						strRotation.Format(L"%.0f", rotation);
 						SetProperty(L"ROTATION", strRotation);
 					}
 
