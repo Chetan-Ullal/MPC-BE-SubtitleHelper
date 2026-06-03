@@ -1,5 +1,5 @@
 /*
- * (C) 2023-2024 see Authors.txt
+ * (C) 2023-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -156,10 +156,6 @@ public:
 		return m_fpath;
 	}
 
-	void SetPath(const CStringW& fpath) {
-		m_fpath = fpath;
-	}
-
 	const CStringW& GetPath() const {
 		return m_fpath;
 	};
@@ -167,11 +163,6 @@ public:
 	bool IsEmpty() const {
 		return m_fpath.IsEmpty();
 	};
-
-	// Title
-	void SetTitle(const CStringW& title) {
-		m_title = title;
-	}
 
 	const CStringW& GetTitle() const {
 		return m_title;

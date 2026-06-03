@@ -40,8 +40,8 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>.;ThirdParty/base64;ThirdParty/tinyxml2;ThirdParty/MD5;../ZenLib;../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_LIB;MEDIAINFO_XML_YES;MEDIAINFO_MINIMAL_YES;MEDIAINFO_ADVANCED_NO;MEDIAINFO_MPEGTS_DUPLICATE_NO;MEDIAINFO_DVDIF_ANALYZE_NO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;ThirdParty;ThirdParty/tinyxml2;ThirdParty/MD5;../ZenLib;../zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_LIB;MEDIAINFO_TEXT_YES;MEDIAINFO_MINIMAL_YES;MEDIAINFO_ADVANCED_NO;MEDIAINFO_MPEGTS_DUPLICATE_NO;MEDIAINFO_DVDIF_ANALYZE_NO;MEDIAINFO_ARCHIVE_NO;MEDIAINFO_EXPORT_NO;FMT_UNICODE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>MediaInfo/PreComp.h</PrecompiledHeaderFile>
@@ -51,7 +51,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MediaInfo\Archive\File_MachO.h" />
     <ClInclude Include="MediaInfo\Audio\File_Aac.h" />
     <ClInclude Include="MediaInfo\Audio\File_Aac_GeneralAudio.h" />
     <ClInclude Include="MediaInfo\Audio\File_Aac_GeneralAudio_Sbr.h" />
@@ -107,13 +106,11 @@
     <ClInclude Include="MediaInfo\Audio\File_Usac.h" />
     <ClInclude Include="MediaInfo\Audio\File_Vorbis.h" />
     <ClInclude Include="MediaInfo\Audio\File_Wvpk.h" />
-    <ClInclude Include="MediaInfo\Export\Export_EbuCore.h" />
-    <ClInclude Include="MediaInfo\Export\Export_Fims.h" />
-    <ClInclude Include="MediaInfo\Export\Export_PBCore2.h" />
     <ClInclude Include="MediaInfo\ExternalCommandHelpers.h" />
     <ClInclude Include="MediaInfo\File__Analyze_Element.h" />
     <ClInclude Include="MediaInfo\File__HasReferences.h" />
     <ClInclude Include="MediaInfo\HashWrapper.h" />
+    <ClInclude Include="MediaInfo\Image\File_AmigaIcon.h" />
     <ClInclude Include="MediaInfo\Image\File_ArriRaw.h" />
     <ClInclude Include="MediaInfo\Image\File_Bpg.h" />
     <ClInclude Include="MediaInfo\Image\File_Dds.h" />
@@ -154,7 +151,9 @@
     <ClInclude Include="MediaInfo\Text\File_TimedText.h" />
     <ClInclude Include="MediaInfo\Text\File_Ttml.h" />
     <ClInclude Include="MediaInfo\Video\File_Aic.h" />
+    <ClInclude Include="MediaInfo\Video\File_Apv.h" />
     <ClInclude Include="MediaInfo\Video\File_Av1.h" />
+    <ClInclude Include="MediaInfo\Video\File_Av2.h" />
     <ClInclude Include="MediaInfo\Video\File_Avs3V.h" />
     <ClInclude Include="MediaInfo\Video\File_Canopus.h" />
     <ClInclude Include="MediaInfo\Video\File_CineForm.h" />
@@ -174,22 +173,9 @@
     <ClInclude Include="ThirdParty\md5\md5.h" />
     <ClInclude Include="ThirdParty\tfsxml\tfsxml.h" />
     <ClInclude Include="ThirdParty\tinyxml2\tinyxml2.h" />
-    <ClInclude Include="MediaInfo\Archive\File_7z.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Ace.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Bzip2.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Elf.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Gzip.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Iso9660.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Mz.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Rar.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Tar.h" />
-    <ClInclude Include="MediaInfo\Archive\File_Zip.h" />
     <ClInclude Include="MediaInfo\Duplicate\File__Duplicate_MpegTs.h" />
     <ClInclude Include="MediaInfo\Duplicate\File__Duplicate__Base.h" />
     <ClInclude Include="MediaInfo\Duplicate\File__Duplicate__Writer.h" />
-    <ClInclude Include="MediaInfo\Export\Export_Mpeg7.h" />
-    <ClInclude Include="MediaInfo\Export\Export_PBCore.h" />
-    <ClInclude Include="MediaInfo\Export\Export_reVTMD.h" />
     <ClInclude Include="MediaInfo\File_Dummy.h" />
     <ClInclude Include="MediaInfo\File_Other.h" />
     <ClInclude Include="MediaInfo\File_Unknown.h" />
@@ -303,17 +289,6 @@
     <ClInclude Include="MediaInfo\Video\File_Y4m.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MediaInfo\Archive\File_7z.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Ace.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Bzip2.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Elf.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Gzip.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Iso9660.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_MachO.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Mz.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Rar.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Tar.cpp" />
-    <ClCompile Include="MediaInfo\Archive\File_Zip.cpp" />
     <ClCompile Include="MediaInfo\Audio\File_Aac.cpp" />
     <ClCompile Include="MediaInfo\Audio\File_Aac_GeneralAudio.cpp" />
     <ClCompile Include="MediaInfo\Audio\File_Aac_GeneralAudio_Sbr.cpp" />
@@ -375,12 +350,6 @@
     <ClCompile Include="MediaInfo\Duplicate\File__Duplicate_MpegTs.cpp" />
     <ClCompile Include="MediaInfo\Duplicate\File__Duplicate__Base.cpp" />
     <ClCompile Include="MediaInfo\Duplicate\File__Duplicate__Writer.cpp" />
-    <ClCompile Include="MediaInfo\Export\Export_EbuCore.cpp" />
-    <ClCompile Include="MediaInfo\Export\Export_Fims.cpp" />
-    <ClCompile Include="MediaInfo\Export\Export_Mpeg7.cpp" />
-    <ClCompile Include="MediaInfo\Export\Export_PBCore.cpp" />
-    <ClCompile Include="MediaInfo\Export\Export_PBCore2.cpp" />
-    <ClCompile Include="MediaInfo\Export\Export_reVTMD.cpp" />
     <ClCompile Include="MediaInfo\ExternalCommandHelpers.cpp" />
     <ClCompile Include="MediaInfo\File_Dummy.cpp" />
     <ClCompile Include="MediaInfo\File_Other.cpp" />
@@ -396,6 +365,7 @@
     <ClCompile Include="MediaInfo\File__HasReferences.cpp" />
     <ClCompile Include="MediaInfo\File__MultipleParsing.cpp" />
     <ClCompile Include="MediaInfo\HashWrapper.cpp" />
+    <ClCompile Include="MediaInfo\Image\File_AmigaIcon.cpp" />
     <ClCompile Include="MediaInfo\Image\File_ArriRaw.cpp" />
     <ClCompile Include="MediaInfo\Image\File_Bmp.cpp" />
     <ClCompile Include="MediaInfo\Image\File_Bpg.cpp" />
@@ -456,7 +426,9 @@
     <ClCompile Include="MediaInfo\Text\File_SubRip.cpp" />
     <ClCompile Include="MediaInfo\Text\File_TimedText.cpp" />
     <ClCompile Include="MediaInfo\Text\File_Ttml.cpp" />
-    <ClCompile Include="MediaInfo\TimeCode.cpp" />
+    <ClCompile Include="MediaInfo\TimeCode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MediaInfo\Multiple\File_Ancillary.cpp" />
     <ClCompile Include="MediaInfo\Multiple\File_Bdmv.cpp" />
     <ClCompile Include="MediaInfo\Multiple\File_Cdxa.cpp" />
@@ -525,7 +497,9 @@
     <ClCompile Include="MediaInfo\Text\File_Teletext.cpp" />
     <ClCompile Include="MediaInfo\Video\File_AfdBarData.cpp" />
     <ClCompile Include="MediaInfo\Video\File_Aic.cpp" />
+    <ClCompile Include="MediaInfo\Video\File_Apv.cpp" />
     <ClCompile Include="MediaInfo\Video\File_Av1.cpp" />
+    <ClCompile Include="MediaInfo\Video\File_Av2.cpp" />
     <ClCompile Include="MediaInfo\Video\File_Avc.cpp" />
     <ClCompile Include="MediaInfo\Video\File_Avc_Duplicate.cpp" />
     <ClCompile Include="MediaInfo\Video\File_Avs3V.cpp" />
@@ -553,17 +527,14 @@
     <ClCompile Include="MediaInfo\Video\File_Vvc.cpp" />
     <ClCompile Include="MediaInfo\Video\File_Y4m.cpp" />
     <ClCompile Include="MediaInfo\XmlUtils.cpp" />
+    <ClCompile Include="ThirdParty\fmt\format.cc">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ThirdParty\md5\md5.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ThirdParty\tfsxml\tfsxml.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ThirdParty\tinyxml2\tinyxml2.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

@@ -23,11 +23,11 @@
 #include "PPageFileMediaInfo.h"
 #include "DSUtil/FileHandle.h"
 
-static String mi_get_lang_file()
+static MediaInfoLib::String mi_get_lang_file()
 {
 	HINSTANCE mpcres = LoadLibraryW(CMPlayerCApp::GetSatelliteDll(AfxGetAppSettings().iLanguage));
 
-	String str;
+	MediaInfoLib::String str;
 	if (mpcres) {
 		HRSRC hRes = FindResourceW(mpcres, MAKEINTRESOURCEW(IDB_MEDIAINFO_LANGUAGE), L"FILE");
 
@@ -176,7 +176,7 @@ void CPPageFileMediaInfo::OnComboFileChange()
 	auto it = m_files.cbegin();
 	std::advance(it, m_fileindex);
 
-	MediaInfo MI;
+	MediaInfoLib::MediaInfo MI;
 
 	MI.Option(L"ParseSpeed", L"0.5");
 	MI.Option(L"Language", mi_get_lang_file());

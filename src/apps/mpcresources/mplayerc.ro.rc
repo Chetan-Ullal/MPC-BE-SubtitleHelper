@@ -202,10 +202,10 @@ BEGIN
     LTEXT           "Introdu adresa unui fișier video sau audio (de pe Internet sau din calculatorul tău) și playerul îl va deschide pentru tine.",IDC_STATIC,35,5,213,25
     LTEXT           "Deschide:",IDC_STATIC2,10,32,90,8
     COMBOBOX        IDC_COMBO1,10,42,188,65,CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Răsfoire...",IDC_BUTTON1,200,41,50,14
+    PUSHBUTTON      "Răsfoiește...",IDC_BUTTON1,200,41,50,14
     LTEXT           "Dublajul:",IDC_STATIC1,10,58,90,8
     COMBOBOX        IDC_COMBO2,10,68,188,20,CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Răsfoire...",IDC_BUTTON2,200,67,50,14
+    PUSHBUTTON      "Răsfoiește...",IDC_BUTTON2,200,67,50,14
     DEFPUSHBUTTON   "OK",IDOK,148,94,50,14,WS_GROUP
     PUSHBUTTON      "Anulează",IDCANCEL,200,94,50,14
     CONTROL         "Adaugă-l în lista de redare (playlist) fără să-l deschizi",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,84,188,9
@@ -441,7 +441,7 @@ BEGIN
     CONTROL         "",IDC_SLIDER3,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,233,34,53,12
     CONTROL         "",IDC_SLIDER4,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS | WS_TABSTOP | 0x400,233,49,53,12
     CONTROL         "Activează meniul întunecat",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,59,147,9,WS_EX_TRANSPARENT
-    CONTROL         "Folosește efectul fundalului estompat (ptr. Windows 10 și versiunile mai noi)",IDC_CHECK7,
+    CONTROL         "Folosește efectul fundalului estompat (pentru Windows 10 și versiunile mai noi)",IDC_CHECK7,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,71,265,9,WS_EX_TRANSPARENT
     CONTROL         "Activează titlul întunecat (pentru Windows 10 și versiunile ulterioare)",IDC_CHECK5,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,83,238,9,WS_EX_TRANSPARENT
@@ -499,7 +499,7 @@ BEGIN
     GROUPBOX        "Dimensiunea ferestrei la pornire",IDC_STATIC,5,5,286,67
     CONTROL         "Mărimea standard a ferestrei",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,16,106,10
     CONTROL         "Reține ultima dimensiune a ferestrei",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,10,30,127,10
-    CONTROL         "Setează mărime fereastră specif.",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,10,44,118,10
+    CONTROL         "Setează mărimea ferestrei specif.",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,10,44,118,10
     CONTROL         "Setează zona video specificată",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON | WS_DISABLED,10,58,118,10
     EDITTEXT        IDC_EDIT1,133,43,28,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER | WS_GROUP
     CTEXT           "×",IDC_STATIC,162,45,8,8
@@ -729,7 +729,7 @@ CAPTION "Alege un filtru"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST2,"SysListView32",LVS_LIST | LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_TABSTOP,5,5,275,154,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Răsfoire...",IDC_BUTTON1,5,163,60,14
+    PUSHBUTTON      "Răsfoiește...",IDC_BUTTON1,5,163,60,14
     DEFPUSHBUTTON   "OK",IDOK,177,163,50,14
     PUSHBUTTON      "Anulează",IDCANCEL,230,163,50,14
 END
@@ -879,7 +879,7 @@ BEGIN
     CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_ARROWKEYS | UDS_HORZ | WS_GROUP,64,205,36,13
     RTEXT           "",IDC_AUTHOR,100,207,190,8
     EDITTEXT        IDC_LOGOFILENAME,64,222,173,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "Răsfoire...",IDC_BUTTON2,241,222,50,13
+    PUSHBUTTON      "Răsfoiește...",IDC_BUTTON2,241,222,50,13
 END
 
 IDD_PPAGEVIDEO DIALOGEX 0, 0, 296, 264
@@ -984,7 +984,7 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,73,284,1
     CONTROL         "Afișează paginile din:",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,77,285,9
     EDITTEXT        IDC_EDIT2,15,89,167,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Răsfoire...",IDC_BUTTON1,186,89,50,14
+    PUSHBUTTON      "Răsfoiește...",IDC_BUTTON1,186,89,50,14
     PUSHBUTTON      "Lansează...",IDC_BUTTON2,240,89,50,14
     LTEXT           "Pagina implicită:",IDC_STATIC,5,107,285,8
     EDITTEXT        IDC_EDIT9,15,119,275,14,ES_AUTOHSCROLL
@@ -2694,7 +2694,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_VOLUME_MUTE          "Mut\nMut"
+    ID_VOLUME_MUTE          "Pune pe mut\nPune pe mut"
     ID_VOLUME_MUTE_OFF      "Activează sunetul\nActivează sunetul"
     ID_VOLUME_MUTE_DISABLED "Fără sunet (Silențios)\nFără sunet (Silențios)"
 END
@@ -2815,13 +2815,13 @@ BEGIN
     IDS_APPLY               "Se aplică"
     IDS_CLEAR               "Goleşte"
     IDS_CANCEL              "Anulează"
-    IDS_TEXTFILE_ENC        "Codare (Codificare):"
+    IDS_TEXTFILE_ENC        "Codarea (Codificarea):"
     IDS_SAVE_FILE           "Se salvează fișierul"
     IDS_VOLUME_OSD_MUTE     "Volumul: %d%% [Mut]"
     IDS_COPY_TO_CLIPBOARD   "Copiază în clipboard"
     IDS_AUDIO_LEVEL         "Nivelul (%d):"
     IDS_AUDIO_RELEASETIME   "Timpul de eliberare (%d):"
-    IDS_AUDIO_GAIN          "Zgomot (%+.1f (de) dB):"
+    IDS_AUDIO_GAIN          "Zgomotul (%+.1f (de) dB):"
     IDS_SAVING_THUMBNAIL    "Se salvează miniaturile"
     IDS_SEEKBEGIN           "Sari la început"
 END
@@ -2891,7 +2891,7 @@ STRINGTABLE
 BEGIN
     IDS_AG_MENU_AUDIOLANG   "Meniul limbilor audio"
     IDS_AG_MENU_SUBTITLELANG "Meniul limbilor subtitrărilor"
-    IDS_AG_MENU_JUMPTO      "Meniul Sari la..."
+    IDS_AG_MENU_JUMPTO      "Meniul pentru Sari la..."
     IDS_AG_MENU_AFTERPLAYBACK "Meniul de după lista de redare (playlist)"
     IDS_AG_RESET_STATS      "Resetează statisticile randorului de sincronizare (Sync)"
     IDS_VIEW_BORDERLESS     "Ascunde marginile\tCtrl+0"
@@ -2904,8 +2904,8 @@ STRINGTABLE
 BEGIN
     IDS_AG_DECREASE_RATE    "Micșorează rata"
     IDS_AG_RESET_RATE       "Resetează rata"
-    IDS_AG_AUDIODELAY_PLUS  "Întârziere audio cu +10ms"
-    IDS_AG_AUDIODELAY_MINUS "Întârziere audio cu -10ms"
+    IDS_AG_AUDIODELAY_PLUS  "Întârziere audio cu +10 ms"
+    IDS_AG_AUDIODELAY_MINUS "Întârziere audio cu -10 ms"
     IDS_AG_JUMP_FORWARD_1   "Sari înainte (puțin)"
     IDS_AG_JUMP_BACKWARD_1  "Sari înapoi (puțin)"
     IDS_AG_JUMP_FORWARD_2   "Sari înainte (mediu)"
@@ -2994,7 +2994,7 @@ BEGIN
     IDS_AG_BOSS_KEY         "Tasta Şef (Tasta Boss)"
     IDS_AG_MENU_PLAYER_S    "Meniul playerului (scurt)"
     IDS_AG_MENU_PLAYER_L    "Meniul playerului (lung)"
-    IDS_AG_MENU_FILTERS     "Meniul Filtre"
+    IDS_AG_MENU_FILTERS     "Meniul pentru Filtre"
     IDS_AG_OPTIONS          "Opțiuni"
     IDS_AG_NEXT_AUDIO       "Următorul fișier audio"
     IDS_AG_PREV_AUDIO       "Fișierul audio precedent"
@@ -3039,7 +3039,7 @@ BEGIN
     IDS_PPAGEWEBSERVER_0    "Selectarea directorului"
     IDS_AG_DEFAULT          "Implicit"
     IDS_AG_DEFAULT_L        "implicite"
-    IDS_AG_AUTO             "Auto(mat)"
+    IDS_AG_AUTO             "Automat (Auto)"
     IDS_AG_RECOMMENDED      "recomandat"
     IDS_AG_NOTRECOMMENDED   "nerecomandat"
     IDS_AG_ADVANCED         "Avansat"
@@ -3047,8 +3047,31 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_UNIT_TIME_H         "h (o)"
+    IDS_UNIT_TIME_M         "m"
+    IDS_UNIT_TIME_S         "s"
+    IDS_UNIT_SIZE_KB        "KB (KO)"
+    IDS_UNIT_SIZE_MB        "MB (MO)"
+    IDS_UNIT_SIZE_GB        "GB (GO)"
+    IDS_UNIT_SPEED_KB_S     "KB/s (KO/s)"
+    IDS_UNIT_SPEED_MB_S     "MB/s (MO/s)"
+    IDS_UNIT_SPEED_GB_S     "GB/s (GO/s)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LOGO_AUTHOR         "Autor necunoscut. Dacă ai făcut acest logo (această siglă), contactează-ne!"
+    IDS_NO_MORE_MEDIA       "Nu mai există fișiere media în dosarul (folderul) actual."
+    IDS_FIRST_IN_FOLDER     "Acum este încărcat primul fișier din dosar (din folder)."
+    IDS_LAST_IN_FOLDER      "Acum este încărcat ultimul fișier din dosar (din folder)."
+    IDS_MERGING_FILES       "Se unesc fișierele..."
+    IDS_MERGE_USING_FFMPEG  "Unește fișierele folosind FFmpeg"
+END
+
+STRINGTABLE
+BEGIN
     IDS_FAVORITES_QUICKADD  "Adaugă comanda rapidă (scurtătura) la favorite"
-    IDS_AG_MENU_FAVORITES   "Meniul Favorite"
+    IDS_AG_MENU_FAVORITES   "Meniul pentru Favorite"
     IDS_DVB_CHANNEL_NUMBER  "N"
     IDS_DVB_CHANNEL_NAME    "Nume"
     IDS_DVB_CHANNEL_FREQUENCY "Frecvență"
@@ -3129,7 +3152,7 @@ BEGIN
     IDS_MAINFRM_139         "Întârzierea subtitrărilor: %ld (de) ms"
     IDS_AG_TITLE2           "Titlul: %02d/%02d"
     IDS_THUMB_ROWNUMBER     "Rânduri:"
-    IDS_THUMB_COLNUMBER     "Coloane:"
+    IDS_THUMB_COLNUMBER     "Coloanele:"
     IDS_THUMB_IMAGE_WIDTH   "Lățimea imaginii:"
     IDS_PPSDB_URLCORRECT    "URL-ul pare să fie corect!"
     IDS_PPSDB_PROTOCOLERR   "Nepotrivire a versiunii protocolului, te rugăm să actualizezi playerul sau alege o altă adresă!"
@@ -3217,7 +3240,7 @@ BEGIN
     IDS_MAINFRM_91          "Tipul de fișiere e necunoscut"
     IDS_MAINFRM_92          "Fluxul nu e acceptat"
     IDS_MAINFRM_93          "Directorul DVD-ului nu poate fi găsit"
-    IDS_MAINFRM_94          "Filtrul navigatorului DVD-ului (DVD Navigator) nu poate fi creat"
+    IDS_MAINFRM_94          "Filtrul pentru navigatorul de DVD-uri (DVD Navigator) nu poate fi creat"
     IDS_AG_FAILED           "Eșuat"
     IDS_MAINFRM_96          "Filtrul pentru captură video nu poate fi creat"
     IDS_MAINFRM_98          "Niciun filtru de captură"
@@ -3369,7 +3392,7 @@ BEGIN
     IDS_MPADEC_STEREO       "Stereo"
     IDS_MPADEC_SPDIF        "Trece prin (S/PDIF, HDMI)"
     IDS_MPADEC_AC3ENCODE    "Codifică în AC-3"
-    IDS_MPADEC_AV_SYNC      "Corecție pentru sinronizarea audio-video (A/V Sync)"
+    IDS_MPADEC_AV_SYNC      "Corecție pentru sincronizarea audio-video (A/V Sync)"
     IDS_MPADEC_STATUS       "Stare"
     IDS_MPADEC_NOTACTIVE    "Decodorul nu este activ."
 END
@@ -3377,7 +3400,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_VDF_SETTINGS        "Setări pentru video (Setări pentru videoclipuri)"
-    IDS_VDF_AUTO            "Auto(mat)"
+    IDS_VDF_AUTO            "Automat (Auto)"
     IDS_VDF_THREADNUMBER    "Numărul firelor de decodare (de decodificare)"
     IDS_VDF_SKIPBFRAMES     "Sari peste cadrele B"
 END
@@ -3453,8 +3476,8 @@ BEGIN
     IDS_ARS_CROSSFEED       "Activează alimentarea încrucișată stereo (pentru căști)"
     IDS_ARS_DEVICE_PERIOD   "Memoria tampon a dispozitivului (Bufferul dispozitivului):"
     IDS_ARS_ALT_CHECK_FORMAT "Verificare alternativă a formatului suportat"
-    IDS_ARS_STATUS          "Stare"
-    IDS_ARS_DEVICE          "Dispozitiv:"
+    IDS_ARS_STATUS          "Starea"
+    IDS_ARS_DEVICE          "Dispozitivul:"
     IDS_ARS_MODE            "Modul:"
     IDS_ARS_INPUT           "Intrare"
     IDS_ARS_OUTPUT          "Ieșire"
@@ -3463,13 +3486,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ARS_SAMPLERATE      "Rată de eșantionare:"
-    IDS_ARS_CHANNELS        "Canale:"
+    IDS_ARS_SAMPLERATE      "Rata de eșantionare:"
+    IDS_ARS_CHANNELS        "Canalele:"
     IDS_ARS_WASAPI_METHOD   "Metoda WASAPI:"
     IDS_ARS_DUMMY_CHANNELS  "Nu umple canalele când mixezi (amesteci)"
+    IDS_ARS_PAUSE_KEEP_ACTIVE "Menține dispozitivul audio activ atunci când este întrerupt"
     IDS_ARS_TIP_BITEXACT_OUTPUT  "Dacă este posibil, sunetul va fi trimis în formatul original.\nAltfel, va fi folosit formatul specificat în setările de sistem."
+END
+
+STRINGTABLE
+BEGIN
     IDS_ARS_TIP_ALT_CHECK_FORMAT  "Randorul va încerca să inițializeze dispozitivul sărind peste unele verificări."
-    IDS_ARS_PAUSE_KEEP_ACTIVE   "Keep audio device active when paused (inaudible noise)"
+    IDS_ARS_TIP_PAUSE_KEEP_ACTIVE  "Randorul va trimite zgomot inaudibil către dispozitivul audio."
 END
 
 STRINGTABLE
@@ -3520,28 +3548,6 @@ STRINGTABLE
 BEGIN
     IDS_NAVIGATE_TUNERSCAN  "Scanează tuner-ul (Caută canale)"
     IDS_SUBTITLES_ERROR     "Subtitrările nu sunt încărcate sau randorul nu este suportat."
-END
-
-STRINGTABLE
-BEGIN
-    IDS_LOGO_AUTHOR         "Autor necunoscut. Dacă ai făcut acest logo (această siglă), contactează-ne!"
-    IDS_NO_MORE_MEDIA       "Nu mai există fișiere media în dosarul (folderul) actual."
-    IDS_FIRST_IN_FOLDER     "Acum este încărcat primul fișier din dosar (din folder)."
-    IDS_LAST_IN_FOLDER      "Acum este încărcat ultimul fișier din dosar (din folder)."
-    IDS_MERGING_FILES       "Se unesc fișierele..."
-END
-
-STRINGTABLE
-BEGIN
-    IDS_UNIT_TIME_H         "h (o)"
-    IDS_UNIT_TIME_M         "m"
-    IDS_UNIT_TIME_S         "s"
-    IDS_UNIT_SIZE_KB        "KB (KO)"
-    IDS_UNIT_SIZE_MB        "MB (MO)"
-    IDS_UNIT_SIZE_GB        "GB (GO)"
-    IDS_UNIT_SPEED_KB_S     "KB/s (KO/s)"
-    IDS_UNIT_SPEED_MB_S     "MB/s (MO/s)"
-    IDS_UNIT_SPEED_GB_S     "GB/s (GO/s)"
 END
 
 STRINGTABLE
@@ -3631,7 +3637,7 @@ BEGIN
     IDS_MFMT_WAV            "WAV (Waveform Audio File Format / Format fișier audio în formă de undă)"
     IDS_MFMT_WMA            "Fișier audio Windows Media (Windows Media Audio)"
     IDS_MFMT_WAVPACK        "WavPack"
-    IDS_MFMT_OPUS           "Codec audio Opus"
+    IDS_MFMT_OPUS           "Codecul audio Opus"
     IDS_MFMT_SPEEX          "Speex"
     IDS_MFMT_MLP            "Fișier audio MLP (Meridian Lossless Packing / Împachetare fără pierderi Meridian) (MLP Audio)"
     IDS_MFMT_DVDAUDIO       "DVD-Audio"
@@ -3875,8 +3881,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_MOUSE_CLICK_MIDDLE  "Clic din mijloc"
-    IDS_MOUSE_CLICK_X1      "Clic X1"
-    IDS_MOUSE_CLICK_X2      "Clic X2"
+    IDS_MOUSE_CLICK_X1      "Clic pe butonul lateral 1 (Clic X1)"
+    IDS_MOUSE_CLICK_X2      "Clic pe butonul lateral 2 (Clic X2)"
     IDS_MOUSE_WHEEL_UP      "Rotița în sus"
     IDS_MOUSE_WHEEL_DOWN    "Rotița în jos"
     IDS_MOUSE_WHEEL_LEFT    "Rotița în stânga"

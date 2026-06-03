@@ -6,13 +6,13 @@
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //
-// Information about Mach-O and Universal Binary files
+// Information about Amiga Icon files
 //
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //---------------------------------------------------------------------------
-#ifndef MediaInfo_File_MachOH
-#define MediaInfo_File_MachOH
+#ifndef MediaInfo_File_AmigaIconH
+#define MediaInfo_File_AmigaIconH
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
@@ -23,10 +23,10 @@ namespace MediaInfoLib
 {
 
 //***************************************************************************
-// Class File_MachO
+// Class File_AmigaIcon
 //***************************************************************************
 
-class File_MachO : public File__Analyze
+class File_AmigaIcon : public File__Analyze
 {
 protected :
     //Buffer - File header
@@ -34,15 +34,6 @@ protected :
 
     //Buffer - Global
     void Read_Buffer_Continue ();
-
-    //Temp
-    struct BinaryInfo {
-        int64u size;
-        int32u cputype;
-        int32u align;
-    };
-    std::map<int64u, BinaryInfo> Universal_Positions; // Key is offset
-    std::map<int64u, BinaryInfo>::iterator Universal_Current;
 };
 
 } //NameSpace
